@@ -36,7 +36,7 @@ export default function ConnectionsPage() {
 						<DialogTitle>{editingConnection ? 'Edit Connection' : 'Add Connection'}</DialogTitle>
 					</DialogHeader>
 					<ConnectionForm connection={editingConnection || undefined} onSuccess={handleClose} onCancel={handleClose} />
-				</DialogContent>
+        </DialogContent>
 			</Dialog>
 		</div>
 	);

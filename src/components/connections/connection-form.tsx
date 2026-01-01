@@ -158,9 +158,10 @@ export function ConnectionForm({
               placeholder="My S3 Server"
               value={formData.name}
               onChange={handleChange}
-              tabIndex={1}
+              tabIndex={0}
             />
           </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="endpoint">Endpoint URL</Label>
@@ -171,7 +172,7 @@ export function ConnectionForm({
               value={formData.endpoint}
               onChange={handleChange}
               required
-              tabIndex={1}
+              tabIndex={0}
             />
           </div>
 
@@ -184,7 +185,7 @@ export function ConnectionForm({
               value={formData.region}
               onChange={handleChange}
               required
-              tabIndex={1}
+              tabIndex={0}
             />
           </div>
 
@@ -197,7 +198,7 @@ export function ConnectionForm({
               value={formData.accessKeyId}
               onChange={handleChange}
               required
-              tabIndex={1}
+              tabIndex={0}
             />
           </div>
 
@@ -211,7 +212,7 @@ export function ConnectionForm({
               value={formData.secretAccessKey}
               onChange={handleChange}
               required={!isEditMode}
-              tabIndex={1}
+              tabIndex={0}
             />
             {isEditMode && (
               <p className="text-xs text-muted-foreground">
