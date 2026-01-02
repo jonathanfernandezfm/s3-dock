@@ -6,13 +6,13 @@ import { useConnectionStore } from "@/lib/stores/connection-store";
 import { useBrowserStore } from "@/lib/stores/browser-store";
 import { Breadcrumb } from "./breadcrumb";
 import { FileList } from "./file-list";
-import { UploadZone } from "./upload-zone";
+import { UploadZone, UploadButton } from "./upload-zone";
 import { CreateFolderDialog } from "./create-folder-dialog";
 import { DeleteConfirmDialog } from "./delete-confirm-dialog";
 import { FilePreviewModal } from "@/components/preview/file-preview-modal";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, AlertCircle, CloudOff, RefreshCw, Trash2 } from "lucide-react";
+import { Loader2, CloudOff, RefreshCw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import type { S3Object } from "@/types";
 
@@ -20,15 +20,17 @@ interface FileBrowserProps {
   connectionId: string;
   bucket: string;
   path?: string[];
+  onNavigate?: (path: string) => void;
+  onGoHome?: () => void;
 }
 
-export function FileBrowser({ connectionId, bucket, path = [] }: FileBrowserProps) {
+export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoHome }: FileBrowserProps) {
   const { statuses } = useConnectionStore();
   const { selectedItems, clearSelection } = useBrowserStore();
   const currentPath = path.length > 0 ? path.join("/") + "/" : "";
   const status = statuses[connectionId];
 
-  const { data, isLoading, error, refetch } = useObjects(
+  const { data, isFetching, refetch } = useObjects(
     connectionId,
     bucket,
     currentPath
@@ -37,6 +39,9 @@ export function FileBrowser({ connectionId, bucket, path = [] }: FileBrowserProp
 
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [previewObject, setPreviewObject] = useState<S3Object | null>(null);
+
+  // Show loading overlay on file list while fetching
+  const showLoadingOverlay = isFetching;
 
   if (!status?.connected) {
     return (
@@ -49,27 +54,6 @@ export function FileBrowser({ connectionId, bucket, path = [] }: FileBrowserProp
         <Button asChild>
           <Link href="/settings/connections">Configure Connections</Link>
         </Button>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-        <h3 className="text-lg font-semibold">Failed to load objects</h3>
-        <p className="text-muted-foreground mb-4">
-          {error instanceof Error ? error.message : "Unknown error"}
-        </p>
-        <Button onClick={() => refetch()}>Retry</Button>
       </div>
     );
   }
@@ -150,6 +134,8 @@ export function FileBrowser({ connectionId, bucket, path = [] }: FileBrowserProp
           connectionId={connectionId}
           bucket={bucket}
           path={currentPath}
+          onNavigate={onNavigate}
+          onGoHome={onGoHome}
         />
         <div className="flex items-center gap-2">
           {selectedItems.size > 0 && (
@@ -163,6 +149,11 @@ export function FileBrowser({ connectionId, bucket, path = [] }: FileBrowserProp
               Delete ({selectedItems.size})
             </Button>
           )}
+          <UploadButton
+            connectionId={connectionId}
+            bucket={bucket}
+            currentPath={currentPath}
+          />
           <CreateFolderDialog
             connectionId={connectionId}
             bucket={bucket}
@@ -174,21 +165,26 @@ export function FileBrowser({ connectionId, bucket, path = [] }: FileBrowserProp
         </div>
       </div>
 
-      <UploadZone
-        connectionId={connectionId}
-        bucket={bucket}
-        currentPath={currentPath}
-      />
-
-      <FileList
-        objects={data?.objects || []}
-        connectionId={connectionId}
-        bucket={bucket}
-        currentPath={currentPath}
-        onDelete={handleDelete}
-        onPreview={setPreviewObject}
-        onDownload={handleDownload}
-      />
+      <div className="relative">
+        {showLoadingOverlay && (
+          <div className="absolute inset-0 bg-background/60 flex items-center justify-center z-10 rounded-lg">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
+        <div className={showLoadingOverlay ? "opacity-50 pointer-events-none" : ""}>
+          <FileList
+            objects={data?.objects || []}
+            connectionId={connectionId}
+            bucket={bucket}
+            currentPath={currentPath}
+            isLoading={showLoadingOverlay}
+            onDelete={handleDelete}
+            onPreview={setPreviewObject}
+            onDownload={handleDownload}
+            onNavigate={onNavigate}
+          />
+        </div>
+      </div>
 
       <DeleteConfirmDialog
         isOpen={!!deletingKey}
@@ -203,6 +199,12 @@ export function FileBrowser({ connectionId, bucket, path = [] }: FileBrowserProp
         connectionId={connectionId}
         bucket={bucket}
         onClose={() => setPreviewObject(null)}
+      />
+
+      <UploadZone
+        connectionId={connectionId}
+        bucket={bucket}
+        currentPath={currentPath}
       />
     </div>
   );

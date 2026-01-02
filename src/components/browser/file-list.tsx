@@ -16,9 +16,11 @@ interface FileListProps {
   connectionId: string;
   bucket: string;
   currentPath: string;
+  isLoading?: boolean;
   onDelete: (key: string) => void;
   onPreview: (object: S3Object) => void;
   onDownload: (key: string) => void;
+  onNavigate?: (path: string) => void;
 }
 
 export function FileList({
@@ -26,9 +28,11 @@ export function FileList({
   connectionId,
   bucket,
   currentPath,
+  isLoading,
   onDelete,
   onPreview,
   onDownload,
+  onNavigate,
 }: FileListProps) {
   const { selectedItems, toggleSelection, selectAll, clearSelection } =
     useBrowserStore();
@@ -44,7 +48,7 @@ export function FileList({
     }
   };
 
-  if (objects.length === 0) {
+  if (objects.length === 0 && !isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg">
         <p className="text-muted-foreground">This folder is empty</p>
@@ -83,6 +87,7 @@ export function FileList({
             onDelete={() => onDelete(object.key)}
             onPreview={() => onPreview(object)}
             onDownload={() => onDownload(object.key)}
+            onNavigate={onNavigate}
           />
         ))}
       </TableBody>

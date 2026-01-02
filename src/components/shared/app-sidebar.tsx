@@ -4,21 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useConnectionStore } from "@/lib/stores/connection-store";
+import { useTabStore } from "@/lib/stores/tab-store";
 import { useConnections } from "@/lib/queries/connections";
 import { Database, Settings, FolderOpen, CheckCircle2, XCircle } from "lucide-react";
-
-const navItems = [
-  {
-    title: "Buckets",
-    href: "/buckets",
-    icon: Database,
-  },
-];
 
 export function AppSidebar() {
   const pathname = usePathname();
   const { data: connections = [] } = useConnections();
   const { statuses } = useConnectionStore();
+  const { activeTabId, resetTabToBuckets } = useTabStore();
 
   const connectedCount = connections.filter(
     (conn) => statuses[conn.id]?.connected
@@ -28,10 +22,19 @@ export function AppSidebar() {
     pathname === "/settings/connections" ||
     pathname.startsWith("/settings/connections/");
 
+  const isBucketsActive =
+    pathname === "/buckets" || pathname.startsWith("/buckets/") || pathname.startsWith("/browser/");
+
+  const handleBucketsClick = () => {
+    if (activeTabId) {
+      resetTabToBuckets(activeTabId);
+    }
+  };
+
   return (
     <aside className="w-64 border-r bg-sidebar-background min-h-screen flex flex-col">
       <div className="p-4 border-b">
-        <Link href="/buckets" className="flex items-center gap-2">
+        <Link href="/buckets" className="flex items-center gap-2" onClick={handleBucketsClick}>
           <FolderOpen className="h-6 w-6 text-sidebar-primary" />
           <span className="font-semibold text-lg">S3 Client</span>
         </Link>
@@ -39,26 +42,21 @@ export function AppSidebar() {
 
       <nav className="flex-1 p-4">
         <ul className="space-y-1">
-          {navItems.map((item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                    isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.title}
-                </Link>
-              </li>
-            );
-          })}
+          <li>
+            <Link
+              href="/buckets"
+              onClick={handleBucketsClick}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                isBucketsActive
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+              )}
+            >
+              <Database className="h-4 w-4" />
+              Buckets
+            </Link>
+          </li>
         </ul>
       </nav>
 

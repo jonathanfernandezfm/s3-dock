@@ -9,7 +9,11 @@ import { Loader2, AlertCircle, CloudOff, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export function BucketList() {
+interface BucketListProps {
+  onOpenBucket?: (connectionId: string, connectionName: string, bucketName: string) => void;
+}
+
+export function BucketList({ onOpenBucket }: BucketListProps = {}) {
   const { groups, isLoading, hasAnyConnected } = useAllBuckets();
   const [deletingBucket, setDeletingBucket] = useState<{
     name: string;
@@ -79,12 +83,14 @@ export function BucketList() {
                   key={`${group.connection.id}-${bucket.name}`}
                   bucket={bucket}
                   connectionId={group.connection.id}
+                  connectionName={getDisplayName(group.connection)}
                   onDelete={(name) =>
                     setDeletingBucket({
                       name,
                       connectionId: group.connection.id,
                     })
                   }
+                  onOpen={onOpenBucket}
                 />
               ))}
             </div>

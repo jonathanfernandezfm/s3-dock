@@ -34,6 +34,7 @@ interface FileRowProps {
   onDelete: () => void;
   onPreview: () => void;
   onDownload: () => void;
+  onNavigate?: (path: string) => void;
 }
 
 function getFileIcon(key: string, isFolder: boolean) {
@@ -65,6 +66,7 @@ export function FileRow({
   onDelete,
   onPreview,
   onDownload,
+  onNavigate,
 }: FileRowProps) {
   const Icon = getFileIcon(object.key, object.isFolder);
   const fileName = getFileName(object.key, currentPath);
@@ -73,6 +75,13 @@ export function FileRow({
   const href = object.isFolder
     ? `/browser/${connectionId}/${bucket}/${object.key}`
     : undefined;
+
+  const handleFolderClick = (e: React.MouseEvent) => {
+    if (onNavigate && object.isFolder) {
+      e.preventDefault();
+      onNavigate(object.key);
+    }
+  };
 
   return (
     <TableRow
@@ -95,7 +104,7 @@ export function FileRow({
             }`}
           />
           {href ? (
-            <Link href={href} className="hover:underline">
+            <Link href={href} className="hover:underline" onClick={handleFolderClick}>
               {fileName}
             </Link>
           ) : (

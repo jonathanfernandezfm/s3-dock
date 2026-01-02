@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useUploadStore, type UploadItem } from "@/lib/stores/upload-store";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queries/keys";
@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { Upload, X, CheckCircle2, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface UploadZoneProps {
   connectionId: string;
@@ -80,69 +79,77 @@ export function UploadZone({
   );
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
+    (e: DragEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       setIsDragging(false);
 
-      const files = Array.from(e.dataTransfer.files);
+      const files = Array.from(e.dataTransfer?.files || []);
       files.forEach(uploadFile);
     },
     [uploadFile]
   );
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDragOver = useCallback((e: DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDragEnter = useCallback((e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsDragging(true);
   }, []);
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
+  const handleDragLeave = useCallback((e: DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    e.stopPropagation();
+
+    // Only hide overlay when leaving the window
+    if (e.relatedTarget === null) {
+      setIsDragging(false);
+    }
   }, []);
 
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files || []);
-      files.forEach(uploadFile);
-      e.target.value = "";
-    },
-    [uploadFile]
-  );
+  // Global drag and drop listeners for full-screen dropzone
+  useEffect(() => {
+    window.addEventListener("dragenter", handleDragEnter);
+    window.addEventListener("dragleave", handleDragLeave);
+    window.addEventListener("dragover", handleDragOver);
+    window.addEventListener("drop", handleDrop);
+
+    return () => {
+      window.removeEventListener("dragenter", handleDragEnter);
+      window.removeEventListener("dragleave", handleDragLeave);
+      window.removeEventListener("dragover", handleDragOver);
+      window.removeEventListener("drop", handleDrop);
+    };
+  }, [handleDragEnter, handleDragLeave, handleDragOver, handleDrop]);
 
   const activeUploads = uploads.filter(
     (u) => u.bucket === bucket && u.key.startsWith(currentPath)
   );
 
   return (
-    <div className="space-y-4">
-      <div
-        className={cn(
-          "border-2 border-dashed rounded-lg p-8 text-center transition-colors",
-          isDragging
-            ? "border-primary bg-primary/5"
-            : "border-muted-foreground/25 hover:border-muted-foreground/50"
-        )}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-      >
-        <Upload className="h-8 w-8 mx-auto mb-4 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground mb-2">
-          Drag and drop files here, or click to select
-        </p>
-        <label>
-          <input
-            type="file"
-            multiple
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <Button variant="secondary" asChild>
-            <span>Select Files</span>
-          </Button>
-        </label>
-      </div>
+    <>
+      {/* Full-screen drop overlay */}
+      {isDragging && (
+        <div
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-8"
+        >
+          <div className="w-full h-full border border-dashed border-muted-foreground/50 rounded-lg flex flex-col items-center justify-center bg-white dark:bg-zinc-950">
+            <Upload className="h-16 w-16 mb-4 text-primary" />
+            <p className="text-xl font-medium text-primary">
+              Drop files to upload
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Files will be uploaded to the current folder
+            </p>
+          </div>
+        </div>
+      )}
 
+      {/* Upload progress list */}
       {activeUploads.length > 0 && (
         <div className="space-y-2">
           {activeUploads.map((upload) => (
@@ -154,7 +161,91 @@ export function UploadZone({
           ))}
         </div>
       )}
-    </div>
+    </>
+  );
+}
+
+interface UploadButtonProps {
+  connectionId: string;
+  bucket: string;
+  currentPath: string;
+}
+
+export function UploadButton({ connectionId, bucket, currentPath }: UploadButtonProps) {
+  const { addUpload, updateUpload } = useUploadStore();
+  const queryClient = useQueryClient();
+
+  const uploadFile = useCallback(
+    async (file: File) => {
+      const id = crypto.randomUUID();
+      const key = currentPath + file.name;
+
+      addUpload({ id, file, bucket, key });
+      updateUpload(id, { status: "uploading" });
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("bucket", bucket);
+        formData.append("key", key);
+        formData.append("connectionId", connectionId);
+
+        const response = await fetch("/api/objects/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Upload failed");
+        }
+
+        updateUpload(id, { status: "completed", progress: 100 });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.objects.list(connectionId, bucket, currentPath),
+        });
+
+        toast({
+          title: "Upload complete",
+          description: `Successfully uploaded ${file.name}`,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        updateUpload(id, { status: "error", error: message });
+        toast({
+          title: "Upload failed",
+          description: message,
+          variant: "destructive",
+        });
+      }
+    },
+    [connectionId, bucket, currentPath, addUpload, updateUpload, queryClient]
+  );
+
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files || []);
+      files.forEach(uploadFile);
+      e.target.value = "";
+    },
+    [uploadFile]
+  );
+
+  return (
+    <label>
+      <input
+        type="file"
+        multiple
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+      <Button asChild>
+        <span>
+          <Upload className="mr-2 h-4 w-4" />
+          Upload file
+        </span>
+      </Button>
+    </label>
   );
 }
 

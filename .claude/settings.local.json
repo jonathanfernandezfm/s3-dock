@@ -9,7 +9,8 @@
       "Bash(pnpm add:*)",
       "Bash(pnpm run build:*)",
       "Bash(tree:*)",
-      "Bash(pnpm prisma generate:*)"
+      "Bash(pnpm prisma generate:*)",
+      "Bash(cat:*)"
     ]
   }
 }

@@ -16,14 +16,30 @@ import type { S3Bucket } from "@/types";
 interface BucketCardProps {
   bucket: S3Bucket;
   connectionId: string;
+  connectionName?: string;
   onDelete: (name: string) => void;
+  onOpen?: (connectionId: string, connectionName: string, bucketName: string) => void;
 }
 
-export function BucketCard({ bucket, connectionId, onDelete }: BucketCardProps) {
+export function BucketCard({ bucket, connectionId, connectionName, onDelete, onOpen }: BucketCardProps) {
   const browserUrl = `/browser/${connectionId}/${bucket.name}`;
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (onOpen) {
+      e.preventDefault();
+      onOpen(connectionId, connectionName || "", bucket.name);
+    }
+  };
+
+  const handleBrowse = (e: React.MouseEvent) => {
+    if (onOpen) {
+      e.preventDefault();
+      onOpen(connectionId, connectionName || "", bucket.name);
+    }
+  };
+
   return (
-    <Link href={browserUrl} className="block">
+    <Link href={browserUrl} className="block" onClick={handleClick}>
       <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -37,11 +53,9 @@ export function BucketCard({ bucket, connectionId, onDelete }: BucketCardProps) 
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={browserUrl}>
-                  <FolderOpen className="mr-2 h-4 w-4" />
-                  Browse
-                </Link>
+              <DropdownMenuItem onClick={handleBrowse}>
+                <FolderOpen className="mr-2 h-4 w-4" />
+                Browse
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive"

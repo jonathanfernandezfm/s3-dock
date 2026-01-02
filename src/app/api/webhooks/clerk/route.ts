@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
   if (!WEBHOOK_SECRET) {
     throw new Error("Missing CLERK_WEBHOOK_SECRET environment variable");
-  }
+  } 
 
   const headerPayload = await headers();
   const svix_id = headerPayload.get("svix-id");

@@ -26,7 +26,7 @@ export default function ConnectionsPage() {
 	};
 
 	return (
-		<div className='space-y-6'>
+		<div className='space-y-6 flex-1 p-6 overflow-auto'>
 			<h1 className='text-2xl font-bold'>Connection Settings</h1>
 			<ConnectionList onAdd={handleAdd} onEdit={handleEdit} />
 

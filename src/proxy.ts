@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import type { NextRequest } from "next/server";
 
 // Define public routes that don't require authentication
 const isPublicRoute = createRouteMatcher([
@@ -7,12 +8,16 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks/clerk(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
+const clerkProxy = clerkMiddleware(async (auth, req) => {
   // Protect all routes except public ones
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
 });
+
+export function proxy(request: NextRequest) {
+  return clerkProxy(request, {} as never);
+}
 
 export const config = {
   matcher: [
