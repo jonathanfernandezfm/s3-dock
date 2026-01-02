@@ -1,14 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import {
   ListBucketsCommand,
   CreateBucketCommand,
 } from "@aws-sdk/client-s3";
 import { createS3Client } from "@/lib/s3/client";
 import { getConnectionById } from "@/lib/db/connections";
+import { withAuth } from "@/lib/auth";
 
-export async function POST(request: NextRequest) {
+// POST /api/buckets - List buckets for a connection
+export const POST = withAuth(async (req, { user }) => {
   try {
-    const { connectionId }: { connectionId: string } = await request.json();
+    const { connectionId }: { connectionId: string } = await req.json();
 
     if (!connectionId) {
       return NextResponse.json(
@@ -17,7 +19,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const connection = await getConnectionById(connectionId);
+    const connection = await getConnectionById(connectionId, user.id);
     if (!connection) {
       return NextResponse.json(
         { error: "Connection not found" },
@@ -39,12 +41,13 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});
 
-export async function PUT(request: NextRequest) {
+// PUT /api/buckets - Create a new bucket
+export const PUT = withAuth(async (req, { user }) => {
   try {
     const { connectionId, name }: { connectionId: string; name: string } =
-      await request.json();
+      await req.json();
 
     if (!connectionId || !name) {
       return NextResponse.json(
@@ -53,7 +56,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const connection = await getConnectionById(connectionId);
+    const connection = await getConnectionById(connectionId, user.id);
     if (!connection) {
       return NextResponse.json(
         { error: "Connection not found" },
@@ -70,4 +73,4 @@ export async function PUT(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});

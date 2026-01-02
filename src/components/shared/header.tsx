@@ -1,5 +1,6 @@
 "use client";
 
+import { UserButton } from "@clerk/nextjs";
 import { useConnectionStore } from "@/lib/stores/connection-store";
 import { useConnections } from "@/lib/queries/connections";
 import { ThemeToggle } from "./theme-toggle";
@@ -29,6 +30,14 @@ export function Header() {
 
       <div className="flex items-center gap-2">
         <ThemeToggle />
+        <UserButton
+          afterSignOutUrl="/sign-in"
+          appearance={{
+            elements: {
+              avatarBox: "h-8 w-8",
+            },
+          }}
+        />
       </div>
     </header>
   );

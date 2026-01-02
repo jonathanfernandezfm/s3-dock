@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { DeleteBucketCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "@/lib/s3/client";
 import { getConnectionById } from "@/lib/db/connections";
+import { withAuth } from "@/lib/auth";
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ bucket: string }> }
-) {
+type RouteContext = { params: Promise<{ bucket: string }> };
+
+export const DELETE = withAuth<RouteContext>(async (req, { user, params }) => {
   try {
-    const { bucket } = await params;
-    const { connectionId }: { connectionId: string } = await request.json();
+    const { bucket } = params;
+    const { connectionId }: { connectionId: string } = await req.json();
 
     if (!connectionId || !bucket) {
       return NextResponse.json(
@@ -18,7 +18,7 @@ export async function DELETE(
       );
     }
 
-    const connection = await getConnectionById(connectionId);
+    const connection = await getConnectionById(connectionId, user.id);
     if (!connection) {
       return NextResponse.json(
         { error: "Connection not found" },
@@ -35,4 +35,4 @@ export async function DELETE(
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});

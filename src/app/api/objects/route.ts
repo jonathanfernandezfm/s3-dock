@@ -1,17 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { createS3Client } from "@/lib/s3/client";
 import { getConnectionById } from "@/lib/db/connections";
+import { withAuth } from "@/lib/auth";
 import type { S3Object } from "@/types";
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (req, { user }) => {
   try {
     const {
       connectionId,
       bucket,
       prefix = "",
     }: { connectionId: string; bucket: string; prefix?: string } =
-      await request.json();
+      await req.json();
 
     if (!connectionId || !bucket) {
       return NextResponse.json(
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const connection = await getConnectionById(connectionId);
+    const connection = await getConnectionById(connectionId, user.id);
     if (!connection) {
       return NextResponse.json(
         { error: "Connection not found" },
@@ -63,4 +64,4 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});

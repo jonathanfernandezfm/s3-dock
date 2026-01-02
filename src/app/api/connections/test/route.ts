@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { ListBucketsCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "@/lib/s3/client";
 import { getConnectionById } from "@/lib/db/connections";
+import { withAuth } from "@/lib/auth";
 
 interface TestConnectionRequest {
   // For existing connections - just pass the ID
@@ -14,9 +15,9 @@ interface TestConnectionRequest {
   forcePathStyle?: boolean;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (req, { user }) => {
   try {
-    const body: TestConnectionRequest = await request.json();
+    const body: TestConnectionRequest = await req.json();
 
     let connectionConfig: {
       endpoint: string;
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     // If an ID is provided, fetch the connection from the database
     if (body.id) {
-      const dbConnection = await getConnectionById(body.id);
+      const dbConnection = await getConnectionById(body.id, user.id);
       if (!dbConnection) {
         return NextResponse.json(
           { success: false, error: "Connection not found" },
@@ -72,4 +73,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

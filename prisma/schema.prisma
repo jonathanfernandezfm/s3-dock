@@ -10,35 +10,97 @@ datasource db {
   provider = "postgresql"
 }
 
-// S3 Connection configuration
-// Stores connection details for S3-compatible storage endpoints
-model Connection {
-  id              String   @id @default(uuid())
-  name            String?  // Optional display name for the connection
-  endpoint        String   // S3 endpoint URL (e.g., https://s3.amazonaws.com)
-  region          String   @default("us-east-1")
-  accessKeyId     String   // AWS access key ID
-  secretAccessKey String   // AWS secret access key (encrypted in production)
-  forcePathStyle  Boolean  @default(true) // Required for MinIO and some S3-compatible services
+// Subscription tier enum
+enum SubscriptionTier {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+// User model synced from Clerk
+model User {
+  id        String   @id @default(uuid())
+  clerkId   String   @unique // Clerk user ID (user_xxx)
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  imageUrl  String?
+
+  // Subscription relationship
+  subscription Subscription?
+
+  // User's S3 connections
+  connections Connection[]
+
+  // Usage tracking
+  usageRecords UsageRecord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Future: Add userId when authentication is implemented
-  // userId String?
-  // user   User?   @relation(fields: [userId], references: [id])
+  @@map("users")
+}
+
+// Subscription model
+model Subscription {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tier SubscriptionTier @default(FREE)
+
+  // For future Stripe integration
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
+  stripePriceId        String?
+
+  // Subscription period
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+// Usage tracking for tier limits
+model UsageRecord {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Usage metrics
+  month          DateTime // First day of the month (for grouping)
+  uploadBytes    BigInt   @default(0) // Total bytes uploaded this month
+  downloadBytes  BigInt   @default(0) // Total bytes downloaded this month
+  operationCount Int      @default(0) // API operations count
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, month])
+  @@map("usage_records")
+}
+
+// S3 Connection configuration
+// Stores connection details for S3-compatible storage endpoints
+model Connection {
+  id              String  @id @default(uuid())
+  name            String? // Optional display name for the connection
+  endpoint        String // S3 endpoint URL (e.g., https://s3.amazonaws.com)
+  region          String  @default("us-east-1")
+  accessKeyId     String // AWS access key ID
+  secretAccessKey String // AWS secret access key (encrypted in production)
+  forcePathStyle  Boolean @default(true) // Required for MinIO and some S3-compatible services
+
+  // User ownership
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("connections")
 }
-
-// Future models for authentication
-// model User {
-//   id          String       @id @default(uuid())
-//   email       String       @unique
-//   name        String?
-//   connections Connection[]
-//   createdAt   DateTime     @default(now())
-//   updatedAt   DateTime     @updatedAt
-//
-//   @@map("users")
-// }

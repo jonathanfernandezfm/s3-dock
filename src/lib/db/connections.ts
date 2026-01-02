@@ -12,25 +12,40 @@ export type ConnectionInput = {
 
 export type ConnectionUpdate = Partial<ConnectionInput>;
 
-export async function getAllConnections(): Promise<Connection[]> {
+/**
+ * Get all connections for a user
+ */
+export async function getConnectionsByUserId(
+  userId: string
+): Promise<Connection[]> {
   return prisma.connection.findMany({
+    where: { userId },
     orderBy: { createdAt: "desc" },
   });
 }
 
+/**
+ * Get a connection by ID, ensuring it belongs to the user
+ */
 export async function getConnectionById(
-  id: string
+  id: string,
+  userId: string
 ): Promise<Connection | null> {
-  return prisma.connection.findUnique({
-    where: { id },
+  return prisma.connection.findFirst({
+    where: { id, userId },
   });
 }
 
+/**
+ * Create a new connection for a user
+ */
 export async function createConnection(
+  userId: string,
   data: ConnectionInput
 ): Promise<Connection> {
   return prisma.connection.create({
     data: {
+      userId,
       name: data.name,
       endpoint: data.endpoint,
       region: data.region,
@@ -41,17 +56,43 @@ export async function createConnection(
   });
 }
 
+/**
+ * Update a connection, ensuring it belongs to the user
+ */
 export async function updateConnection(
   id: string,
+  userId: string,
   data: ConnectionUpdate
-): Promise<Connection> {
+): Promise<Connection | null> {
+  const connection = await prisma.connection.findFirst({
+    where: { id, userId },
+  });
+
+  if (!connection) {
+    return null;
+  }
+
   return prisma.connection.update({
     where: { id },
     data,
   });
 }
 
-export async function deleteConnection(id: string): Promise<Connection> {
+/**
+ * Delete a connection, ensuring it belongs to the user
+ */
+export async function deleteConnection(
+  id: string,
+  userId: string
+): Promise<Connection | null> {
+  const connection = await prisma.connection.findFirst({
+    where: { id, userId },
+  });
+
+  if (!connection) {
+    return null;
+  }
+
   return prisma.connection.delete({
     where: { id },
   });

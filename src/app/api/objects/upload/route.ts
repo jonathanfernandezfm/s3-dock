@@ -1,11 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "@/lib/s3/client";
 import { getConnectionById } from "@/lib/db/connections";
+import { withAuth } from "@/lib/auth";
+import {
+  canUploadFileSize,
+  canUploadMonthlyVolume,
+  recordUpload,
+} from "@/lib/subscriptions";
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (req, { user }) => {
   try {
-    const formData = await request.formData();
+    const formData = await req.formData();
     const file = formData.get("file") as File;
     const bucket = formData.get("bucket") as string;
     const key = formData.get("key") as string;
@@ -18,12 +24,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const connection = await getConnectionById(connectionId);
+    const connection = await getConnectionById(connectionId, user.id);
     if (!connection) {
       return NextResponse.json(
         { error: "Connection not found" },
         { status: 404 }
       );
+    }
+
+    // Check tier limits
+    const tier = user.subscription?.tier ?? "FREE";
+
+    // Check file size limit
+    const sizeCheck = canUploadFileSize(file.size, tier);
+    if (!sizeCheck.allowed) {
+      return NextResponse.json({ error: sizeCheck.reason }, { status: 403 });
+    }
+
+    // Check monthly volume limit
+    const volumeCheck = await canUploadMonthlyVolume(user.id, tier, file.size);
+    if (!volumeCheck.allowed) {
+      return NextResponse.json({ error: volumeCheck.reason }, { status: 403 });
     }
 
     const client = createS3Client(connection);
@@ -40,9 +61,12 @@ export async function POST(request: NextRequest) {
 
     await client.send(command);
 
+    // Record usage
+    await recordUpload(user.id, file.size);
+
     return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
+});
