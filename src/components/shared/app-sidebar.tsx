@@ -3,20 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useConnectionStore } from "@/lib/stores/connection-store";
 import { useLayoutStore } from "@/lib/stores/layout-store";
 import { useConnections } from "@/lib/queries/connections";
-import { Database, Settings, FolderOpen, CheckCircle2, XCircle } from "lucide-react";
+import { Database, Settings, FolderOpen, Server } from "lucide-react";
 
 export function AppSidebar() {
   const pathname = usePathname();
   const { data: connections = [] } = useConnections();
-  const { statuses } = useConnectionStore();
   const { panes, focusedPaneId, resetTabToBuckets } = useLayoutStore();
-
-  const connectedCount = connections.filter(
-    (conn) => statuses[conn.id]?.connected
-  ).length;
 
   const isSettingsActive =
     pathname === "/settings/connections" ||
@@ -80,19 +74,10 @@ export function AppSidebar() {
         </Link>
 
         <div className="flex items-center gap-2 text-sm px-3">
-          {connectedCount > 0 ? (
-            <>
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <span className="text-muted-foreground">
-                {connectedCount} connection{connectedCount !== 1 ? "s" : ""}
-              </span>
-            </>
-          ) : (
-            <>
-              <XCircle className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Not connected</span>
-            </>
-          )}
+          <Server className="h-4 w-4 text-muted-foreground" />
+          <span className="text-muted-foreground">
+            {connections.length} connection{connections.length !== 1 ? "s" : ""}
+          </span>
         </div>
       </div>
     </aside>

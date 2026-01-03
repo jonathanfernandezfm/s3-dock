@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useConnectionStore } from "@/lib/stores/connection-store";
 import { queryKeys } from "./keys";
 import type { S3Object } from "@/types";
 
@@ -73,13 +72,10 @@ export function useObjects(
   bucket: string,
   prefix: string = ""
 ) {
-  const { statuses } = useConnectionStore();
-  const status = statuses[connectionId];
-
   return useQuery({
     queryKey: queryKeys.objects.list(connectionId, bucket, prefix),
     queryFn: () => fetchObjects(connectionId, bucket, prefix),
-    enabled: !!connectionId && status?.connected && !!bucket,
+    enabled: !!connectionId && !!bucket,
   });
 }
 

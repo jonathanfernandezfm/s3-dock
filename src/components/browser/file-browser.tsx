@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useObjects, useDeleteObjects } from "@/lib/queries/objects";
-import { useConnectionStore } from "@/lib/stores/connection-store";
 import { useBrowserStore } from "@/lib/stores/browser-store";
 import { usePaneContextSafe } from "@/lib/contexts/pane-context";
 import { Breadcrumb } from "./breadcrumb";
@@ -13,8 +12,7 @@ import { DeleteConfirmDialog } from "./delete-confirm-dialog";
 import { FilePreviewModal } from "@/components/preview/file-preview-modal";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, CloudOff, RefreshCw, Trash2 } from "lucide-react";
-import Link from "next/link";
+import { Loader2, RefreshCw, Trash2 } from "lucide-react";
 import type { S3Object } from "@/types";
 
 interface FileBrowserProps {
@@ -26,7 +24,6 @@ interface FileBrowserProps {
 }
 
 export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoHome }: FileBrowserProps) {
-  const { statuses } = useConnectionStore();
   const paneContext = usePaneContextSafe();
   const paneId = paneContext?.paneId || "pane-default";
 
@@ -35,7 +32,6 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
   const selectedItems = paneState.selectedItems;
 
   const currentPath = path.length > 0 ? path.join("/") + "/" : "";
-  const status = statuses[connectionId];
 
   const { data, isFetching, refetch } = useObjects(
     connectionId,
@@ -49,21 +45,6 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
 
   // Show loading overlay on file list while fetching
   const showLoadingOverlay = isFetching;
-
-  if (!status?.connected) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <CloudOff className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold">Connection Not Available</h3>
-        <p className="text-muted-foreground mb-4">
-          The connection is not active or has been removed
-        </p>
-        <Button asChild>
-          <Link href="/settings/connections">Configure Connections</Link>
-        </Button>
-      </div>
-    );
-  }
 
   const handleDelete = async (key: string) => {
     setDeletingKey(key);

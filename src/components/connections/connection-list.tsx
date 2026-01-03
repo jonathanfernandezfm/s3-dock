@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useConnectionStore } from "@/lib/stores/connection-store";
 import {
   useConnections,
   useDeleteConnection,
   type ConnectionResponse,
 } from "@/lib/queries/connections";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,8 +24,6 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import {
-  CheckCircle2,
-  XCircle,
   MoreVertical,
   Pencil,
   Trash2,
@@ -42,46 +39,15 @@ interface ConnectionListProps {
 
 export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
   const { data: connections = [], isLoading } = useConnections();
-  const { statuses, setStatus, removeStatus } = useConnectionStore();
   const deleteConnection = useDeleteConnection();
 
   const [deletingConnection, setDeletingConnection] =
     useState<ConnectionResponse | null>(null);
-  const [connectingId, setConnectingId] = useState<string | null>(null);
-
-  const handleConnect = async (connection: ConnectionResponse) => {
-    setConnectingId(connection.id);
-    try {
-      const response = await fetch("/api/connections/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: connection.id }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setStatus(connection.id, { connected: true, testedAt: new Date() });
-      } else {
-        setStatus(connection.id, { connected: false, error: data.error });
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      setStatus(connection.id, { connected: false, error: message });
-    } finally {
-      setConnectingId(null);
-    }
-  };
-
-  const handleDisconnect = (connectionId: string) => {
-    setStatus(connectionId, { connected: false });
-  };
 
   const handleDelete = async () => {
     if (deletingConnection) {
       try {
         await deleteConnection.mutateAsync(deletingConnection.id);
-        removeStatus(deletingConnection.id);
         toast({
           title: "Connection deleted",
           description: "The connection has been removed.",
@@ -140,92 +106,42 @@ export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
         </Button>
       </div>
 
-      <div className="grid gap-4">
-        {connections.map((connection) => {
-          const status = statuses[connection.id];
-          const isConnecting = connectingId === connection.id;
-
-          return (
-            <Card key={connection.id}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Server className="h-4 w-4 text-muted-foreground" />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {connections.map((connection) => (
+          <Card key={connection.id} className="p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Server className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-sm font-medium truncate">
                   {getDisplayName(connection)}
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  {status?.connected ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDisconnect(connection.id)}
-                    >
-                      Disconnect
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleConnect(connection)}
-                      disabled={isConnecting}
-                    >
-                      {isConnecting && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Connect
-                    </Button>
-                  )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEdit(connection)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => setDeletingConnection(connection)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    {connection.endpoint}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    {status?.connected ? (
-                      <>
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        <span className="text-xs text-green-600">Connected</span>
-                      </>
-                    ) : status?.error ? (
-                      <>
-                        <XCircle className="h-4 w-4 text-red-500" />
-                        <span className="text-xs text-red-600">Failed</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">
-                          Disconnected
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                </span>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                    <MoreVertical className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onEdit(connection)}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() => setDeletingConnection(connection)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 truncate pl-6">
+              {connection.endpoint}
+            </p>
+          </Card>
+        ))}
       </div>
 
       <Dialog

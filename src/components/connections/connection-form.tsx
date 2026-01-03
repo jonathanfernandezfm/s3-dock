@@ -11,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useConnectionStore } from "@/lib/stores/connection-store";
 import {
   useCreateConnection,
   useUpdateConnection,
@@ -32,7 +31,6 @@ export function ConnectionForm({
   onSuccess,
   onCancel,
 }: ConnectionFormProps) {
-  const { setStatus } = useConnectionStore();
   const createConnection = useCreateConnection();
   const updateConnection = useUpdateConnection();
 
@@ -115,11 +113,7 @@ export function ConnectionForm({
           description: "Connection settings have been saved.",
         });
       } else {
-        const newConnection = await createConnection.mutateAsync(formData);
-
-        if (testResult?.success) {
-          setStatus(newConnection.id, { connected: true, testedAt: new Date() });
-        }
+        await createConnection.mutateAsync(formData);
 
         toast({
           title: "Connection added",

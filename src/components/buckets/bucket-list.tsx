@@ -14,22 +14,22 @@ interface BucketListProps {
 }
 
 export function BucketList({ onOpenBucket }: BucketListProps = {}) {
-  const { groups, isLoading, hasAnyConnected } = useAllBuckets();
+  const { groups, isLoading, hasAnyConnections } = useAllBuckets();
   const [deletingBucket, setDeletingBucket] = useState<{
     name: string;
     connectionId: string;
   } | null>(null);
 
-  if (!hasAnyConnected) {
+  if (!hasAnyConnections) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <CloudOff className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold">No Active Connections</h3>
+        <h3 className="text-lg font-semibold">No Connections</h3>
         <p className="text-muted-foreground mb-4">
-          Connect to an S3 endpoint to view buckets
+          Add an S3 connection to view buckets
         </p>
         <Button asChild>
-          <Link href="/settings/connections">Configure Connections</Link>
+          <Link href="/settings/connections">Add Connection</Link>
         </Button>
       </div>
     );

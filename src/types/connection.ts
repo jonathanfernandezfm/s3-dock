@@ -7,9 +7,3 @@ export interface S3Connection {
   region: string;
   forcePathStyle?: boolean;
 }
-
-export interface ConnectionStatus {
-  connected: boolean;
-  error?: string;
-  testedAt?: Date;
-}

@@ -76,11 +76,13 @@ interface TabBarProps {
 }
 
 export function TabBar({ paneId }: TabBarProps) {
-  const { panes, grid, addTab, addPane, setFocusedPane } = useLayoutStore();
+  const { panes, grid, focusedPaneId, addTab, addPane, removePane, setFocusedPane } = useLayoutStore();
   const pane = panes[paneId];
 
   if (!pane) return null;
 
+  const isFocused = focusedPaneId === paneId;
+  const hasMultiplePanes = Object.keys(panes).length > 1;
   const canSplitRight = grid.columns < 3;
 
   const handleAddTab = () => {
@@ -92,8 +94,18 @@ export function TabBar({ paneId }: TabBarProps) {
     addPane("right");
   };
 
+  const handleClosePane = () => {
+    removePane(paneId);
+  };
+
   return (
-    <div className="flex items-end border-b bg-muted/20 px-2">
+    <div
+      className={cn(
+        "flex items-center border-b px-2",
+        isFocused && hasMultiplePanes ? "bg-primary/5" : "bg-muted/20"
+      )}
+    >
+      {/* Tabs */}
       <div className="flex items-end overflow-x-auto flex-1">
         {pane.tabs.map((tab) => (
           <TabItem
@@ -113,7 +125,9 @@ export function TabBar({ paneId }: TabBarProps) {
           <Plus className="h-4 w-4" />
         </Button>
       </div>
-      <div className="flex items-center gap-1 mb-1 ml-2">
+
+      {/* Right side controls */}
+      <div className="flex items-center gap-1 ml-2 self-center">
         <Button
           variant="ghost"
           size="icon"
@@ -124,6 +138,17 @@ export function TabBar({ paneId }: TabBarProps) {
         >
           <PanelRight className="h-4 w-4" />
         </Button>
+        {hasMultiplePanes && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+            onClick={handleClosePane}
+            title="Close pane"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
-import { useConnectionStore } from "@/lib/stores/connection-store";
 import { useConnections, type ConnectionResponse } from "./connections";
 import { queryKeys } from "./keys";
 import type { S3Bucket } from "@/types";
@@ -62,13 +61,10 @@ async function deleteBucket(
 }
 
 export function useBuckets(connectionId: string) {
-  const { statuses } = useConnectionStore();
-  const status = statuses[connectionId];
-
   return useQuery({
     queryKey: queryKeys.buckets.byConnection(connectionId),
     queryFn: () => fetchBuckets(connectionId),
-    enabled: !!connectionId && status?.connected,
+    enabled: !!connectionId,
   });
 }
 
@@ -82,24 +78,19 @@ export interface BucketGroup {
 export function useAllBuckets(): {
   groups: BucketGroup[];
   isLoading: boolean;
-  hasAnyConnected: boolean;
+  hasAnyConnections: boolean;
 } {
   const { data: connections = [] } = useConnections();
-  const { statuses } = useConnectionStore();
-
-  const connectedConnections = connections.filter(
-    (conn) => statuses[conn.id]?.connected
-  );
 
   const queries = useQueries({
-    queries: connectedConnections.map((connection) => ({
+    queries: connections.map((connection) => ({
       queryKey: queryKeys.buckets.byConnection(connection.id),
       queryFn: () => fetchBuckets(connection.id),
       enabled: true,
     })),
   });
 
-  const groups: BucketGroup[] = connectedConnections.map((connection, index) => ({
+  const groups: BucketGroup[] = connections.map((connection, index) => ({
     connection,
     buckets: queries[index]?.data || [],
     isLoading: queries[index]?.isLoading || false,
@@ -107,9 +98,9 @@ export function useAllBuckets(): {
   }));
 
   const isLoading = queries.some((q) => q.isLoading);
-  const hasAnyConnected = connectedConnections.length > 0;
+  const hasAnyConnections = connections.length > 0;
 
-  return { groups, isLoading, hasAnyConnected };
+  return { groups, isLoading, hasAnyConnections };
 }
 
 export function useCreateBucket(connectionId: string) {

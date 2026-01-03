@@ -3,7 +3,6 @@
 import { useLayoutStore } from "@/lib/stores/layout-store";
 import { useBrowserStore } from "@/lib/stores/browser-store";
 import { PaneProvider } from "@/lib/contexts/pane-context";
-import { PaneHeader } from "./pane-header";
 import { TabBar } from "@/components/tabs/tab-bar";
 import { TabContent } from "@/components/tabs/tab-content";
 import { cn } from "@/lib/utils";
@@ -19,8 +18,6 @@ export function Pane({ paneId, isLastColumn = true }: PaneProps) {
   const { initPaneState, removePaneState } = useBrowserStore();
 
   const pane = panes[paneId];
-  const isFocused = focusedPaneId === paneId;
-  const hasMultiplePanes = Object.keys(panes).length > 1;
 
   // Initialize browser state for this pane
   useEffect(() => {
@@ -31,6 +28,9 @@ export function Pane({ paneId, isLastColumn = true }: PaneProps) {
   }, [paneId, initPaneState, removePaneState]);
 
   if (!pane) return null;
+
+  const isFocused = focusedPaneId === paneId;
+  const hasMultiplePanes = Object.keys(panes).length > 1;
 
   const handleClick = () => {
     if (!isFocused) {
@@ -47,7 +47,6 @@ export function Pane({ paneId, isLastColumn = true }: PaneProps) {
         )}
         onClick={handleClick}
       >
-        {hasMultiplePanes && <PaneHeader paneId={paneId} />}
         <TabBar paneId={paneId} />
         <div className="flex-1 p-6 overflow-auto">
           <TabContent paneId={paneId} />
