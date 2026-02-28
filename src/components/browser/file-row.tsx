@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,8 @@ import {
   Trash2,
   Eye,
 } from "lucide-react";
-import { formatBytes, formatDate, getFileExtension, isImageFile } from "@/lib/utils";
+import { formatBytes, formatDate, getFileExtension, isImageFile, cn } from "@/lib/utils";
+import { createDragPreview, removeDragPreview } from "./drag-preview";
 import type { S3Object } from "@/types";
 
 interface FileRowProps {
@@ -35,6 +37,15 @@ interface FileRowProps {
   onPreview: () => void;
   onDownload: () => void;
   onNavigate?: (path: string) => void;
+  // Drag and drop props
+  paneId: string;
+  allObjects: S3Object[];
+  selectedItems: Set<string>;
+  onDragStart?: (items: S3Object[]) => void;
+  onDragEnd?: () => void;
+  onFolderDrop?: (targetFolderKey: string, operation: "copy" | "move") => void;
+  isDragging?: boolean;
+  canDropOnFolder?: boolean;
 }
 
 function getFileIcon(key: string, isFolder: boolean) {
@@ -67,10 +78,20 @@ export function FileRow({
   onPreview,
   onDownload,
   onNavigate,
+  paneId,
+  allObjects,
+  selectedItems,
+  onDragStart,
+  onDragEnd,
+  onFolderDrop,
+  isDragging,
+  canDropOnFolder,
 }: FileRowProps) {
   const Icon = getFileIcon(object.key, object.isFolder);
   const fileName = getFileName(object.key, currentPath);
   const canPreview = isImageFile(object.key);
+  const dragPreviewRef = useRef<HTMLElement | null>(null);
+  const [isFolderDragOver, setIsFolderDragOver] = useState(false);
 
   const href = object.isFolder
     ? `/browser/${connectionId}/${bucket}/${object.key}`
@@ -83,10 +104,92 @@ export function FileRow({
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    // Determine which items to drag
+    let itemsToDrag: S3Object[];
+
+    if (selectedItems.has(object.key)) {
+      // Dragging a selected item - drag all selected items
+      itemsToDrag = allObjects.filter((o) => selectedItems.has(o.key));
+    } else {
+      // Dragging an unselected item - drag only this item
+      itemsToDrag = [object];
+    }
+
+    // Set drag data
+    e.dataTransfer.effectAllowed = "copyMove";
+    e.dataTransfer.setData(
+      "application/x-s3-objects",
+      JSON.stringify({
+        sourcePaneId: paneId,
+        connectionId,
+        bucket,
+        path: currentPath,
+        items: itemsToDrag,
+      })
+    );
+
+    // Create and set custom drag image
+    const preview = createDragPreview(itemsToDrag);
+    dragPreviewRef.current = preview;
+    e.dataTransfer.setDragImage(preview, 0, 0);
+
+    // Notify parent
+    onDragStart?.(itemsToDrag);
+  };
+
+  const handleDragEnd = () => {
+    // Clean up drag preview
+    if (dragPreviewRef.current) {
+      removeDragPreview(dragPreviewRef.current);
+      dragPreviewRef.current = null;
+    }
+    onDragEnd?.();
+  };
+
+  // Folder drop handling
+  const handleFolderDragOver = (e: React.DragEvent) => {
+    if (!object.isFolder || !canDropOnFolder) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = e.shiftKey ? "move" : "copy";
+    setIsFolderDragOver(true);
+  };
+
+  const handleFolderDragLeave = (e: React.DragEvent) => {
+    if (!object.isFolder) return;
+    e.stopPropagation();
+    setIsFolderDragOver(false);
+  };
+
+  const handleFolderDrop = (e: React.DragEvent) => {
+    if (!object.isFolder) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsFolderDragOver(false);
+
+    const operation = e.shiftKey ? "move" : "copy";
+    onFolderDrop?.(object.key, operation);
+  };
+
+  // Determine if this row is being dragged
+  const isBeingDragged = isDragging && (selectedItems.has(object.key) || selectedItems.size === 0);
+
   return (
     <TableRow
-      className={isSelected ? "bg-muted" : undefined}
+      className={cn(
+        isSelected && "bg-muted",
+        isBeingDragged && isDragging && "opacity-50",
+        isFolderDragOver && object.isFolder && "bg-blue-50 dark:bg-blue-950 ring-2 ring-blue-500 ring-inset"
+      )}
       data-state={isSelected ? "selected" : undefined}
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={object.isFolder ? handleFolderDragOver : undefined}
+      onDragLeave={object.isFolder ? handleFolderDragLeave : undefined}
+      onDrop={object.isFolder ? handleFolderDrop : undefined}
+      style={{ cursor: "grab" }}
     >
       <TableCell className="w-8">
         <input

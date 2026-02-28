@@ -1,5 +1,7 @@
 import { AppSidebar } from "@/components/shared/app-sidebar";
 import { Header } from "@/components/shared/header";
+import { DragProvider } from "@/lib/contexts/drag-context";
+import { Notifications } from "@/components/shared/notifications";
 
 export default function DashboardLayout({
   children,
@@ -7,12 +9,15 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen">
-      <AppSidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 flex flex-col overflow-hidden">{children}</main>
+    <DragProvider>
+      <div className="flex h-screen overflow-hidden">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 flex flex-col overflow-hidden">{children}</main>
+        </div>
       </div>
-    </div>
+      <Notifications />
+    </DragProvider>
   );
 }

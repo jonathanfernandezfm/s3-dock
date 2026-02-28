@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "@/hooks/use-toast";
+import { useNotificationStore } from "@/lib/stores/notification-store";
 import {
   MoreVertical,
   Pencil,
@@ -40,6 +40,7 @@ interface ConnectionListProps {
 export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
   const { data: connections = [], isLoading } = useConnections();
   const deleteConnection = useDeleteConnection();
+  const { addNotification } = useNotificationStore();
 
   const [deletingConnection, setDeletingConnection] =
     useState<ConnectionResponse | null>(null);
@@ -48,17 +49,20 @@ export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
     if (deletingConnection) {
       try {
         await deleteConnection.mutateAsync(deletingConnection.id);
-        toast({
+        addNotification({
+          type: "delete",
           title: "Connection deleted",
           description: "The connection has been removed.",
+          status: "completed",
         });
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Failed to delete connection";
-        toast({
+        addNotification({
+          type: "error",
           title: "Error",
-          description: message,
-          variant: "destructive",
+          error: message,
+          status: "error",
         });
       } finally {
         setDeletingConnection(null);

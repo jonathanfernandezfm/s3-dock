@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { FileRow } from "./file-row";
 import { useBrowserStore } from "@/lib/stores/browser-store";
+import { cn } from "@/lib/utils";
 import type { S3Object } from "@/types";
 
 interface FileListProps {
@@ -22,6 +24,22 @@ interface FileListProps {
   onDownload: (key: string) => void;
   onNavigate?: (path: string) => void;
   paneId: string;
+  // Drag and drop props
+  onDrop?: (
+    data: {
+      sourcePaneId: string;
+      connectionId: string;
+      bucket: string;
+      path: string;
+      items: S3Object[];
+    },
+    operation: "copy" | "move",
+    targetFolder?: string
+  ) => void;
+  isDragging?: boolean;
+  isValidDropTarget?: boolean;
+  onDragStart?: (items: S3Object[]) => void;
+  onDragEnd?: () => void;
 }
 
 export function FileList({
@@ -35,12 +53,18 @@ export function FileList({
   onDownload,
   onNavigate,
   paneId,
+  onDrop,
+  isDragging,
+  isValidDropTarget,
+  onDragStart,
+  onDragEnd,
 }: FileListProps) {
   const { getPaneState, toggleSelection, selectAll, clearSelection } =
     useBrowserStore();
 
   const paneState = getPaneState(paneId);
   const selectedItems = paneState.selectedItems;
+  const [isListDragOver, setIsListDragOver] = useState(false);
 
   const allSelected =
     objects.length > 0 && objects.every((o) => selectedItems.has(o.key));
@@ -53,49 +77,137 @@ export function FileList({
     }
   };
 
+  // Drop zone handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!isValidDropTarget) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = e.shiftKey ? "move" : "copy";
+    setIsListDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only set drag over to false if leaving the container entirely
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setIsListDragOver(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsListDragOver(false);
+
+    if (!isValidDropTarget) return;
+
+    try {
+      const data = JSON.parse(e.dataTransfer.getData("application/x-s3-objects"));
+      const operation = e.shiftKey ? "move" : "copy";
+      onDrop?.(data, operation);
+    } catch {
+      // Invalid drag data
+    }
+  };
+
+  const handleFolderDrop = (targetFolderKey: string, operation: "copy" | "move") => {
+    // Get the drag data from the store since we can't access dataTransfer here
+    const dragState = useBrowserStore.getState().dragState;
+    if (!dragState.isDragging) return;
+
+    onDrop?.(
+      {
+        sourcePaneId: dragState.sourcePaneId!,
+        connectionId: dragState.sourceConnectionId!,
+        bucket: dragState.sourceBucket!,
+        path: dragState.sourcePath,
+        items: dragState.draggedItems,
+      },
+      operation,
+      targetFolderKey
+    );
+  };
+
   if (objects.length === 0 && !isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg">
-        <p className="text-muted-foreground">This folder is empty</p>
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center flex-1 min-h-[200px] py-12 text-center transition-colors",
+          isListDragOver && isValidDropTarget && "bg-blue-50 dark:bg-blue-950"
+        )}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <p className="text-muted-foreground">
+          {isListDragOver && isValidDropTarget
+            ? "Drop files here"
+            : "This folder is empty"}
+        </p>
       </div>
     );
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-8">
-            <input
-              type="checkbox"
-              checked={allSelected}
-              onChange={handleSelectAll}
-              className="h-4 w-4 rounded border-gray-300"
+    <div
+      className={cn(
+        "flex flex-col flex-1 min-h-[200px] transition-colors",
+        isListDragOver && isValidDropTarget && "ring-2 ring-blue-500 ring-inset bg-blue-50/50 dark:bg-blue-950/50"
+      )}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-8">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={handleSelectAll}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+            </TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Size</TableHead>
+            <TableHead>Modified</TableHead>
+            <TableHead className="w-8"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {objects.map((object) => (
+            <FileRow
+              key={object.key}
+              object={object}
+              connectionId={connectionId}
+              bucket={bucket}
+              currentPath={currentPath}
+              isSelected={selectedItems.has(object.key)}
+              onSelect={() => toggleSelection(paneId, object.key)}
+              onDelete={() => onDelete(object.key)}
+              onPreview={() => onPreview(object)}
+              onDownload={() => onDownload(object.key)}
+              onNavigate={onNavigate}
+              paneId={paneId}
+              allObjects={objects}
+              selectedItems={selectedItems}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              onFolderDrop={handleFolderDrop}
+              isDragging={isDragging}
+              canDropOnFolder={isValidDropTarget}
             />
-          </TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Size</TableHead>
-          <TableHead>Modified</TableHead>
-          <TableHead className="w-8"></TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {objects.map((object) => (
-          <FileRow
-            key={object.key}
-            object={object}
-            connectionId={connectionId}
-            bucket={bucket}
-            currentPath={currentPath}
-            isSelected={selectedItems.has(object.key)}
-            onSelect={() => toggleSelection(paneId, object.key)}
-            onDelete={() => onDelete(object.key)}
-            onPreview={() => onPreview(object)}
-            onDownload={() => onDownload(object.key)}
-            onNavigate={onNavigate}
-          />
-        ))}
-      </TableBody>
-    </Table>
+          ))}
+        </TableBody>
+      </Table>
+
+      {/* Extended drop zone below the table */}
+      {isListDragOver && isValidDropTarget && (
+        <div className="flex-1 flex items-center justify-center text-sm text-blue-600 dark:text-blue-400">
+          Drop here to add to this folder
+        </div>
+      )}
+    </div>
   );
 }

@@ -13,7 +13,10 @@
       "Bash(cat:*)",
       "Bash(pnpm lint:*)",
       "Bash(npx next lint:*)",
-      "Bash(timeout 15 pnpm dev:*)"
+      "Bash(timeout 15 pnpm dev:*)",
+      "Bash(git -C /Users/jonathanfm/Documents/personal/s3-client log --oneline -20)",
+      "Bash(git -C /Users/jonathanfm/Documents/personal/s3-client diff --name-only)",
+      "Bash(pnpm build:*)"
     ]
   }
 }

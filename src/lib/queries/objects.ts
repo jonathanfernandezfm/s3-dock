@@ -10,6 +10,27 @@ interface ListObjectsResponse {
   nextContinuationToken?: string;
 }
 
+interface CopyMoveResult {
+  sourceKey: string;
+  targetKey: string;
+  success: boolean;
+  error?: string;
+}
+
+interface CopyMoveResponse {
+  results: CopyMoveResult[];
+  summary: { total: number; successful: number; failed: number };
+}
+
+interface CopyMoveParams {
+  sourceConnectionId: string;
+  sourceBucket: string;
+  sourceKeys: string[];
+  targetConnectionId: string;
+  targetBucket: string;
+  targetPath: string;
+}
+
 async function fetchObjects(
   connectionId: string,
   bucket: string,
@@ -96,6 +117,60 @@ export function useCreateFolder(connectionId: string, bucket: string) {
   return useMutation({
     mutationFn: (path: string) => createFolder(connectionId, bucket, path),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.objects.all });
+    },
+  });
+}
+
+async function copyObjects(params: CopyMoveParams): Promise<CopyMoveResponse> {
+  const response = await fetch("/api/objects/copy", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to copy objects");
+  }
+
+  return response.json();
+}
+
+async function moveObjects(params: CopyMoveParams): Promise<CopyMoveResponse> {
+  const response = await fetch("/api/objects/move", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to move objects");
+  }
+
+  return response.json();
+}
+
+export function useCopyObjects() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: copyObjects,
+    onSuccess: () => {
+      // Invalidate all objects queries to refresh both source and target
+      queryClient.invalidateQueries({ queryKey: queryKeys.objects.all });
+    },
+  });
+}
+
+export function useMoveObjects() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: moveObjects,
+    onSuccess: () => {
+      // Invalidate all objects queries to refresh both source and target
       queryClient.invalidateQueries({ queryKey: queryKeys.objects.all });
     },
   });

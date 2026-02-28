@@ -43,7 +43,7 @@ export function TabContent({ paneId }: TabContentProps) {
       : [];
 
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col flex-1 gap-6">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-bold">File Browser</h1>
           {activeTab.connectionName && (

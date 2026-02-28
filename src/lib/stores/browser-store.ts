@@ -1,10 +1,20 @@
 import { create } from "zustand";
+import type { S3Object } from "@/types";
 
 interface PaneBrowserState {
   selectedItems: Set<string>;
   viewMode: "list" | "grid";
   sortBy: "name" | "size" | "date";
   sortOrder: "asc" | "desc";
+}
+
+export interface DragState {
+  isDragging: boolean;
+  sourcePaneId: string | null;
+  sourceConnectionId: string | null;
+  sourceBucket: string | null;
+  sourcePath: string;
+  draggedItems: S3Object[];
 }
 
 function createDefaultPaneState(): PaneBrowserState {
@@ -18,6 +28,7 @@ function createDefaultPaneState(): PaneBrowserState {
 
 interface BrowserState {
   paneStates: Record<string, PaneBrowserState>;
+  dragState: DragState;
 
   // Pane state management
   initPaneState: (paneId: string) => void;
@@ -33,10 +44,30 @@ interface BrowserState {
   setViewMode: (paneId: string, mode: "list" | "grid") => void;
   setSortBy: (paneId: string, sortBy: "name" | "size" | "date") => void;
   setSortOrder: (paneId: string, order: "asc" | "desc") => void;
+
+  // Drag actions
+  startDrag: (
+    paneId: string,
+    connectionId: string,
+    bucket: string,
+    path: string,
+    items: S3Object[]
+  ) => void;
+  endDrag: () => void;
 }
+
+const initialDragState: DragState = {
+  isDragging: false,
+  sourcePaneId: null,
+  sourceConnectionId: null,
+  sourceBucket: null,
+  sourcePath: "",
+  draggedItems: [],
+};
 
 export const useBrowserStore = create<BrowserState>((set, get) => ({
   paneStates: {},
+  dragState: initialDragState,
 
   initPaneState: (paneId) => {
     set((state) => {
@@ -59,12 +90,8 @@ export const useBrowserStore = create<BrowserState>((set, get) => ({
 
   getPaneState: (paneId) => {
     const state = get().paneStates[paneId];
-    if (!state) {
-      // Initialize if not exists
-      get().initPaneState(paneId);
-      return get().paneStates[paneId] || createDefaultPaneState();
-    }
-    return state;
+    // Return existing state or default (don't initialize during render)
+    return state || createDefaultPaneState();
   },
 
   toggleSelection: (paneId, key) => {
@@ -143,5 +170,22 @@ export const useBrowserStore = create<BrowserState>((set, get) => ({
         },
       };
     });
+  },
+
+  startDrag: (paneId, connectionId, bucket, path, items) => {
+    set({
+      dragState: {
+        isDragging: true,
+        sourcePaneId: paneId,
+        sourceConnectionId: connectionId,
+        sourceBucket: bucket,
+        sourcePath: path,
+        draggedItems: items,
+      },
+    });
+  },
+
+  endDrag: () => {
+    set({ dragState: initialDragState });
   },
 }));

@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useCreateBucket } from "@/lib/queries/buckets";
-import { toast } from "@/hooks/use-toast";
+import { useNotificationStore } from "@/lib/stores/notification-store";
 import { Plus, Loader2 } from "lucide-react";
 
 interface CreateBucketDialogProps {
@@ -25,6 +25,7 @@ export function CreateBucketDialog({ connectionId }: CreateBucketDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const createBucket = useCreateBucket(connectionId);
+  const { addNotification } = useNotificationStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,17 +34,20 @@ export function CreateBucketDialog({ connectionId }: CreateBucketDialogProps) {
 
     try {
       await createBucket.mutateAsync(name.trim());
-      toast({
+      addNotification({
+        type: "info",
         title: "Bucket created",
         description: `Successfully created bucket "${name}"`,
+        status: "completed",
       });
       setName("");
       setOpen(false);
     } catch (error) {
-      toast({
+      addNotification({
+        type: "error",
         title: "Failed to create bucket",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
+        error: error instanceof Error ? error.message : "Unknown error",
+        status: "error",
       });
     }
   };

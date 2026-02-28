@@ -17,7 +17,7 @@ import {
   type ConnectionResponse,
   type ConnectionInput,
 } from "@/lib/queries/connections";
-import { toast } from "@/hooks/use-toast";
+import { useNotificationStore } from "@/lib/stores/notification-store";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 interface ConnectionFormProps {
@@ -33,6 +33,7 @@ export function ConnectionForm({
 }: ConnectionFormProps) {
   const createConnection = useCreateConnection();
   const updateConnection = useUpdateConnection();
+  const { addNotification } = useNotificationStore();
 
   const [formData, setFormData] = useState<ConnectionInput>({
     name: connection?.name || "",
@@ -74,25 +75,29 @@ export function ConnectionForm({
 
       if (data.success) {
         setTestResult({ success: true });
-        toast({
+        addNotification({
+          type: "info",
           title: "Connection successful",
           description: "Successfully connected to the S3 endpoint.",
+          status: "completed",
         });
       } else {
         setTestResult({ success: false, error: data.error });
-        toast({
+        addNotification({
+          type: "error",
           title: "Connection failed",
-          description: data.error || "Failed to connect to the S3 endpoint.",
-          variant: "destructive",
+          error: data.error || "Failed to connect to the S3 endpoint.",
+          status: "error",
         });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
       setTestResult({ success: false, error: message });
-      toast({
+      addNotification({
+        type: "error",
         title: "Connection failed",
-        description: message,
-        variant: "destructive",
+        error: message,
+        status: "error",
       });
     } finally {
       setTesting(false);
@@ -108,26 +113,31 @@ export function ConnectionForm({
           id: connection.id,
           data: formData,
         });
-        toast({
+        addNotification({
+          type: "info",
           title: "Connection updated",
           description: "Connection settings have been saved.",
+          status: "completed",
         });
       } else {
         await createConnection.mutateAsync(formData);
 
-        toast({
+        addNotification({
+          type: "info",
           title: "Connection added",
           description: "New connection has been saved.",
+          status: "completed",
         });
       }
 
       onSuccess?.();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to save connection";
-      toast({
+      addNotification({
+        type: "error",
         title: "Error",
-        description: message,
-        variant: "destructive",
+        error: message,
+        status: "error",
       });
     }
   };

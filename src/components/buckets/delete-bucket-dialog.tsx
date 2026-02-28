@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useDeleteBucket } from "@/lib/queries/buckets";
-import { toast } from "@/hooks/use-toast";
+import { useNotificationStore } from "@/lib/stores/notification-store";
 import { Loader2 } from "lucide-react";
 
 interface DeleteBucketDialogProps {
@@ -25,22 +25,26 @@ export function DeleteBucketDialog({
   onClose,
 }: DeleteBucketDialogProps) {
   const deleteBucket = useDeleteBucket(connectionId || "");
+  const { addNotification } = useNotificationStore();
 
   const handleDelete = async () => {
     if (!bucketName || !connectionId) return;
 
     try {
       await deleteBucket.mutateAsync(bucketName);
-      toast({
+      addNotification({
+        type: "delete",
         title: "Bucket deleted",
         description: `Successfully deleted bucket "${bucketName}"`,
+        status: "completed",
       });
       onClose();
     } catch (error) {
-      toast({
+      addNotification({
+        type: "delete",
         title: "Failed to delete bucket",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
+        error: error instanceof Error ? error.message : "Unknown error",
+        status: "error",
       });
     }
   };

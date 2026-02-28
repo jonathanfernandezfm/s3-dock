@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useCreateFolder } from "@/lib/queries/objects";
-import { toast } from "@/hooks/use-toast";
+import { useNotificationStore } from "@/lib/stores/notification-store";
 import { FolderPlus, Loader2 } from "lucide-react";
 
 interface CreateFolderDialogProps {
@@ -31,6 +31,7 @@ export function CreateFolderDialog({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const createFolder = useCreateFolder(connectionId, bucket);
+  const { addNotification } = useNotificationStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,17 +42,20 @@ export function CreateFolderDialog({
 
     try {
       await createFolder.mutateAsync(folderPath);
-      toast({
+      addNotification({
+        type: "folder",
         title: "Folder created",
         description: `Successfully created folder "${name}"`,
+        status: "completed",
       });
       setName("");
       setOpen(false);
     } catch (error) {
-      toast({
+      addNotification({
+        type: "folder",
         title: "Failed to create folder",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
+        error: error instanceof Error ? error.message : "Unknown error",
+        status: "error",
       });
     }
   };

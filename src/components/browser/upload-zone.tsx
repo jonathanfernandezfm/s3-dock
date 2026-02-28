@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queries/keys";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { toast } from "@/hooks/use-toast";
+import { useNotificationStore } from "@/lib/stores/notification-store";
 import { Upload, X, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface UploadZoneProps {
@@ -22,6 +22,7 @@ export function UploadZone({
 }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const { uploads, addUpload, updateUpload, removeUpload } = useUploadStore();
+  const { addNotification } = useNotificationStore();
   const queryClient = useQueryClient();
 
   const uploadFile = useCallback(
@@ -54,17 +55,20 @@ export function UploadZone({
           queryKey: queryKeys.objects.list(connectionId, bucket, currentPath),
         });
 
-        toast({
+        addNotification({
+          type: "upload",
           title: "Upload complete",
           description: `Successfully uploaded ${file.name}`,
+          status: "completed",
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
         updateUpload(id, { status: "error", error: message });
-        toast({
+        addNotification({
+          type: "upload",
           title: "Upload failed",
-          description: message,
-          variant: "destructive",
+          error: message,
+          status: "error",
         });
       }
     },
@@ -74,9 +78,18 @@ export function UploadZone({
       currentPath,
       addUpload,
       updateUpload,
+      addNotification,
       queryClient,
     ]
   );
+
+  // Check if this is an external file drag (not internal S3 object drag)
+  const isExternalFileDrag = useCallback((e: DragEvent): boolean => {
+    if (!e.dataTransfer) return false;
+    // Internal drags have our custom type, external file drags have "Files"
+    const types = Array.from(e.dataTransfer.types);
+    return types.includes("Files") && !types.includes("application/x-s3-objects");
+  }, []);
 
   const handleDrop = useCallback(
     (e: DragEvent) => {
@@ -84,22 +97,29 @@ export function UploadZone({
       e.stopPropagation();
       setIsDragging(false);
 
+      // Only handle external file drops
+      if (!isExternalFileDrag(e)) return;
+
       const files = Array.from(e.dataTransfer?.files || []);
       files.forEach(uploadFile);
     },
-    [uploadFile]
+    [uploadFile, isExternalFileDrag]
   );
 
   const handleDragOver = useCallback((e: DragEvent) => {
+    // Only handle external file drags
+    if (!isExternalFileDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
-  }, []);
+  }, [isExternalFileDrag]);
 
   const handleDragEnter = useCallback((e: DragEvent) => {
+    // Only show overlay for external file drags
+    if (!isExternalFileDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
-  }, []);
+  }, [isExternalFileDrag]);
 
   const handleDragLeave = useCallback((e: DragEvent) => {
     e.preventDefault();
@@ -173,6 +193,7 @@ interface UploadButtonProps {
 
 export function UploadButton({ connectionId, bucket, currentPath }: UploadButtonProps) {
   const { addUpload, updateUpload } = useUploadStore();
+  const { addNotification } = useNotificationStore();
   const queryClient = useQueryClient();
 
   const uploadFile = useCallback(
@@ -205,21 +226,24 @@ export function UploadButton({ connectionId, bucket, currentPath }: UploadButton
           queryKey: queryKeys.objects.list(connectionId, bucket, currentPath),
         });
 
-        toast({
+        addNotification({
+          type: "upload",
           title: "Upload complete",
           description: `Successfully uploaded ${file.name}`,
+          status: "completed",
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
         updateUpload(id, { status: "error", error: message });
-        toast({
+        addNotification({
+          type: "upload",
           title: "Upload failed",
-          description: message,
-          variant: "destructive",
+          error: message,
+          status: "error",
         });
       }
     },
-    [connectionId, bucket, currentPath, addUpload, updateUpload, queryClient]
+    [connectionId, bucket, currentPath, addUpload, updateUpload, addNotification, queryClient]
   );
 
   const handleFileSelect = useCallback(
