@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,23 +17,35 @@ import {
   type ConnectionResponse,
   type ConnectionInput,
 } from "@/lib/queries/connections";
+import { useWorkspaces } from "@/lib/queries/workspaces";
 import { useNotificationStore } from "@/lib/stores/notification-store";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 interface ConnectionFormProps {
   connection?: ConnectionResponse;
+  defaultWorkspaceId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
 export function ConnectionForm({
   connection,
+  defaultWorkspaceId,
   onSuccess,
   onCancel,
 }: ConnectionFormProps) {
   const createConnection = useCreateConnection();
   const updateConnection = useUpdateConnection();
   const { addNotification } = useNotificationStore();
+  const { data: workspaces = [] } = useWorkspaces();
+
+  const adminWorkspaces = workspaces.filter((w) => w.role === "ADMIN");
+  const personalWorkspace = adminWorkspaces.find((w) => w.type === "PERSONAL");
+  const defaultWsId =
+    defaultWorkspaceId ??
+    personalWorkspace?.id ??
+    adminWorkspaces[0]?.id ??
+    undefined;
 
   const [formData, setFormData] = useState<ConnectionInput>({
     name: connection?.name || "",
@@ -42,6 +54,7 @@ export function ConnectionForm({
     secretAccessKey: connection?.secretAccessKey || "",
     region: connection?.region || "us-east-1",
     forcePathStyle: connection?.forcePathStyle ?? true,
+    workspaceId: defaultWsId,
   });
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{
@@ -49,11 +62,20 @@ export function ConnectionForm({
     error?: string;
   } | null>(null);
 
+  useEffect(() => {
+    if (!formData.workspaceId && defaultWsId) {
+      setFormData((prev) => ({ ...prev, workspaceId: defaultWsId }));
+    }
+  }, [defaultWsId, formData.workspaceId]);
+
   const isEditMode = !!connection;
   const isSaving = createConnection.isPending || updateConnection.isPending;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -121,7 +143,6 @@ export function ConnectionForm({
         });
       } else {
         await createConnection.mutateAsync(formData);
-
         addNotification({
           type: "info",
           title: "Connection added",
@@ -132,7 +153,8 @@ export function ConnectionForm({
 
       onSuccess?.();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to save connection";
+      const message =
+        error instanceof Error ? error.message : "Failed to save connection";
       addNotification({
         type: "error",
         title: "Error",
@@ -154,6 +176,25 @@ export function ConnectionForm({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!isEditMode && adminWorkspaces.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="workspaceId">Workspace</Label>
+              <select
+                id="workspaceId"
+                name="workspaceId"
+                value={formData.workspaceId ?? ""}
+                onChange={handleChange}
+                className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                {adminWorkspaces.map((ws) => (
+                  <option key={ws.id} value={ws.id}>
+                    {ws.name} ({ws.type === "PERSONAL" ? "Personal" : "Team"})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="name">Connection Name (optional)</Label>
             <Input
@@ -165,7 +206,6 @@ export function ConnectionForm({
               tabIndex={0}
             />
           </div>
-
 
           <div className="space-y-2">
             <Label htmlFor="endpoint">Endpoint URL</Label>
@@ -267,7 +307,12 @@ export function ConnectionForm({
 
           <div className="flex gap-2 pt-4">
             {onCancel && (
-              <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isSaving}
+              >
                 Cancel
               </Button>
             )}

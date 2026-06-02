@@ -1,8 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
-import { useWorkspaceStore } from "@/lib/stores/workspace-store";
 
 export interface WorkspaceSummary {
   id: string;
@@ -28,38 +26,8 @@ async function fetchWorkspaces(): Promise<WorkspaceSummary[]> {
 }
 
 export function useWorkspaces() {
-  const selectedWorkspaceId = useWorkspaceStore((s) => s.selectedWorkspaceId);
-  const setSelectedWorkspaceId = useWorkspaceStore((s) => s.setSelectedWorkspaceId);
-
-  const query = useQuery({
+  return useQuery({
     queryKey: workspaceKeys.list(),
     queryFn: fetchWorkspaces,
   });
-
-  useEffect(() => {
-    const items = query.data ?? [];
-    if (items.length === 0) {
-      return;
-    }
-
-    const selectedStillValid = selectedWorkspaceId
-      ? items.some((item) => item.id === selectedWorkspaceId)
-      : false;
-
-    if (!selectedStillValid) {
-      const personal = items.find((item) => item.type === "PERSONAL");
-      setSelectedWorkspaceId((personal ?? items[0]).id);
-    }
-  }, [query.data, selectedWorkspaceId, setSelectedWorkspaceId]);
-
-  const selectedWorkspace = useMemo(
-    () => (query.data ?? []).find((item) => item.id === selectedWorkspaceId) ?? null,
-    [query.data, selectedWorkspaceId]
-  );
-
-  return {
-    ...query,
-    selectedWorkspaceId,
-    selectedWorkspace,
-  };
 }

@@ -1,17 +1,32 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useObjects, useDeleteObjects, useCopyObjects, useMoveObjects } from "@/lib/queries/objects";
+import { useState, useCallback, useEffect, useRef } from "react";
+import {
+  useObjects,
+  useDeleteObjects,
+  useCopyObjects,
+  useMoveObjects,
+} from "@/lib/queries/objects";
 import { useConnections } from "@/lib/queries/connections";
 import { useBrowserStore } from "@/lib/stores/browser-store";
 import { useNotificationStore } from "@/lib/stores/notification-store";
 import { usePaneContextSafe } from "@/lib/contexts/pane-context";
 import { Breadcrumb } from "./breadcrumb";
 import { FileList } from "./file-list";
+import { FileGallery } from "./file-gallery";
+import { ViewModeToggle } from "./view-mode-toggle";
 import { UploadZone, UploadButton } from "./upload-zone";
 import { CreateFolderDialog } from "./create-folder-dialog";
 import { DeleteConfirmDialog } from "./delete-confirm-dialog";
 import { FilePreviewModal } from "@/components/preview/file-preview-modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, Trash2 } from "lucide-react";
 import type { S3Object } from "@/types";
@@ -24,11 +39,32 @@ interface FileBrowserProps {
   onGoHome?: () => void;
 }
 
-export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoHome }: FileBrowserProps) {
+const CROSS_WS_CONFIRMED_KEY = "s3-cross-workspace-confirmed";
+
+interface PendingDrop {
+  data: {
+    sourcePaneId: string;
+    connectionId: string;
+    bucket: string;
+    path: string;
+    items: S3Object[];
+  };
+  operation: "copy" | "move";
+  targetFolder?: string;
+}
+
+export function FileBrowser({
+  connectionId,
+  bucket,
+  path = [],
+  onNavigate,
+  onGoHome,
+}: FileBrowserProps) {
   const paneContext = usePaneContextSafe();
   const paneId = paneContext?.paneId || "pane-default";
 
-  const { getPaneState, clearSelection, dragState, startDrag, endDrag } = useBrowserStore();
+  const { getPaneState, clearSelection, dragState, startDrag, endDrag, setViewMode } =
+    useBrowserStore();
   const { addNotification, updateNotification } = useNotificationStore();
   const { data: connections = [] } = useConnections();
   const paneState = getPaneState(paneId);
@@ -49,11 +85,31 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
 
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [previewObject, setPreviewObject] = useState<S3Object | null>(null);
+  const [crossWorkspacePending, setCrossWorkspacePending] =
+    useState<PendingDrop | null>(null);
 
-  // Show loading overlay on file list while fetching
+  const guardInHistory = useRef(false);
+
+  useEffect(() => {
+    if (path.length > 0 && !guardInHistory.current) {
+      history.pushState({ s3FolderGuard: true }, "");
+      guardInHistory.current = true;
+    }
+
+    const handlePopState = () => {
+      if (path.length > 0) {
+        guardInHistory.current = false;
+        const parentPath = path.slice(0, -1).join("/");
+        onNavigate?.(parentPath);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [path, onNavigate]);
+
   const showLoadingOverlay = isFetching;
 
-  // Drag and drop state
   const isDragging = dragState.isDragging;
   const isValidDropTarget =
     canWrite &&
@@ -74,32 +130,43 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
     endDrag();
   }, [endDrag]);
 
-  const handleDrop = useCallback(
+  const executeDrop = useCallback(
     async (
-      data: {
-        sourcePaneId: string;
-        connectionId: string;
-        bucket: string;
-        path: string;
-        items: S3Object[];
-      },
+      data: PendingDrop["data"],
       operation: "copy" | "move",
       targetFolder?: string
     ) => {
-      if (!canWrite) {
-        return;
-      }
+      if (!canWrite) return;
 
       const targetPath = targetFolder || currentPath;
       const totalCount = data.items.length;
       const operationLabel = operation === "copy" ? "Copying" : "Moving";
       const pastLabel = operation === "copy" ? "Copied" : "Moved";
 
-      // Create notification for progress tracking
+      const sourceConn = connections.find((c) => c.id === data.connectionId);
+      const targetConn = connections.find((c) => c.id === connectionId);
+      const isCrossWorkspace =
+        sourceConn &&
+        targetConn &&
+        sourceConn.workspaceId !== targetConn.workspaceId;
+      const sourceLabel = sourceConn
+        ? sourceConn.workspaceType === "PERSONAL"
+          ? "Personal"
+          : (sourceConn.name ?? "Team")
+        : "";
+      const targetLabel = targetConn
+        ? targetConn.workspaceType === "PERSONAL"
+          ? "Personal"
+          : (targetConn.name ?? "Team")
+        : "";
+      const crossLabel = isCrossWorkspace
+        ? ` (${sourceLabel} → ${targetLabel})`
+        : "";
+
       const notificationId = addNotification({
         type: operation,
         title: `${operationLabel} ${totalCount} item${totalCount !== 1 ? "s" : ""}`,
-        description: `${data.bucket} → ${bucket}`,
+        description: `${data.bucket} → ${bucket}${crossLabel}`,
         status: "in-progress",
       });
 
@@ -120,9 +187,10 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
 
         if (result.summary.failed > 0) {
           const failedItems = result.results.filter((r) => !r.success);
-          const errorMessage = failedItems.length > 0 && failedItems[0].error
-            ? `${result.summary.failed} failed: ${failedItems[0].error}`
-            : `${result.summary.failed} item(s) failed`;
+          const errorMessage =
+            failedItems.length > 0 && failedItems[0].error
+              ? `${result.summary.failed} failed: ${failedItems[0].error}`
+              : `${result.summary.failed} item(s) failed`;
           updateNotification(notificationId, {
             status: "error",
             title: `Failed to ${operation}`,
@@ -137,12 +205,12 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
           });
         }
 
-        // Clear selection in source pane after move
         if (operation === "move" && result.summary.failed === 0) {
           clearSelection(data.sourcePaneId);
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
         updateNotification(notificationId, {
           status: "error",
           title: `Failed to ${operation}`,
@@ -156,6 +224,7 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
     [
       canWrite,
       connectionId,
+      connections,
       bucket,
       currentPath,
       copyObjects,
@@ -166,6 +235,47 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
       endDrag,
     ]
   );
+
+  const handleDrop = useCallback(
+    async (
+      data: PendingDrop["data"],
+      operation: "copy" | "move",
+      targetFolder?: string
+    ) => {
+      if (!canWrite) return;
+
+      const sourceConn = connections.find((c) => c.id === data.connectionId);
+      const targetConn = connections.find((c) => c.id === connectionId);
+      const isCrossWorkspace =
+        sourceConn &&
+        targetConn &&
+        sourceConn.workspaceId !== targetConn.workspaceId;
+
+      if (isCrossWorkspace) {
+        const confirmed =
+          typeof window !== "undefined" &&
+          localStorage.getItem(CROSS_WS_CONFIRMED_KEY) === "true";
+        if (!confirmed) {
+          setCrossWorkspacePending({ data, operation, targetFolder });
+          endDrag();
+          return;
+        }
+      }
+
+      await executeDrop(data, operation, targetFolder);
+    },
+    [canWrite, connectionId, connections, endDrag, executeDrop]
+  );
+
+  const handleCrossWorkspaceConfirm = useCallback(async () => {
+    if (!crossWorkspacePending) return;
+    if (typeof window !== "undefined") {
+      localStorage.setItem(CROSS_WS_CONFIRMED_KEY, "true");
+    }
+    const { data, operation, targetFolder } = crossWorkspacePending;
+    setCrossWorkspacePending(null);
+    await executeDrop(data, operation, targetFolder);
+  }, [crossWorkspacePending, executeDrop]);
 
   const handleDelete = async (key: string) => {
     if (!canWrite) return;
@@ -246,6 +356,19 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
     }
   };
 
+  const pendingSourceConn = crossWorkspacePending
+    ? connections.find((c) => c.id === crossWorkspacePending.data.connectionId)
+    : null;
+  const pendingTargetConn = crossWorkspacePending ? connection : null;
+  const pendingSourceName =
+    pendingSourceConn?.workspaceType === "PERSONAL"
+      ? "Personal"
+      : (pendingSourceConn?.name ?? "a team workspace");
+  const pendingTargetName =
+    pendingTargetConn?.workspaceType === "PERSONAL"
+      ? "Personal"
+      : (pendingTargetConn?.name ?? "this workspace");
+
   return (
     <div className="flex flex-col flex-1 gap-4">
       <div className="flex items-center justify-between gap-4">
@@ -275,6 +398,10 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
               Delete ({selectedItems.size})
             </Button>
           )}
+          <ViewModeToggle
+            value={paneState.viewMode}
+            onChange={(m) => setViewMode(paneId, m)}
+          />
           <UploadButton
             connectionId={connectionId}
             bucket={bucket}
@@ -299,25 +426,48 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         )}
-        <div className={`flex-1 flex flex-col ${showLoadingOverlay ? "opacity-50 pointer-events-none" : ""}`}>
-          <FileList
-            objects={data?.objects || []}
-            connectionId={connectionId}
-            bucket={bucket}
-            currentPath={currentPath}
-            canWrite={canWrite}
-            isLoading={showLoadingOverlay}
-            onDelete={handleDelete}
-            onPreview={setPreviewObject}
-            onDownload={handleDownload}
-            onNavigate={onNavigate}
-            paneId={paneId}
-            onDrop={handleDrop}
-            isDragging={isDragging}
-            isValidDropTarget={isValidDropTarget}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          />
+        <div
+          className={`flex-1 flex flex-col ${showLoadingOverlay ? "opacity-50 pointer-events-none" : ""}`}
+        >
+          {paneState.viewMode === "grid" ? (
+            <FileGallery
+              objects={data?.objects || []}
+              connectionId={connectionId}
+              bucket={bucket}
+              currentPath={currentPath}
+              canWrite={canWrite}
+              isLoading={showLoadingOverlay}
+              onDelete={handleDelete}
+              onPreview={setPreviewObject}
+              onDownload={handleDownload}
+              onNavigate={onNavigate}
+              paneId={paneId}
+              onDrop={handleDrop}
+              isDragging={isDragging}
+              isValidDropTarget={isValidDropTarget}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            />
+          ) : (
+            <FileList
+              objects={data?.objects || []}
+              connectionId={connectionId}
+              bucket={bucket}
+              currentPath={currentPath}
+              canWrite={canWrite}
+              isLoading={showLoadingOverlay}
+              onDelete={handleDelete}
+              onPreview={setPreviewObject}
+              onDownload={handleDownload}
+              onNavigate={onNavigate}
+              paneId={paneId}
+              onDrop={handleDrop}
+              isDragging={isDragging}
+              isValidDropTarget={isValidDropTarget}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            />
+          )}
         </div>
       </div>
 
@@ -342,6 +492,34 @@ export function FileBrowser({ connectionId, bucket, path = [], onNavigate, onGoH
         currentPath={currentPath}
         disabled={!canWrite}
       />
+
+      <Dialog
+        open={!!crossWorkspacePending}
+        onOpenChange={(open) => {
+          if (!open) setCrossWorkspacePending(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cross-workspace transfer</DialogTitle>
+            <DialogDescription>
+              You are about to {crossWorkspacePending?.operation ?? "copy"}{" "}
+              files from <strong>{pendingSourceName}</strong> to{" "}
+              <strong>{pendingTargetName}</strong>. This transfers data across
+              workspace boundaries. Continue?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCrossWorkspacePending(null)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCrossWorkspaceConfirm}>Continue</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

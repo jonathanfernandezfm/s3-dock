@@ -31,7 +31,6 @@ export function TabContent({ paneId }: TabContentProps) {
   if (activeTab.type === "buckets") {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Buckets</h1>
         <BucketList onOpenBucket={handleOpenBucket} />
       </div>
     );

@@ -1,0 +1,218 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { FileTile } from "./file-tile";
+import { usePresignedUrls } from "@/lib/queries/presign";
+import { useBrowserStore } from "@/lib/stores/browser-store";
+import { isImageFile, cn } from "@/lib/utils";
+import type { S3Object } from "@/types";
+
+interface FileGalleryProps {
+  objects: S3Object[];
+  connectionId: string;
+  bucket: string;
+  currentPath: string;
+  canWrite?: boolean;
+  isLoading?: boolean;
+  onDelete: (key: string) => void;
+  onPreview: (object: S3Object) => void;
+  onDownload: (key: string) => void;
+  onNavigate?: (path: string) => void;
+  paneId: string;
+  onDrop?: (
+    data: {
+      sourcePaneId: string;
+      connectionId: string;
+      bucket: string;
+      path: string;
+      items: S3Object[];
+    },
+    operation: "copy" | "move",
+    targetFolder?: string
+  ) => void;
+  isDragging?: boolean;
+  isValidDropTarget?: boolean;
+  onDragStart?: (items: S3Object[]) => void;
+  onDragEnd?: () => void;
+}
+
+export function FileGallery({
+  objects,
+  connectionId,
+  bucket,
+  currentPath,
+  canWrite,
+  isLoading,
+  onPreview,
+  onNavigate,
+  paneId,
+  onDrop,
+  isDragging,
+  isValidDropTarget,
+  onDragStart,
+  onDragEnd,
+}: FileGalleryProps) {
+  const { getPaneState, toggleSelection, setViewMode } = useBrowserStore();
+  const paneState = getPaneState(paneId);
+  const selectedItems = paneState.selectedItems;
+  const [isGalleryDragOver, setIsGalleryDragOver] = useState(false);
+
+  const folderObjects = objects.filter((o) => o.isFolder);
+  const imageObjects = objects.filter((o) => !o.isFolder && isImageFile(o.key));
+  const otherCount = objects.filter((o) => !o.isFolder && !isImageFile(o.key)).length;
+
+  const imageKeys = useMemo(() => imageObjects.map((o) => o.key), [imageObjects]);
+  const thumbnailUrls = usePresignedUrls(connectionId, bucket, imageKeys);
+
+  const handleFolderDrop = (targetFolderKey: string, operation: "copy" | "move") => {
+    if (!canWrite) return;
+    const dragState = useBrowserStore.getState().dragState;
+    if (!dragState.isDragging) return;
+    onDrop?.(
+      {
+        sourcePaneId: dragState.sourcePaneId!,
+        connectionId: dragState.sourceConnectionId!,
+        bucket: dragState.sourceBucket!,
+        path: dragState.sourcePath,
+        items: dragState.draggedItems,
+      },
+      operation,
+      targetFolderKey
+    );
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!isValidDropTarget || !canWrite) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = e.shiftKey ? "move" : "copy";
+    setIsGalleryDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setIsGalleryDragOver(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsGalleryDragOver(false);
+    if (!isValidDropTarget || !canWrite) return;
+    try {
+      const data = JSON.parse(e.dataTransfer.getData("application/x-s3-objects"));
+      const operation = e.shiftKey ? "move" : "copy";
+      onDrop?.(data, operation);
+    } catch {}
+  };
+
+  if (objects.length === 0 && !isLoading) {
+    return (
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center flex-1 min-h-[200px] py-12 text-center transition-colors",
+          isGalleryDragOver && isValidDropTarget && "bg-blue-50 dark:bg-blue-950"
+        )}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <p className="text-muted-foreground">
+          {isGalleryDragOver && isValidDropTarget ? "Drop files here" : "This folder is empty"}
+        </p>
+      </div>
+    );
+  }
+
+  if (folderObjects.length === 0 && imageObjects.length === 0 && otherCount > 0) {
+    return (
+      <div className="flex flex-col items-center justify-center flex-1 min-h-[200px] py-12 text-center">
+        <p className="text-muted-foreground">
+          No images in this folder.{" "}
+          <button
+            className="underline"
+            onClick={() => setViewMode(paneId, "list")}
+          >
+            Switch to list view
+          </button>{" "}
+          to see {otherCount} file{otherCount !== 1 ? "s" : ""}.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col flex-1 min-h-[200px] transition-colors",
+        isGalleryDragOver &&
+          isValidDropTarget &&
+          "ring-2 ring-blue-500 ring-inset bg-blue-50/50 dark:bg-blue-950/50"
+      )}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(176px,1fr))] gap-4 p-4">
+        {folderObjects.map((object) => (
+          <FileTile
+            key={object.key}
+            object={object}
+            connectionId={connectionId}
+            bucket={bucket}
+            currentPath={currentPath}
+            canWrite={canWrite}
+            isSelected={selectedItems.has(object.key)}
+            onSelect={() => toggleSelection(paneId, object.key)}
+            onPreview={() => onPreview(object)}
+            onNavigate={onNavigate}
+            paneId={paneId}
+            allObjects={objects}
+            selectedItems={selectedItems}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onFolderDrop={handleFolderDrop}
+            isDragging={isDragging}
+            canDropOnFolder={isValidDropTarget && canWrite}
+          />
+        ))}
+        {imageObjects.map((object) => (
+          <FileTile
+            key={object.key}
+            object={object}
+            connectionId={connectionId}
+            bucket={bucket}
+            currentPath={currentPath}
+            canWrite={canWrite}
+            isSelected={selectedItems.has(object.key)}
+            onSelect={() => toggleSelection(paneId, object.key)}
+            onPreview={() => onPreview(object)}
+            onNavigate={onNavigate}
+            thumbnailUrl={thumbnailUrls[object.key]}
+            paneId={paneId}
+            allObjects={objects}
+            selectedItems={selectedItems}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onFolderDrop={handleFolderDrop}
+            isDragging={isDragging}
+            canDropOnFolder={isValidDropTarget && canWrite}
+          />
+        ))}
+      </div>
+      {otherCount > 0 && (
+        <p className="text-sm text-muted-foreground p-4">
+          + {otherCount} non-image file{otherCount !== 1 ? "s" : ""} hidden.{" "}
+          <button
+            className="underline"
+            onClick={() => setViewMode(paneId, "list")}
+          >
+            Switch to list view
+          </button>
+        </p>
+      )}
+    </div>
+  );
+}

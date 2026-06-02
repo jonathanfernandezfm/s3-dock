@@ -85,10 +85,11 @@ export function withAuth<T extends RouteContext = RouteContext>(
       return handler(req, { user, params: params as T["params"] extends Promise<infer P> ? P : Record<string, string> });
     } catch (error) {
       console.error("Auth error:", error);
-      return NextResponse.json(
-        { error: "Authentication failed" },
-        { status: 500 }
-      );
+      if (error instanceof Error && error.message === "Unauthorized") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      const message = error instanceof Error ? error.message : "Internal server error";
+      return NextResponse.json({ error: message }, { status: 500 });
     }
   };
 }

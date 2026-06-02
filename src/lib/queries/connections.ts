@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useWorkspaceStore } from "@/lib/stores/workspace-store";
 
 export interface ConnectionResponse {
   id: string;
@@ -30,18 +29,12 @@ export interface ConnectionInput {
 
 export const connectionKeys = {
   all: ["connections"] as const,
-  list: (workspaceId?: string | null) =>
-    [...connectionKeys.all, "list", workspaceId ?? "all"] as const,
+  list: () => [...connectionKeys.all, "list"] as const,
   detail: (id: string) => [...connectionKeys.all, "detail", id] as const,
 };
 
-async function fetchConnections(
-  workspaceId?: string | null
-): Promise<ConnectionResponse[]> {
-  const params = workspaceId
-    ? `?workspaceId=${encodeURIComponent(workspaceId)}`
-    : "";
-  const response = await fetch(`/api/connections${params}`);
+async function fetchConnections(): Promise<ConnectionResponse[]> {
+  const response = await fetch("/api/connections");
 
   if (!response.ok) {
     const error = await response.json();
@@ -111,12 +104,9 @@ async function deleteConnection(id: string): Promise<{ success: boolean }> {
 }
 
 export function useConnections() {
-  const selectedWorkspaceId = useWorkspaceStore((s) => s.selectedWorkspaceId);
-
   return useQuery({
-    queryKey: connectionKeys.list(selectedWorkspaceId),
-    queryFn: () => fetchConnections(selectedWorkspaceId),
-    enabled: !!selectedWorkspaceId,
+    queryKey: connectionKeys.list(),
+    queryFn: fetchConnections,
   });
 }
 
@@ -130,14 +120,9 @@ export function useConnection(id: string) {
 
 export function useCreateConnection() {
   const queryClient = useQueryClient();
-  const selectedWorkspaceId = useWorkspaceStore((s) => s.selectedWorkspaceId);
 
   return useMutation({
-    mutationFn: (data: ConnectionInput) =>
-      createConnection({
-        ...data,
-        workspaceId: data.workspaceId ?? selectedWorkspaceId ?? undefined,
-      }),
+    mutationFn: (data: ConnectionInput) => createConnection(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: connectionKeys.all });
     },

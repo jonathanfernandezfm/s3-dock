@@ -1,4 +1,5 @@
-import { FolderOpen, Cloud, Shield, Zap } from "lucide-react";
+import Image from "next/image";
+import { Cloud, Shield, Zap } from "lucide-react";
 
 export default function AuthLayout({
   children,
@@ -18,11 +19,9 @@ export default function AuthLayout({
 
         {/* Logo */}
         <div className="flex items-center gap-3 relative z-10">
-          <div className="p-2 bg-white/10 rounded-lg">
-            <FolderOpen className="h-8 w-8 text-white" />
-          </div>
+          <Image src="/logo.png" alt="S3 Hub" width={40} height={40} className="invert" />
           <span className="font-bold text-2xl text-white">
-            S3 Client
+            S3 Hub
           </span>
         </div>
 

@@ -1,5 +1,6 @@
 import prisma from "./prisma";
 import type { Connection, Workspace } from "@/generated/prisma/client";
+import { encrypt, decrypt } from "@/lib/crypto";
 
 export type ConnectionInput = {
   name?: string | null;
@@ -170,7 +171,7 @@ export async function getConnectionAccessById(
       endpoint: connection.endpoint,
       region: connection.region,
       accessKeyId: connection.accessKeyId,
-      secretAccessKey: connection.secretAccessKey,
+      secretAccessKey: decrypt(connection.secretAccessKey),
       forcePathStyle: connection.forcePathStyle,
       workspaceId: connection.workspaceId,
       createdById: connection.createdById,
@@ -223,7 +224,7 @@ export async function createConnection(
       endpoint: data.endpoint,
       region: data.region,
       accessKeyId: data.accessKeyId,
-      secretAccessKey: data.secretAccessKey,
+      secretAccessKey: encrypt(data.secretAccessKey),
       forcePathStyle: data.forcePathStyle ?? true,
     },
   });
@@ -242,9 +243,14 @@ export async function updateConnection(
     return null;
   }
 
+  const updateData = { ...data };
+  if (updateData.secretAccessKey) {
+    updateData.secretAccessKey = encrypt(updateData.secretAccessKey);
+  }
+
   return prisma.connection.update({
     where: { id },
-    data,
+    data: updateData,
   });
 }
 

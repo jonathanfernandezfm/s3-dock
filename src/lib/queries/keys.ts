@@ -15,4 +15,9 @@ export const queryKeys = {
     detail: (connectionId: string, bucket: string, key: string) =>
       [...queryKeys.objects.all, connectionId, bucket, key, "detail"] as const,
   },
+  presign: {
+    all: ["presign"] as const,
+    batch: (connectionId: string, bucket: string, sortedKeys: string[]) =>
+      [...queryKeys.presign.all, "batch", connectionId, bucket, sortedKeys.join("|")] as const,
+  },
 };

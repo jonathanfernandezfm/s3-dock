@@ -153,7 +153,7 @@ model Connection {
   endpoint        String // S3 endpoint URL (e.g., https://s3.amazonaws.com)
   region          String  @default("us-east-1")
   accessKeyId     String // AWS access key ID
-  secretAccessKey String // AWS secret access key (encrypted in production)
+  secretAccessKey String // AES-256-GCM encrypted; use src/lib/crypto.ts to decrypt
   forcePathStyle  Boolean @default(true) // Required for MinIO and some S3-compatible services
 
   // Workspace ownership

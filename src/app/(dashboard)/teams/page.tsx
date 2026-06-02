@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   useTeams,
   useTeam,
@@ -10,29 +9,19 @@ import {
   useUpdateTeamMemberRole,
   useRemoveTeamMember,
 } from "@/lib/queries/teams";
-import { useWorkspaceStore } from "@/lib/stores/workspace-store";
 import { useNotificationStore } from "@/lib/stores/notification-store";
 import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 import { TeamMembersCard } from "@/components/teams/team-members-card";
-import { ConnectionList } from "@/components/connections/connection-list";
-import { ConnectionForm } from "@/components/connections/connection-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { ConnectionResponse } from "@/lib/queries/connections";
-import { Loader2, FolderOpen } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function TeamsPage() {
-  const router = useRouter();
-  const setSelectedWorkspaceId = useWorkspaceStore((s) => s.setSelectedWorkspaceId);
   const { addNotification } = useNotificationStore();
 
   const { data: teams = [], isLoading: isLoadingTeams } = useTeams();
   const createTeam = useCreateTeam();
 
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  const [connectionDialogOpen, setConnectionDialogOpen] = useState(false);
-  const [editingConnection, setEditingConnection] = useState<ConnectionResponse | null>(null);
 
   useEffect(() => {
     if (!selectedTeamId && teams.length > 0) {
@@ -50,17 +39,10 @@ export default function TeamsPage() {
   const updateRole = useUpdateTeamMemberRole(selectedTeamId);
   const removeMember = useRemoveTeamMember(selectedTeamId);
 
-  useEffect(() => {
-    if (team?.workspaceId) {
-      setSelectedWorkspaceId(team.workspaceId);
-    }
-  }, [team?.workspaceId, setSelectedWorkspaceId]);
-
   const handleCreateTeam = async (data: { name: string; slug?: string }) => {
     try {
       const created = await createTeam.mutateAsync(data);
       setSelectedTeamId(created.id);
-      setSelectedWorkspaceId(created.workspaceId);
       addNotification({
         type: "info",
         title: "Team created",
@@ -78,7 +60,10 @@ export default function TeamsPage() {
     }
   };
 
-  const handleAddMember = async (data: { email: string; role: "ADMIN" | "VIEWER" }) => {
+  const handleAddMember = async (data: {
+    email: string;
+    role: "ADMIN" | "VIEWER";
+  }) => {
     try {
       await addMember.mutateAsync(data);
       addNotification({
@@ -135,34 +120,15 @@ export default function TeamsPage() {
     }
   };
 
-  const handleAddConnection = () => {
-    setEditingConnection(null);
-    setConnectionDialogOpen(true);
-  };
-
-  const handleEditConnection = (connection: ConnectionResponse) => {
-    setEditingConnection(connection);
-    setConnectionDialogOpen(true);
-  };
-
-  const handleConnectionDialogClose = () => {
-    setConnectionDialogOpen(false);
-    setEditingConnection(null);
-  };
-
-  const openTeamBuckets = () => {
-    if (team?.workspaceId) {
-      setSelectedWorkspaceId(team.workspaceId);
-      router.push("/buckets");
-    }
-  };
-
   return (
     <div className="flex flex-1 min-h-0 overflow-hidden">
       <aside className="w-80 border-r p-4 space-y-4 overflow-auto">
         <div className="flex items-center justify-between gap-2">
           <h1 className="text-xl font-bold">Teams</h1>
-          <CreateTeamDialog onCreate={handleCreateTeam} isPending={createTeam.isPending} />
+          <CreateTeamDialog
+            onCreate={handleCreateTeam}
+            isPending={createTeam.isPending}
+          />
         </div>
 
         {isLoadingTeams ? (
@@ -181,10 +147,7 @@ export default function TeamsPage() {
               <button
                 key={teamItem.id}
                 type="button"
-                onClick={() => {
-                  setSelectedTeamId(teamItem.id);
-                  setSelectedWorkspaceId(teamItem.workspaceId);
-                }}
+                onClick={() => setSelectedTeamId(teamItem.id)}
                 className={`w-full text-left rounded-lg border p-3 transition-colors ${
                   selectedTeamId === teamItem.id
                     ? "bg-accent border-accent"
@@ -193,10 +156,13 @@ export default function TeamsPage() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-medium truncate">{teamItem.name}</p>
-                  <span className="text-xs text-muted-foreground">{teamItem.role}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {teamItem.role}
+                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {teamItem.memberCount} member{teamItem.memberCount !== 1 ? "s" : ""}
+                  {teamItem.memberCount} member
+                  {teamItem.memberCount !== 1 ? "s" : ""}
                 </p>
               </button>
             ))}
@@ -208,7 +174,7 @@ export default function TeamsPage() {
         {!selectedTeamSummary ? (
           <Card>
             <CardContent className="pt-6 text-muted-foreground">
-              Select a team to manage members and shared connections.
+              Select a team to manage members.
             </CardContent>
           </Card>
         ) : isLoadingTeam || !team ? (
@@ -218,15 +184,11 @@ export default function TeamsPage() {
         ) : (
           <>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl">{team.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Role: {team.role}</p>
-                </div>
-                <Button variant="outline" onClick={openTeamBuckets}>
-                  <FolderOpen className="mr-2 h-4 w-4" />
-                  Open Buckets
-                </Button>
+              <CardHeader>
+                <CardTitle className="text-2xl">{team.name}</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Role: {team.role}
+                </p>
               </CardHeader>
             </Card>
 
@@ -240,28 +202,6 @@ export default function TeamsPage() {
               onUpdateRole={handleUpdateRole}
               onRemoveMember={handleRemoveMember}
             />
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Team Connections</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ConnectionList onAdd={handleAddConnection} onEdit={handleEditConnection} />
-              </CardContent>
-            </Card>
-
-            <Dialog open={connectionDialogOpen} onOpenChange={setConnectionDialogOpen}>
-              <DialogContent className="sm:max-w-md p-0 overflow-hidden">
-                <DialogHeader className="sr-only">
-                  <DialogTitle>{editingConnection ? "Edit Team Connection" : "Add Team Connection"}</DialogTitle>
-                </DialogHeader>
-                <ConnectionForm
-                  connection={editingConnection || undefined}
-                  onSuccess={handleConnectionDialogClose}
-                  onCancel={handleConnectionDialogClose}
-                />
-              </DialogContent>
-            </Dialog>
           </>
         )}
       </section>

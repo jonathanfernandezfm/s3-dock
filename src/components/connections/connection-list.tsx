@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   useConnections,
   useDeleteConnection,
   type ConnectionResponse,
 } from "@/lib/queries/connections";
-import { useWorkspaces } from "@/lib/queries/workspaces";
+import { useWorkspaces, type WorkspaceSummary } from "@/lib/queries/workspaces";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -31,21 +31,41 @@ import {
   Plus,
   Server,
   Loader2,
+  Briefcase,
+  Users,
 } from "lucide-react";
 
 interface ConnectionListProps {
-  onAdd: () => void;
+  onAdd: (workspaceId?: string) => void;
   onEdit: (connection: ConnectionResponse) => void;
 }
 
 export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
   const { data: connections = [], isLoading } = useConnections();
-  const { selectedWorkspace, isLoading: isLoadingWorkspaces } = useWorkspaces();
+  const { data: workspaces = [], isLoading: isLoadingWorkspaces } =
+    useWorkspaces();
   const deleteConnection = useDeleteConnection();
   const { addNotification } = useNotificationStore();
 
   const [deletingConnection, setDeletingConnection] =
     useState<ConnectionResponse | null>(null);
+
+  const workspaceGroups = useMemo(() => {
+    const wsMap = new Map<
+      string,
+      { workspace: WorkspaceSummary; connections: ConnectionResponse[] }
+    >();
+    for (const ws of workspaces) {
+      wsMap.set(ws.id, { workspace: ws, connections: [] });
+    }
+    for (const conn of connections) {
+      const entry = wsMap.get(conn.workspaceId);
+      if (entry) {
+        entry.connections.push(conn);
+      }
+    }
+    return Array.from(wsMap.values());
+  }, [workspaces, connections]);
 
   const handleDelete = async () => {
     if (deletingConnection) {
@@ -72,14 +92,13 @@ export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
     }
   };
 
-  const getDisplayName = (connection: ConnectionResponse) => {
-    return connection.name || connection.endpoint;
-  };
+  const getDisplayName = (connection: ConnectionResponse) =>
+    connection.name || connection.endpoint;
 
-  const canManage = (connection: ConnectionResponse) => connection.role === "ADMIN";
-  const canAddConnection = selectedWorkspace?.role === "ADMIN";
+  const canManage = (connection: ConnectionResponse) =>
+    connection.role === "ADMIN";
 
-  if (isLoading || isLoadingWorkspaces || !selectedWorkspace) {
+  if (isLoading || isLoadingWorkspaces) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -95,7 +114,7 @@ export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
         <p className="text-muted-foreground mb-4">
           Add your first S3 connection to get started
         </p>
-        <Button onClick={onAdd} disabled={!canAddConnection}>
+        <Button onClick={() => onAdd()}>
           <Plus className="mr-2 h-4 w-4" />
           Add Connection
         </Button>
@@ -104,59 +123,105 @@ export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">
-          {connections.length} Connection{connections.length !== 1 ? "s" : ""}
-        </h2>
-        <Button onClick={onAdd} disabled={!canAddConnection}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Connection
-        </Button>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {connections.map((connection) => (
-          <Card key={connection.id} className="p-3">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <Server className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-sm font-medium truncate">
-                  {getDisplayName(connection)}
-                </span>
+    <div className="space-y-8">
+      {workspaceGroups.map(({ workspace, connections: wsConns }) => {
+        if (wsConns.length === 0 && workspace.role !== "ADMIN") return null;
+        const canAdd = workspace.role === "ADMIN";
+        return (
+          <div key={workspace.id} className="space-y-4">
+            <div className="flex items-center justify-between border-b pb-2">
+              <div className="flex items-center gap-2">
+                {workspace.type === "TEAM" ? (
+                  <Users className="h-5 w-5 text-muted-foreground" />
+                ) : (
+                  <Briefcase className="h-5 w-5 text-muted-foreground" />
+                )}
+                <h2 className="text-lg font-semibold">{workspace.name}</h2>
                 <span className="text-[10px] uppercase tracking-wide text-muted-foreground border rounded px-1.5 py-0.5">
-                  {connection.role}
+                  {workspace.role}
                 </span>
               </div>
-              {canManage(connection) && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                      <MoreVertical className="h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEdit(connection)}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={() => setDeletingConnection(connection)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              {canAdd && (
+                <Button size="sm" onClick={() => onAdd(workspace.id)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Connection
+                </Button>
               )}
             </div>
-            <p className="text-xs text-muted-foreground mt-1 truncate pl-6">
-              {connection.endpoint}
-            </p>
-          </Card>
-        ))}
-      </div>
+
+            {wsConns.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center border rounded-lg border-dashed">
+                <p className="text-sm text-muted-foreground mb-3">
+                  No connections yet
+                </p>
+                {canAdd && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onAdd(workspace.id)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Connection
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {wsConns.map((connection) => (
+                  <Card
+                    key={connection.id}
+                    id={`connection-${connection.id}`}
+                    className="p-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Server className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm font-medium truncate">
+                          {getDisplayName(connection)}
+                        </span>
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground border rounded px-1.5 py-0.5">
+                          {connection.role}
+                        </span>
+                      </div>
+                      {canManage(connection) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0"
+                            >
+                              <MoreVertical className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => onEdit(connection)}
+                            >
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => setDeletingConnection(connection)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 truncate pl-6">
+                      {connection.endpoint}
+                    </p>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
 
       <Dialog
         open={!!deletingConnection}
@@ -172,7 +237,10 @@ export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeletingConnection(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeletingConnection(null)}
+            >
               Cancel
             </Button>
             <Button

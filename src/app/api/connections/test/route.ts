@@ -27,6 +27,7 @@ export const POST = withAuth(async (req, { user }) => {
       forcePathStyle: boolean;
     };
 
+
     // If an ID is provided, fetch the connection from the database
     if (body.id) {
       const access = await getConnectionAccessById(body.id, user.id);
@@ -67,13 +68,17 @@ export const POST = withAuth(async (req, { user }) => {
       };
     }
 
+        console.log(connectionConfig)
+
+
     const client = createS3Client(connectionConfig);
     const command = new ListBucketsCommand({});
-
+    
     await client.send(command);
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.log(error)
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       { success: false, error: message },
