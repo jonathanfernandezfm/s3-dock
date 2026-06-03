@@ -91,7 +91,7 @@ export function FileBrowser({
     }
   }, [isActivityOpen, connectionId, bucket, currentPath, setActivityScope]);
 
-  const { data, isFetching, refetch } = useObjects(
+  const { data, isPending, refetch } = useObjects(
     connectionId,
     bucket,
     currentPath
@@ -144,7 +144,7 @@ export function FileBrowser({
     return () => window.removeEventListener("popstate", handlePopState);
   }, [path, onNavigate]);
 
-  const showLoadingOverlay = isFetching;
+  const showLoadingOverlay = isPending;
 
   const isDragging = dragState.isDragging;
   const isValidDropTarget =

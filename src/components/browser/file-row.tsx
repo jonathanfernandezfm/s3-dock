@@ -112,7 +112,6 @@ export function FileRow({
     <TableRow
       className={cn(
         isSelected && "bg-muted",
-        isBeingDragged && isDragging && "opacity-50",
         isFolderDragOver && object.isFolder && "bg-blue-50 dark:bg-blue-950 ring-2 ring-blue-500 ring-inset"
       )}
       data-state={isSelected ? "selected" : undefined}

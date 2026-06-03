@@ -1,9 +1,11 @@
 "use client";
 
+import { useRef, useState, useEffect } from "react";
 import { useLayoutStore, Tab } from "@/lib/stores/layout-store";
 import { Button } from "@/components/ui/button";
 import { X, Plus, FolderOpen, Database, PanelRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDragContextSafe } from "@/lib/contexts/drag-context";
 
 interface TabItemProps {
   tab: Tab;
@@ -11,12 +13,54 @@ interface TabItemProps {
   paneId: string;
 }
 
+const DRAG_HOVER_DELAY_MS = 1000;
+
 function TabItem({ tab, isActive, paneId }: TabItemProps) {
   const { setActiveTab, removeTab, panes } = useLayoutStore();
+  const dragCtx = useDragContextSafe();
 
   const pane = panes[paneId];
   const tabCount = pane?.tabs.length || 0;
   const paneCount = Object.keys(panes).length;
+
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragEnterCountRef = useRef(0);
+  const [isDragHovered, setIsDragHovered] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    };
+  }, []);
+
+  const clearDragHover = () => {
+    dragEnterCountRef.current = 0;
+    setIsDragHovered(false);
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  };
+
+  const handleDragEnter = () => {
+    if (!dragCtx?.isDragging || isActive) return;
+    dragEnterCountRef.current++;
+    if (dragEnterCountRef.current === 1) {
+      setIsDragHovered(true);
+      hoverTimerRef.current = setTimeout(() => {
+        setActiveTab(paneId, tab.id);
+        clearDragHover();
+      }, DRAG_HOVER_DELAY_MS);
+    }
+  };
+
+  const handleDragLeave = () => {
+    if (!dragCtx?.isDragging) return;
+    dragEnterCountRef.current = Math.max(0, dragEnterCountRef.current - 1);
+    if (dragEnterCountRef.current === 0) {
+      clearDragHover();
+    }
+  };
 
   const getTabLabel = () => {
     if (tab.type === "buckets") {
@@ -42,7 +86,8 @@ function TabItem({ tab, isActive, paneId }: TabItemProps) {
         "group relative flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-all min-w-0 max-w-[350px] rounded-t-lg mx-0.5 mt-2",
         isActive
           ? "bg-background shadow-sm border border-b-0 border-border"
-          : "bg-muted/40 hover:bg-muted/70 border border-b-0 border-transparent"
+          : "bg-muted/40 hover:bg-muted/70 border border-b-0 border-transparent",
+        isDragHovered && "ring-2 ring-primary/60 ring-inset bg-primary/10"
       )}
       onClick={() => setActiveTab(paneId, tab.id)}
       onMouseDown={(e) => {
@@ -54,6 +99,8 @@ function TabItem({ tab, isActive, paneId }: TabItemProps) {
         e.stopPropagation();
         removeTab(paneId, tab.id);
       }}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
     >
       {isActive && (
         <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />

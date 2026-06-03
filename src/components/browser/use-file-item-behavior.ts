@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { createDragPreview, removeDragPreview } from "./drag-preview";
 import { getPreviewKind } from "@/lib/utils";
+import { useBrowserStore } from "@/lib/stores/browser-store";
 import type { S3Object } from "@/types";
 
 export function useFileItemBehavior({
@@ -106,8 +107,12 @@ export function useFileItemBehavior({
     onFolderDrop?.(object.key, operation);
   };
 
+  const draggedItems = useBrowserStore((state) => state.dragState.draggedItems);
   const isBeingDragged =
-    !!isDragging && (selectedItems.has(object.key) || selectedItems.size === 0);
+    !!isDragging && (
+      selectedItems.has(object.key) ||
+      draggedItems.some((i) => i.key === object.key)
+    );
 
   const fileName = (() => {
     const name = object.key.replace(currentPath, "");
