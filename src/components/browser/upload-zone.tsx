@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useState, useEffect } from "react";
 import { useUploadStore, type UploadItem } from "@/lib/stores/upload-store";
@@ -281,7 +281,7 @@ export function UploadButton({
       />
       <Button asChild disabled={disabled}>
         <span>
-          <Upload className="mr-2 h-4 w-4" />
+          <Upload className="h-4 w-4" />
           Upload file
         </span>
       </Button>

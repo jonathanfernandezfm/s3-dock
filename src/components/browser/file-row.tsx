@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -126,7 +126,7 @@ export function FileRow({
         <div className="flex items-center gap-2">
           <Icon
             className={`h-4 w-4 ${
-              object.isFolder ? "text-blue-500" : "text-muted-foreground"
+              object.isFolder ? "text-amber-400" : "text-muted-foreground"
             }`}
           />
           {href ? (
@@ -159,19 +159,19 @@ export function FileRow({
           <DropdownMenuContent align="end">
             {canPreview && (
               <DropdownMenuItem onClick={onPreview}>
-                <Eye className="mr-2 h-4 w-4" />
+                <Eye className="h-4 w-4" />
                 Preview
               </DropdownMenuItem>
             )}
             {!object.isFolder && (
               <DropdownMenuItem onClick={onDownload}>
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="h-4 w-4" />
                 Download
               </DropdownMenuItem>
             )}
             {canWrite && (
               <DropdownMenuItem className="text-destructive" onClick={onDelete}>
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             )}

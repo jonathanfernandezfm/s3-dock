@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import {
@@ -115,7 +115,7 @@ export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
           Add your first S3 connection to get started
         </p>
         <Button onClick={() => onAdd()}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="h-4 w-4" />
           Add Connection
         </Button>
       </div>
@@ -143,7 +143,7 @@ export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
               </div>
               {canAdd && (
                 <Button size="sm" onClick={() => onAdd(workspace.id)}>
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="h-4 w-4" />
                   Add Connection
                 </Button>
               )}
@@ -160,7 +160,7 @@ export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
                     variant="outline"
                     onClick={() => onAdd(workspace.id)}
                   >
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="h-4 w-4" />
                     Add Connection
                   </Button>
                 )}
@@ -198,14 +198,14 @@ export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
                             <DropdownMenuItem
                               onClick={() => onEdit(connection)}
                             >
-                              <Pencil className="mr-2 h-4 w-4" />
+                              <Pencil className="h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-destructive"
                               onClick={() => setDeletingConnection(connection)}
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
+                              <Trash2 className="h-4 w-4" />
                               Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -249,7 +249,7 @@ export function ConnectionList({ onAdd, onEdit }: ConnectionListProps) {
               disabled={deleteConnection.isPending}
             >
               {deleteConnection.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               )}
               Delete
             </Button>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -286,7 +286,7 @@ export function ConnectionForm({
               onClick={testConnection}
               disabled={testing || isSaving}
             >
-              {testing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {testing && <Loader2 className="h-4 w-4 animate-spin" />}
               Test Connection
             </Button>
 
@@ -317,7 +317,7 @@ export function ConnectionForm({
               </Button>
             )}
             <Button type="submit" className="flex-1" disabled={isSaving}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
               {isEditMode ? "Save Changes" : "Add Connection"}
             </Button>
           </div>

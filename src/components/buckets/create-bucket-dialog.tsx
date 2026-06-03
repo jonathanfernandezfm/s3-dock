@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -72,7 +72,7 @@ export function CreateBucketDialog({
       {!hideTrigger && (
         <DialogTrigger asChild>
           <Button size="sm" variant="outline" disabled={disabled}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Create Bucket
           </Button>
         </DialogTrigger>
@@ -105,7 +105,7 @@ export function CreateBucketDialog({
             </Button>
             <Button type="submit" disabled={createBucket.isPending}>
               {createBucket.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               )}
               Create
             </Button>

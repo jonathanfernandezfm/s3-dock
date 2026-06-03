@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -78,7 +78,7 @@ export function CreateFolderDialog({
       {!hideTrigger && (
         <DialogTrigger asChild>
           <Button variant="outline" disabled={disabled}>
-            <FolderPlus className="mr-2 h-4 w-4" />
+            <FolderPlus className="h-4 w-4" />
             New Folder
           </Button>
         </DialogTrigger>
@@ -108,7 +108,7 @@ export function CreateFolderDialog({
             </Button>
             <Button type="submit" disabled={createFolder.isPending}>
               {createFolder.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               )}
               Create
             </Button>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -63,7 +63,7 @@ export function CreateTeamDialog({
       {!hideTrigger && (
         <DialogTrigger asChild>
           <Button>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Create Team
           </Button>
         </DialogTrigger>
@@ -102,7 +102,7 @@ export function CreateTeamDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Create
             </Button>
           </DialogFooter>

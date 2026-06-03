@@ -2,10 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Folder, FileImage, Loader2 } from "lucide-react";
+import { Folder, FileImage, FileText, File, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFileItemBehavior } from "./use-file-item-behavior";
 import type { S3Object } from "@/types";
+
+function FileTypeIcon({ filename, className }: { filename: string; className?: string }) {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  if (ext === "pdf") {
+    return <FileText className={cn("text-red-500", className)} />;
+  }
+  return <File className={cn("text-muted-foreground opacity-50", className)} />;
+}
 
 interface FileTileProps {
   object: S3Object;
@@ -101,7 +109,7 @@ export function FileTile({
               isFolderDragOver && "ring-2 ring-blue-500"
             )}
           >
-            <Folder className="h-12 w-12 text-blue-500" />
+            <Folder className="h-12 w-12 text-amber-400" />
           </div>
         </Link>
         <div className="mt-2 text-sm truncate" title={fileName}>
@@ -154,7 +162,7 @@ export function FileTile({
             )}
           </>
         ) : (
-          <FileImage className="h-12 w-12 opacity-30" />
+          <FileTypeIcon filename={fileName} className="h-12 w-12" />
         )}
       </div>
       <div className="mt-2 text-sm truncate" title={fileName}>

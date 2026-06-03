@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,7 +62,7 @@ export function BucketCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleBrowse}>
-                <FolderOpen className="mr-2 h-4 w-4" />
+                <FolderOpen className="h-4 w-4" />
                 Browse
               </DropdownMenuItem>
               {canDelete && (
@@ -73,7 +73,7 @@ export function BucketCard({
                     onDelete(bucket.name);
                   }}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
               )}

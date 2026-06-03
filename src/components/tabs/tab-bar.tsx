@@ -42,7 +42,7 @@ function TabItem({ tab, isActive, paneId }: TabItemProps) {
         "group relative flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-all min-w-0 max-w-[350px] rounded-t-lg mx-0.5 mt-2",
         isActive
           ? "bg-background shadow-sm border border-b-0 border-border"
-          : "bg-muted/40 hover:bg-muted/70"
+          : "bg-muted/40 hover:bg-muted/70 border border-b-0 border-transparent"
       )}
       onClick={() => setActiveTab(paneId, tab.id)}
     >

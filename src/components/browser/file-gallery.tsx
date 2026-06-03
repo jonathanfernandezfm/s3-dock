@@ -52,14 +52,14 @@ export function FileGallery({
   onDragStart,
   onDragEnd,
 }: FileGalleryProps) {
-  const { getPaneState, toggleSelection, setViewMode } = useBrowserStore();
+  const { getPaneState, toggleSelection } = useBrowserStore();
   const paneState = getPaneState(paneId);
   const selectedItems = paneState.selectedItems;
   const [isGalleryDragOver, setIsGalleryDragOver] = useState(false);
 
   const folderObjects = objects.filter((o) => o.isFolder);
   const imageObjects = objects.filter((o) => !o.isFolder && isImageFile(o.key));
-  const otherCount = objects.filter((o) => !o.isFolder && !isImageFile(o.key)).length;
+  const otherObjects = objects.filter((o) => !o.isFolder && !isImageFile(o.key));
 
   const imageKeys = useMemo(() => imageObjects.map((o) => o.key), [imageObjects]);
   const thumbnailUrls = usePresignedUrls(connectionId, bucket, imageKeys);
@@ -126,23 +126,6 @@ export function FileGallery({
     );
   }
 
-  if (folderObjects.length === 0 && imageObjects.length === 0 && otherCount > 0) {
-    return (
-      <div className="flex flex-col items-center justify-center flex-1 min-h-[200px] py-12 text-center">
-        <p className="text-muted-foreground">
-          No images in this folder.{" "}
-          <button
-            className="underline"
-            onClick={() => setViewMode(paneId, "list")}
-          >
-            Switch to list view
-          </button>{" "}
-          to see {otherCount} file{otherCount !== 1 ? "s" : ""}.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div
       className={cn(
@@ -201,18 +184,29 @@ export function FileGallery({
             canDropOnFolder={isValidDropTarget && canWrite}
           />
         ))}
+        {otherObjects.map((object) => (
+          <FileTile
+            key={object.key}
+            object={object}
+            connectionId={connectionId}
+            bucket={bucket}
+            currentPath={currentPath}
+            canWrite={canWrite}
+            isSelected={selectedItems.has(object.key)}
+            onSelect={() => toggleSelection(paneId, object.key)}
+            onPreview={() => onPreview(object)}
+            onNavigate={onNavigate}
+            paneId={paneId}
+            allObjects={objects}
+            selectedItems={selectedItems}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onFolderDrop={handleFolderDrop}
+            isDragging={isDragging}
+            canDropOnFolder={isValidDropTarget && canWrite}
+          />
+        ))}
       </div>
-      {otherCount > 0 && (
-        <p className="text-sm text-muted-foreground p-4">
-          + {otherCount} non-image file{otherCount !== 1 ? "s" : ""} hidden.{" "}
-          <button
-            className="underline"
-            onClick={() => setViewMode(paneId, "list")}
-          >
-            Switch to list view
-          </button>
-        </p>
-      )}
     </div>
   );
 }

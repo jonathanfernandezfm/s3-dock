@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -203,13 +203,13 @@ export function AppSidebar() {
                                 <DropdownMenuItem
                                   onClick={() => router.push(`/connections?workspaceId=${workspace.id}`)}
                                 >
-                                  <Plug className="mr-2 h-3.5 w-3.5" />
+                                  <Plug className="h-3.5 w-3.5" />
                                   Add connection
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => router.push("/teams")}
                                 >
-                                  <Users className="mr-2 h-3.5 w-3.5" />
+                                  <Users className="h-3.5 w-3.5" />
                                   Add member
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -250,14 +250,14 @@ export function AppSidebar() {
                                       <DropdownMenuItem
                                         onClick={() => setEditingConnection(conn)}
                                       >
-                                        <Pencil className="mr-2 h-3.5 w-3.5" />
+                                        <Pencil className="h-3.5 w-3.5" />
                                         Edit
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                         className="text-destructive focus:text-destructive"
                                         onClick={() => setDeletingConnection(conn)}
                                       >
-                                        <Trash2 className="mr-2 h-3.5 w-3.5" />
+                                        <Trash2 className="h-3.5 w-3.5" />
                                         Delete
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -353,7 +353,7 @@ export function AppSidebar() {
               disabled={deleteConnection.isPending}
             >
               {deleteConnection.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               )}
               Delete
             </Button>
