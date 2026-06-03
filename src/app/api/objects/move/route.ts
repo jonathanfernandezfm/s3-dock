@@ -10,6 +10,7 @@ import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { recordActivityBatch } from "@/lib/db/activity";
+import prisma from "@/lib/db/prisma";
 
 interface MoveRequest {
   sourceConnectionId: string;
@@ -165,6 +166,31 @@ export const POST = withAuth(async (req, { user }) => {
           batchId,
         });
       }
+    }
+
+    try {
+      const successfulResults = results.filter((r) => r.success);
+      const sameEndpoint = sourceConnectionId === targetConnectionId;
+      const updates = successfulResults.map((r) =>
+        prisma.fileNote.updateMany({
+          where: {
+            connectionId: sourceConnectionId,
+            bucket: sourceBucket,
+            key: r.sourceKey,
+          },
+          data:
+            sameEndpoint && sourceBucket === targetBucket
+              ? { key: r.targetKey }
+              : {
+                  connectionId: targetConnectionId,
+                  bucket: targetBucket,
+                  key: r.targetKey,
+                },
+        })
+      );
+      await Promise.all(updates);
+    } catch (err) {
+      console.error("[notes] cascade move failed:", err);
     }
 
     return NextResponse.json({

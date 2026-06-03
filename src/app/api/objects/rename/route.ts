@@ -4,6 +4,7 @@ import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { recordActivity } from "@/lib/db/activity";
+import prisma from "@/lib/db/prisma";
 
 interface RenameRequest {
   connectionId: string;
@@ -69,6 +70,15 @@ export const POST = withAuth(async (req, { user }) => {
       key: sourceKey,
       targetKey,
     });
+
+    try {
+      await prisma.fileNote.updateMany({
+        where: { connectionId, bucket, key: sourceKey },
+        data: { key: targetKey },
+      });
+    } catch (err) {
+      console.error("[notes] cascade rename failed:", err);
+    }
 
     return NextResponse.json({ success: true, targetKey });
   } catch (error) {

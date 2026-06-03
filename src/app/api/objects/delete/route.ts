@@ -4,6 +4,7 @@ import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { recordActivityBatch } from "@/lib/db/activity";
+import prisma from "@/lib/db/prisma";
 
 export const POST = withAuth(async (req, { user }) => {
   try {
@@ -55,6 +56,14 @@ export const POST = withAuth(async (req, { user }) => {
       bucket,
       items: keys.map((k) => ({ key: k })),
     });
+
+    try {
+      await prisma.fileNote.deleteMany({
+        where: { connectionId, bucket, key: { in: keys } },
+      });
+    } catch (err) {
+      console.error("[notes] cascade delete failed:", err);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

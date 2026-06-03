@@ -4,6 +4,7 @@ import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { recordActivity } from "@/lib/db/activity";
+import prisma from "@/lib/db/prisma";
 
 type RouteContext = { params: Promise<{ bucket: string }> };
 
@@ -45,6 +46,14 @@ export const DELETE = withAuth<RouteContext>(async (req, { user, params }) => {
       action: "BUCKET_DELETE",
       bucket,
     });
+
+    try {
+      await prisma.fileNote.deleteMany({
+        where: { connectionId, bucket },
+      });
+    } catch (err) {
+      console.error("[notes] cascade bucket-delete failed:", err);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
