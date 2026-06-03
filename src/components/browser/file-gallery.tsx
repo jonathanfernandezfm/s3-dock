@@ -5,7 +5,6 @@ import { FileTile } from "./file-tile";
 import { usePresignedUrls } from "@/lib/queries/presign";
 import { useBrowserStore } from "@/lib/stores/browser-store";
 import { isImageFile, cn } from "@/lib/utils";
-import { useNoteCounts } from "@/lib/queries/notes";
 import type { S3Object } from "@/types";
 
 interface FileGalleryProps {
@@ -35,6 +34,7 @@ interface FileGalleryProps {
   isValidDropTarget?: boolean;
   onDragStart?: (items: S3Object[]) => void;
   onDragEnd?: () => void;
+  noteCounts?: Record<string, number>;
 }
 
 export function FileGallery({
@@ -52,6 +52,7 @@ export function FileGallery({
   isValidDropTarget,
   onDragStart,
   onDragEnd,
+  noteCounts = {},
 }: FileGalleryProps) {
   const { getPaneState, toggleSelection } = useBrowserStore();
   const paneState = getPaneState(paneId);
@@ -65,12 +66,6 @@ export function FileGallery({
   const imageKeys = useMemo(() => imageObjects.map((o) => o.key), [imageObjects]);
   const thumbnailUrls = usePresignedUrls(connectionId, bucket, imageKeys);
 
-  const noteCountsQuery = useNoteCounts({
-    connectionId,
-    bucket,
-    keys: objects.map((o) => o.key),
-  });
-  const noteCounts = noteCountsQuery.data ?? {};
 
   const handleFolderDrop = (targetFolderKey: string, operation: "copy" | "move") => {
     if (!canWrite) return;

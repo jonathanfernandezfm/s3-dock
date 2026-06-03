@@ -33,6 +33,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, Star, History, MessageSquare } from "lucide-react";
 import { useInfoDrawerStore } from "@/lib/stores/info-drawer-store";
+import { useNoteCounts } from "@/lib/queries/notes";
 import { BulkOpsPanel } from "./bulk-ops-panel";
 import type { S3Object } from "@/types";
 
@@ -103,6 +104,19 @@ export function FileBrowser({
   const deleteObjects = useDeleteObjects(connectionId, bucket);
   const copyObjects = useCopyObjects();
   const moveObjects = useMoveObjects();
+
+  const noteCountsQuery = useNoteCounts({
+    connectionId,
+    bucket,
+    keys: (data?.objects ?? []).map((o) => o.key),
+  });
+  const noteCounts = noteCountsQuery.data ?? {};
+
+  const singleSelectedKey =
+    selectedItems.size === 1 ? Array.from(selectedItems)[0] : null;
+  const noteButtonCount = singleSelectedKey
+    ? (noteCounts[singleSelectedKey] ?? 0)
+    : 0;
 
   const prefixBookmarks = useBookmarksForBucket(connectionId, bucket);
 
@@ -445,9 +459,14 @@ export function FileBrowser({
             size="icon"
             onClick={() => toggleInfoDrawer("notes")}
             title="Notes"
-            className={infoTab === "notes" && isInfoOpen ? "text-primary" : ""}
+            className={`relative ${infoTab === "notes" && isInfoOpen ? "text-primary" : ""}`}
           >
             <MessageSquare className="h-4 w-4" />
+            {noteButtonCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-primary text-[10px] font-medium text-primary-foreground flex items-center justify-center px-0.5 leading-none">
+                {noteButtonCount > 9 ? "9+" : noteButtonCount}
+              </span>
+            )}
           </Button>
           <UploadButton
             connectionId={connectionId}
@@ -496,6 +515,7 @@ export function FileBrowser({
               isValidDropTarget={isValidDropTarget}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
+              noteCounts={noteCounts}
             />
           ) : (
             <FileList
@@ -515,6 +535,7 @@ export function FileBrowser({
               isValidDropTarget={isValidDropTarget}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
+              noteCounts={noteCounts}
             />
           )}
         </div>

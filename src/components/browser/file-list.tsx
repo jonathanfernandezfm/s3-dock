@@ -11,7 +11,6 @@ import {
 import { FileRow } from "./file-row";
 import { useBrowserStore } from "@/lib/stores/browser-store";
 import { cn } from "@/lib/utils";
-import { useNoteCounts } from "@/lib/queries/notes";
 import type { S3Object } from "@/types";
 
 interface FileListProps {
@@ -42,6 +41,7 @@ interface FileListProps {
   isValidDropTarget?: boolean;
   onDragStart?: (items: S3Object[]) => void;
   onDragEnd?: () => void;
+  noteCounts?: Record<string, number>;
 }
 
 export function FileList({
@@ -61,6 +61,7 @@ export function FileList({
   isValidDropTarget,
   onDragStart,
   onDragEnd,
+  noteCounts = {},
 }: FileListProps) {
   const { getPaneState, toggleSelection, selectAll, clearSelection } =
     useBrowserStore();
@@ -69,12 +70,6 @@ export function FileList({
   const selectedItems = paneState.selectedItems;
   const [isListDragOver, setIsListDragOver] = useState(false);
 
-  const noteCountsQuery = useNoteCounts({
-    connectionId,
-    bucket,
-    keys: objects.map((o) => o.key),
-  });
-  const noteCounts = noteCountsQuery.data ?? {};
 
   const allSelected =
     objects.length > 0 && objects.every((o) => selectedItems.has(o.key));
