@@ -41,6 +41,7 @@ interface FileListProps {
   isValidDropTarget?: boolean;
   onDragStart?: (items: S3Object[]) => void;
   onDragEnd?: () => void;
+  folderNoteCounts?: Record<string, number>;
 }
 
 export function FileList({
@@ -60,6 +61,7 @@ export function FileList({
   isValidDropTarget,
   onDragStart,
   onDragEnd,
+  folderNoteCounts = {},
 }: FileListProps) {
   const { getPaneState, toggleSelection, selectAll, clearSelection } =
     useBrowserStore();
@@ -202,6 +204,7 @@ export function FileList({
               onFolderDrop={handleFolderDrop}
               isDragging={isDragging}
               canDropOnFolder={isValidDropTarget && canWrite}
+              noteCount={object.isFolder ? (folderNoteCounts[object.key] ?? 0) : 0}
             />
           ))}
         </TableBody>

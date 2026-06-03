@@ -33,7 +33,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, Star, History, MessageSquare } from "lucide-react";
 import { useInfoDrawerStore } from "@/lib/stores/info-drawer-store";
-import { useNotesForKey } from "@/lib/queries/notes";
+import { useNotesForKey, useNoteCounts } from "@/lib/queries/notes";
 import { BulkOpsPanel } from "./bulk-ops-panel";
 import type { S3Object } from "@/types";
 
@@ -106,6 +106,16 @@ export function FileBrowser({
     key: currentPath,
   });
   const noteButtonCount = folderNotesQuery.data?.length ?? 0;
+
+  const folderKeys = (data?.objects ?? [])
+    .filter((o) => o.isFolder)
+    .map((o) => o.key);
+  const folderNoteCountsQuery = useNoteCounts({
+    connectionId,
+    bucket,
+    keys: folderKeys,
+  });
+  const folderNoteCounts = folderNoteCountsQuery.data ?? {};
 
   const prefixBookmarks = useBookmarksForBucket(connectionId, bucket);
 
@@ -504,6 +514,7 @@ export function FileBrowser({
               isValidDropTarget={isValidDropTarget}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
+              folderNoteCounts={folderNoteCounts}
             />
           ) : (
             <FileList
@@ -523,6 +534,7 @@ export function FileBrowser({
               isValidDropTarget={isValidDropTarget}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
+              folderNoteCounts={folderNoteCounts}
             />
           )}
         </div>
