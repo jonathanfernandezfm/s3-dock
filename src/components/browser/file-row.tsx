@@ -21,6 +21,7 @@ import {
   Trash2,
   Eye,
   Star,
+  MessageSquare,
 } from "lucide-react";
 import { formatBytes, formatDate, getFileExtension, isImageFile, cn } from "@/lib/utils";
 import { useFileItemBehavior } from "./use-file-item-behavior";
@@ -49,6 +50,7 @@ interface FileRowProps {
   onFolderDrop?: (targetFolderKey: string, operation: "copy" | "move") => void;
   isDragging?: boolean;
   canDropOnFolder?: boolean;
+  noteCount?: number;
 }
 
 function getFileIcon(key: string, isFolder: boolean) {
@@ -85,6 +87,7 @@ export function FileRow({
   onFolderDrop,
   isDragging,
   canDropOnFolder,
+  noteCount = 0,
 }: FileRowProps) {
   const Icon = getFileIcon(object.key, object.isFolder);
   const { dragHandlers, folderDropHandlers, isFolderDragOver, isBeingDragged, canPreview, fileName } = useFileItemBehavior({
@@ -164,6 +167,15 @@ export function FileRow({
               </button>
             );
           })()}
+          {noteCount > 0 && (
+            <span
+              className="ml-1.5 inline-flex items-center gap-0.5 text-xs text-muted-foreground"
+              title={`${noteCount} note${noteCount === 1 ? "" : "s"}`}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              {noteCount}
+            </span>
+          )}
         </div>
       </TableCell>
       <TableCell className="text-muted-foreground">

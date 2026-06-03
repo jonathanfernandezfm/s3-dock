@@ -11,6 +11,7 @@ import {
 import { FileRow } from "./file-row";
 import { useBrowserStore } from "@/lib/stores/browser-store";
 import { cn } from "@/lib/utils";
+import { useNoteCounts } from "@/lib/queries/notes";
 import type { S3Object } from "@/types";
 
 interface FileListProps {
@@ -67,6 +68,13 @@ export function FileList({
   const paneState = getPaneState(paneId);
   const selectedItems = paneState.selectedItems;
   const [isListDragOver, setIsListDragOver] = useState(false);
+
+  const noteCountsQuery = useNoteCounts({
+    connectionId,
+    bucket,
+    keys: objects.map((o) => o.key),
+  });
+  const noteCounts = noteCountsQuery.data ?? {};
 
   const allSelected =
     objects.length > 0 && objects.every((o) => selectedItems.has(o.key));
@@ -201,6 +209,7 @@ export function FileList({
               onFolderDrop={handleFolderDrop}
               isDragging={isDragging}
               canDropOnFolder={isValidDropTarget && canWrite}
+              noteCount={noteCounts[object.key] ?? 0}
             />
           ))}
         </TableBody>

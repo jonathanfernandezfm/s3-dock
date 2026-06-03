@@ -31,8 +31,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, Star, History } from "lucide-react";
-import { useActivityDrawerStore } from "@/lib/stores/activity-drawer-store";
+import { Loader2, RefreshCw, Star, History, MessageSquare } from "lucide-react";
+import { useInfoDrawerStore } from "@/lib/stores/info-drawer-store";
 import { BulkOpsPanel } from "./bulk-ops-panel";
 import type { S3Object } from "@/types";
 
@@ -70,8 +70,8 @@ export function FileBrowser({
 
   const { getPaneState, clearSelection, dragState, startDrag, endDrag, setViewMode } =
     useBrowserStore();
-  const { open: openActivityDrawer, isOpen: isActivityOpen, setScope: setActivityScope } =
-    useActivityDrawerStore();
+  const { isOpen: isInfoOpen, activeTab: infoTab, setScope: setInfoScope, toggle: toggleInfoDrawer } =
+    useInfoDrawerStore();
   const { addNotification, updateNotification } = useNotificationStore();
   const { data: connections = [] } = useConnections();
   const paneState = getPaneState(paneId);
@@ -82,14 +82,18 @@ export function FileBrowser({
   const currentPath = path.length > 0 ? path.join("/") + "/" : "";
 
   useEffect(() => {
-    if (isActivityOpen) {
-      setActivityScope({
+    if (!isInfoOpen) return;
+    if (selectedItems.size === 1) {
+      const onlyKey = Array.from(selectedItems)[0];
+      setInfoScope({ connectionId, bucket, objectKey: onlyKey });
+    } else {
+      setInfoScope({
         connectionId,
         bucket,
         prefix: currentPath || undefined,
       });
     }
-  }, [isActivityOpen, connectionId, bucket, currentPath, setActivityScope]);
+  }, [isInfoOpen, selectedItems, connectionId, bucket, currentPath, setInfoScope]);
 
   const { data, isPending, refetch } = useObjects(
     connectionId,
@@ -428,18 +432,22 @@ export function FileBrowser({
             onChange={(m) => setViewMode(paneId, m)}
           />
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
+            onClick={() => toggleInfoDrawer("activity")}
             title="Activity"
-            onClick={() =>
-              openActivityDrawer({
-                connectionId,
-                bucket,
-                prefix: currentPath || undefined,
-              })
-            }
+            className={infoTab === "activity" && isInfoOpen ? "text-primary" : ""}
           >
             <History className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => toggleInfoDrawer("notes")}
+            title="Notes"
+            className={infoTab === "notes" && isInfoOpen ? "text-primary" : ""}
+          >
+            <MessageSquare className="h-4 w-4" />
           </Button>
           <UploadButton
             connectionId={connectionId}

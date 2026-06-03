@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Folder, FileImage, FileText, File, Loader2 } from "lucide-react";
+import { Folder, FileImage, FileText, File, Loader2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFileItemBehavior } from "./use-file-item-behavior";
 import type { S3Object } from "@/types";
@@ -34,6 +34,7 @@ interface FileTileProps {
   onFolderDrop?: (targetFolderKey: string, operation: "copy" | "move") => void;
   isDragging?: boolean;
   canDropOnFolder?: boolean;
+  noteCount?: number;
 }
 
 export function FileTile({
@@ -54,6 +55,7 @@ export function FileTile({
   onFolderDrop,
   isDragging,
   canDropOnFolder,
+  noteCount = 0,
 }: FileTileProps) {
   const [loaded, setLoaded] = useState(false);
   const [broken, setBroken] = useState(false);
@@ -94,6 +96,15 @@ export function FileTile({
           data-selected={isSelected}
           className="absolute top-2 left-2 h-4 w-4 rounded border-gray-300 opacity-0 group-hover:opacity-100 data-[selected=true]:opacity-100 z-10"
         />
+        {noteCount > 0 && (
+          <span
+            className="absolute top-2 right-2 z-10 inline-flex items-center gap-0.5 text-xs bg-background/90 backdrop-blur-sm rounded px-1.5 py-0.5 border border-border text-foreground"
+            title={`${noteCount} note${noteCount === 1 ? "" : "s"}`}
+          >
+            <MessageSquare className="h-3 w-3" />
+            {noteCount}
+          </span>
+        )}
         <Link
           href={`/browser/${connectionId}/${bucket}/${object.key}`}
           onClick={(e) => {
@@ -138,6 +149,15 @@ export function FileTile({
         data-selected={isSelected}
         className="absolute top-2 left-2 h-4 w-4 rounded border-gray-300 opacity-0 group-hover:opacity-100 data-[selected=true]:opacity-100 z-10"
       />
+      {noteCount > 0 && (
+        <span
+          className="absolute top-2 right-2 z-10 inline-flex items-center gap-0.5 text-xs bg-background/90 backdrop-blur-sm rounded px-1.5 py-0.5 border border-border text-foreground"
+          title={`${noteCount} note${noteCount === 1 ? "" : "s"}`}
+        >
+          <MessageSquare className="h-3 w-3" />
+          {noteCount}
+        </span>
+      )}
       <div
         className="aspect-square rounded-md border bg-muted overflow-hidden relative flex items-center justify-center cursor-pointer"
         onClick={onPreview}

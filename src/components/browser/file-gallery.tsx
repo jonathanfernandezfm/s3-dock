@@ -5,6 +5,7 @@ import { FileTile } from "./file-tile";
 import { usePresignedUrls } from "@/lib/queries/presign";
 import { useBrowserStore } from "@/lib/stores/browser-store";
 import { isImageFile, cn } from "@/lib/utils";
+import { useNoteCounts } from "@/lib/queries/notes";
 import type { S3Object } from "@/types";
 
 interface FileGalleryProps {
@@ -63,6 +64,13 @@ export function FileGallery({
 
   const imageKeys = useMemo(() => imageObjects.map((o) => o.key), [imageObjects]);
   const thumbnailUrls = usePresignedUrls(connectionId, bucket, imageKeys);
+
+  const noteCountsQuery = useNoteCounts({
+    connectionId,
+    bucket,
+    keys: objects.map((o) => o.key),
+  });
+  const noteCounts = noteCountsQuery.data ?? {};
 
   const handleFolderDrop = (targetFolderKey: string, operation: "copy" | "move") => {
     if (!canWrite) return;
@@ -159,6 +167,7 @@ export function FileGallery({
             onFolderDrop={handleFolderDrop}
             isDragging={isDragging}
             canDropOnFolder={isValidDropTarget && canWrite}
+            noteCount={noteCounts[object.key] ?? 0}
           />
         ))}
         {imageObjects.map((object) => (
@@ -182,6 +191,7 @@ export function FileGallery({
             onFolderDrop={handleFolderDrop}
             isDragging={isDragging}
             canDropOnFolder={isValidDropTarget && canWrite}
+            noteCount={noteCounts[object.key] ?? 0}
           />
         ))}
         {otherObjects.map((object) => (
@@ -204,6 +214,7 @@ export function FileGallery({
             onFolderDrop={handleFolderDrop}
             isDragging={isDragging}
             canDropOnFolder={isValidDropTarget && canWrite}
+            noteCount={noteCounts[object.key] ?? 0}
           />
         ))}
       </div>
