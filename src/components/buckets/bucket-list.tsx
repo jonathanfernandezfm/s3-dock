@@ -14,6 +14,7 @@ import {
   Briefcase,
   Users,
 } from "lucide-react";
+import { filterNonEmptyWorkspaceGroups } from "./bucket-list-helpers";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePaletteIntentStore } from "@/lib/stores/palette-intent-store";
@@ -92,21 +93,25 @@ export function BucketList({ onOpenBucket }: BucketListProps = {}) {
     endpoint: string;
   }) => connection.name || connection.endpoint;
 
+  const visibleWorkspaceGroups = filterNonEmptyWorkspaceGroups(workspaceGroups);
+
   return (
     <div className="space-y-10">
-      {workspaceGroups.map(({ workspace, groups: wsGroups }) => {
-        if (wsGroups.length === 0) return null;
+      {visibleWorkspaceGroups.map(({ workspace, groups: wsGroups }, index) => {
         return (
           <div key={workspace.id} className="space-y-6">
-            <div className="flex items-center gap-2 border-b pb-2">
+            {index > 0 && <div className="border-t border-border/50" />}
+            <div className="flex items-center gap-1.5">
               {workspace.type === "TEAM" ? (
-                <Users className="h-5 w-5 text-muted-foreground" />
+                <Users className="h-3 w-3 text-muted-foreground/70" />
               ) : (
-                <Briefcase className="h-5 w-5 text-muted-foreground" />
+                <Briefcase className="h-3 w-3 text-muted-foreground/70" />
               )}
-              <h2 className="text-xl font-bold">{workspace.name}</h2>
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground border rounded px-1.5 py-0.5">
-                {workspace.role}
+              <span className="text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">
+                {workspace.name}
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/50">
+                · {workspace.role}
               </span>
             </div>
 
