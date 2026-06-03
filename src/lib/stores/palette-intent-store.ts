@@ -12,12 +12,20 @@ export type PaletteIntent =
     };
 
 interface PaletteIntentState {
+  open: boolean;
+  openPalette: () => void;
+  closePalette: () => void;
+  togglePalette: () => void;
   intent: PaletteIntent | null;
   requestIntent: (intent: PaletteIntent) => void;
   consumeIntent: () => PaletteIntent | null;
 }
 
 export const usePaletteIntentStore = create<PaletteIntentState>((set, get) => ({
+  open: false,
+  openPalette: () => set({ open: true }),
+  closePalette: () => set({ open: false }),
+  togglePalette: () => set((s) => ({ open: !s.open })),
   intent: null,
   requestIntent: (intent) => set({ intent }),
   consumeIntent: () => {
