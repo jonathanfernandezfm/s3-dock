@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Home, MoreHorizontal } from "lucide-react";
+import { ChevronRight, Home, MoreHorizontal, Star } from "lucide-react";
+import { useBookmarksForBucket, useCreateBookmark, useDeleteBookmark } from "@/lib/queries/bookmarks";
+import { findBookmark } from "@/lib/bookmarks-helpers";
 
 interface BreadcrumbProps {
   connectionId: string;
@@ -21,6 +23,9 @@ export function Breadcrumb({
   maxVisibleItems = 3,
 }: BreadcrumbProps) {
   const parts = path.split("/").filter(Boolean);
+  const prefixBookmarks = useBookmarksForBucket(connectionId, bucket);
+  const createBookmark = useCreateBookmark();
+  const deleteBookmark = useDeleteBookmark();
 
   const buildPath = (index: number) => {
     const pathParts = parts.slice(0, index + 1);
@@ -72,7 +77,14 @@ export function Breadcrumb({
     visibleParts = parts.map((part, index) => ({ part, originalIndex: index }));
   }
 
+  const currentPrefix = parts.length > 0 ? parts.join("/") + "/" : null;
+  const pinnedFolder = currentPrefix
+    ? findBookmark(prefixBookmarks, connectionId, bucket, currentPrefix)
+    : null;
+  const folderPinned = !!pinnedFolder;
+
   return (
+    <div className="flex items-center gap-1.5 min-w-0">
     <nav className="flex items-center text-sm min-w-0 overflow-hidden">
       <Link
         href="/buckets"
@@ -151,5 +163,18 @@ export function Breadcrumb({
           </div>
         ))}
     </nav>
+    {currentPrefix && (
+      <button
+        onClick={() => {
+          if (folderPinned && pinnedFolder) deleteBookmark.mutate(pinnedFolder.id);
+          else createBookmark.mutate({ connectionId, bucket, prefix: currentPrefix });
+        }}
+        className={`p-1 rounded hover:bg-accent shrink-0 ${folderPinned ? "text-yellow-400" : "text-muted-foreground/50 hover:text-muted-foreground"}`}
+        title={folderPinned ? "Unpin current folder" : "Pin current folder"}
+      >
+        <Star className="size-3.5" fill={folderPinned ? "currentColor" : "none"} />
+      </button>
+    )}
+    </div>
   );
 }

@@ -47,6 +47,7 @@ model User {
 
   // Usage tracking
   usageRecords UsageRecord[]
+  bookmarks    Bookmark[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -164,8 +165,26 @@ model Connection {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  bookmarks Bookmark[]
 
   @@index([workspaceId])
 
   @@map("connections")
+}
+
+model Bookmark {
+  id           String     @id @default(uuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connectionId String
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  bucket       String
+  prefix       String?
+  label        String?
+  createdAt    DateTime   @default(now())
+
+  @@unique([userId, connectionId, bucket, prefix])
+  @@index([userId, connectionId])
+  @@index([userId, connectionId, bucket])
+  @@map("bookmarks")
 }

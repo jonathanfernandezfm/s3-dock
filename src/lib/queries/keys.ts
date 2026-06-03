@@ -20,4 +20,13 @@ export const queryKeys = {
     batch: (connectionId: string, bucket: string, sortedKeys: string[]) =>
       [...queryKeys.presign.all, "batch", connectionId, bucket, sortedKeys.join("|")] as const,
   },
+  bookmarks: {
+    all: ["bookmarks"] as const,
+    list: (connectionId?: string, bucket?: string) =>
+      connectionId && bucket
+        ? ([...queryKeys.bookmarks.all, "list", connectionId, bucket] as const)
+        : connectionId
+        ? ([...queryKeys.bookmarks.all, "list", connectionId] as const)
+        : ([...queryKeys.bookmarks.all, "list"] as const),
+  },
 };

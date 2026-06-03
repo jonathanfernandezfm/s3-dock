@@ -12,6 +12,8 @@ import { useBrowserStore } from "@/lib/stores/browser-store";
 import { useNotificationStore } from "@/lib/stores/notification-store";
 import { usePaneContextSafe } from "@/lib/contexts/pane-context";
 import { usePaletteIntentStore } from "@/lib/stores/palette-intent-store";
+import { useBookmarksForBucket } from "@/lib/queries/bookmarks";
+import { getPathTail } from "@/lib/bookmarks-helpers";
 import { Breadcrumb } from "./breadcrumb";
 import { FileList } from "./file-list";
 import { FileGallery } from "./file-gallery";
@@ -29,7 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Star } from "lucide-react";
 import { BulkOpsPanel } from "./bulk-ops-panel";
 import type { S3Object } from "@/types";
 
@@ -84,6 +86,8 @@ export function FileBrowser({
   const deleteObjects = useDeleteObjects(connectionId, bucket);
   const copyObjects = useCopyObjects();
   const moveObjects = useMoveObjects();
+
+  const prefixBookmarks = useBookmarksForBucket(connectionId, bucket);
 
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [previewObject, setPreviewObject] = useState<S3Object | null>(null);
@@ -367,6 +371,21 @@ export function FileBrowser({
 
   return (
     <div className="flex flex-col flex-1 gap-4">
+      {prefixBookmarks.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b text-xs">
+          <Star className="size-3 text-muted-foreground shrink-0" />
+          {prefixBookmarks.map((bm) => (
+            <button
+              key={bm.id}
+              title={bm.prefix ?? ""}
+              onClick={() => onNavigate?.(bm.prefix ?? "")}
+              className="px-2 py-0.5 rounded-full border border-border hover:bg-accent text-foreground"
+            >
+              {getPathTail(bm.prefix ?? "")}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0 flex-1">
           <Breadcrumb

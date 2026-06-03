@@ -8,6 +8,7 @@ import {
   Plug,
   Plus,
   Settings,
+  Star,
   Users,
 } from "lucide-react";
 import {
@@ -23,6 +24,7 @@ import { useLayoutStore } from "@/lib/stores/layout-store";
 import { useRecentLocationsStore } from "@/lib/stores/recent-locations-store";
 import { usePaletteIntentStore } from "@/lib/stores/palette-intent-store";
 import { usePaletteItems } from "./use-palette-items";
+import type { PinnedItem } from "./use-palette-items";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -116,6 +118,33 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     close();
   };
 
+  const navigateToPinned = (item: PinnedItem) => {
+    if (!paneId || !activeTab) return;
+    const sameBucket =
+      activeTab.type === "browser" &&
+      activeTab.connectionId === item.connectionId &&
+      activeTab.bucket === item.bucket;
+    if (!sameBucket) {
+      updateTabBucket(
+        paneId,
+        activeTab.id,
+        item.connectionId,
+        item.connectionName,
+        item.bucket
+      );
+    }
+    if (item.prefix) {
+      updateTabPath(paneId, activeTab.id, item.prefix);
+    }
+    pushRecent({
+      connectionId: item.connectionId,
+      connectionName: item.connectionName,
+      bucket: item.bucket,
+      path: item.prefix ?? "",
+    });
+    close();
+  };
+
   const navigateToConnectionAnchor = (connectionId: string) => {
     if (paneId && activeTab) {
       resetTabToBuckets(paneId, activeTab.id);
@@ -193,6 +222,35 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       <CommandInput placeholder="Search or run a command..." />
       <CommandList>
         <CommandEmpty>No results.</CommandEmpty>
+
+        {items.pinned.length > 0 && (
+          <>
+            <CommandGroup heading="Pinned">
+              {items.pinned.map((item) => {
+                const displayLabel = item.label ?? (item.prefix ? item.prefix.replace(/\/$/, "") : item.bucket);
+                const value = `pinned ${item.bucket} ${item.prefix ?? ""} ${item.connectionName}`;
+                return (
+                  <CommandItem
+                    key={item.id}
+                    value={value}
+                    onSelect={() => navigateToPinned(item)}
+                  >
+                    <span className="flex h-5 w-5 items-center justify-center">
+                      <Star className="h-4 w-4 text-yellow-400" fill="currentColor" />
+                    </span>
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate">{displayLabel}</span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {item.connectionName} · {item.bucket}{item.prefix ? "/" + item.prefix : ""}
+                      </span>
+                    </div>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
 
         {items.recents.length > 0 && (
           <>

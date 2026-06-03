@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -20,9 +20,12 @@ import {
   Download,
   Trash2,
   Eye,
+  Star,
 } from "lucide-react";
 import { formatBytes, formatDate, getFileExtension, isImageFile, cn } from "@/lib/utils";
 import { useFileItemBehavior } from "./use-file-item-behavior";
+import { useBookmarksForBucket, useCreateBookmark, useDeleteBookmark } from "@/lib/queries/bookmarks";
+import { findBookmark } from "@/lib/bookmarks-helpers";
 import type { S3Object } from "@/types";
 
 interface FileRowProps {
@@ -90,6 +93,10 @@ export function FileRow({
     onDragStart, onDragEnd, onFolderDrop,
   });
 
+  const prefixBookmarks = useBookmarksForBucket(connectionId, bucket);
+  const createBookmark = useCreateBookmark();
+  const deleteBookmark = useDeleteBookmark();
+
   const href = object.isFolder
     ? `/browser/${connectionId}/${bucket}/${object.key}`
     : undefined;
@@ -141,6 +148,23 @@ export function FileRow({
               {fileName}
             </span>
           )}
+          {object.isFolder && (() => {
+            const existing = findBookmark(prefixBookmarks, connectionId, bucket, object.key);
+            const pinned = !!existing;
+            return (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (pinned && existing) deleteBookmark.mutate(existing.id);
+                  else createBookmark.mutate({ connectionId, bucket, prefix: object.key });
+                }}
+                className={`p-1 rounded hover:bg-accent ${pinned ? "text-yellow-400" : "text-muted-foreground/40 hover:text-muted-foreground"}`}
+                title={pinned ? "Unpin folder" : "Pin folder"}
+              >
+                <Star className="size-3" fill={pinned ? "currentColor" : "none"} />
+              </button>
+            );
+          })()}
         </div>
       </TableCell>
       <TableCell className="text-muted-foreground">
@@ -150,33 +174,48 @@ export function FileRow({
         {object.lastModified ? formatDate(object.lastModified) : "-"}
       </TableCell>
       <TableCell className="w-8">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {canPreview && (
-              <DropdownMenuItem onClick={onPreview}>
-                <Eye className="h-4 w-4" />
-                Preview
-              </DropdownMenuItem>
-            )}
-            {!object.isFolder && (
-              <DropdownMenuItem onClick={onDownload}>
-                <Download className="h-4 w-4" />
-                Download
-              </DropdownMenuItem>
-            )}
-            {canWrite && (
-              <DropdownMenuItem className="text-destructive" onClick={onDelete}>
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {canPreview && (
+                <DropdownMenuItem onClick={onPreview}>
+                  <Eye className="h-4 w-4" />
+                  Preview
+                </DropdownMenuItem>
+              )}
+              {!object.isFolder && (
+                <DropdownMenuItem onClick={onDownload}>
+                  <Download className="h-4 w-4" />
+                  Download
+                </DropdownMenuItem>
+              )}
+              {object.isFolder && (() => {
+                const existing = findBookmark(prefixBookmarks, connectionId, bucket, object.key);
+                const pinned = !!existing;
+                return (
+                  <DropdownMenuItem onClick={() => {
+                    if (pinned && existing) deleteBookmark.mutate(existing.id);
+                    else createBookmark.mutate({ connectionId, bucket, prefix: object.key });
+                  }}>
+                    <Star className="size-4" />
+                    {pinned ? "Unpin folder" : "Pin folder"}
+                  </DropdownMenuItem>
+                );
+              })()}
+              {canWrite && (
+                <DropdownMenuItem className="text-destructive" onClick={onDelete}>
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </TableCell>
     </TableRow>
   );

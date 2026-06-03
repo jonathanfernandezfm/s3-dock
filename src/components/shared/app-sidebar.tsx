@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -14,6 +14,7 @@ import {
   type ConnectionResponse,
 } from "@/lib/queries/connections";
 import { useNotificationStore } from "@/lib/stores/notification-store";
+import { useBookmarks } from "@/lib/queries/bookmarks";
 import { ConnectionForm } from "@/components/connections/connection-form";
 import {
   Dialog,
@@ -43,6 +44,7 @@ import {
   Pencil,
   Trash2,
   Loader2,
+  Star,
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -51,9 +53,12 @@ export function AppSidebar() {
   const { data: workspaces = [] } = useWorkspaces();
   const { data: connections = [] } = useConnections();
   const { collapsedWorkspaces, toggleWorkspace } = useSidebarStore();
-  const { panes, focusedPaneId, resetTabToBuckets } = useLayoutStore();
+  const { panes, focusedPaneId, resetTabToBuckets, updateTabBucket, addTab } = useLayoutStore();
   const deleteConnection = useDeleteConnection();
   const { addNotification } = useNotificationStore();
+  const { data: allBookmarks = [] } = useBookmarks();
+
+  const bucketPins = allBookmarks.filter((bm) => bm.prefix === null);
 
   const [editingConnection, setEditingConnection] =
     useState<ConnectionResponse | null>(null);
@@ -88,6 +93,25 @@ export function AppSidebar() {
     }
   };
 
+  const handlePinnedBucketClick = (connectionId: string, connectionName: string, bucket: string) => {
+    const targetPaneId = focusedPaneId || Object.keys(panes)[0];
+    if (targetPaneId) {
+      const pane = panes[targetPaneId];
+      if (pane?.activeTabId) {
+        updateTabBucket(targetPaneId, pane.activeTabId, connectionId, connectionName, bucket);
+        router.push("/buckets");
+      }
+    }
+  };
+
+  const handlePinnedBucketMiddleClick = (connectionId: string, connectionName: string, bucket: string) => {
+    const targetPaneId = focusedPaneId || Object.keys(panes)[0];
+    if (targetPaneId) {
+      addTab(targetPaneId, { type: "browser", connectionId, connectionName, bucket, path: "" });
+      router.push("/buckets");
+    }
+  };
+
   const handleDelete = async () => {
     if (!deletingConnection) return;
     try {
@@ -117,7 +141,7 @@ export function AppSidebar() {
   return (
     <>
       <aside className="w-64 border-r bg-sidebar-background min-h-screen flex flex-col">
-        <div className="p-4 border-b">
+        <div className="h-14 px-4 border-b flex items-center">
           <Link
             href="/buckets"
             className="flex items-center gap-2"
@@ -155,6 +179,36 @@ export function AppSidebar() {
             <Plug className="h-4 w-4" />
             Connections
           </Link>
+
+          {bucketPins.length > 0 && (
+            <div className="pt-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground px-3 pb-1">
+                Pinned
+              </p>
+              <div className="space-y-0.5">
+                {bucketPins.map((bm) => (
+                  <button
+                    key={bm.id}
+                    type="button"
+                    onClick={() => handlePinnedBucketClick(bm.connectionId, bm.connectionName, bm.bucket)}
+                    onMouseDown={(e) => {
+                      if (e.button === 1) {
+                        e.preventDefault();
+                        handlePinnedBucketMiddleClick(bm.connectionId, bm.connectionName, bm.bucket);
+                      }
+                    }}
+                    className="flex items-center gap-2 w-full text-left px-3 py-1.5 rounded-md hover:bg-sidebar-accent/50 text-sidebar-foreground text-sm"
+                  >
+                    <Database className="size-3.5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <div className="truncate font-medium">{bm.bucket}</div>
+                      <div className="truncate text-xs text-muted-foreground">{bm.connectionName}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {workspaces.length > 0 && (
             <div className="pt-3">

@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useConnections } from "@/lib/queries/connections";
 import { useAllBuckets } from "@/lib/queries/buckets";
 import { useTeams } from "@/lib/queries/teams";
+import { useBookmarks } from "@/lib/queries/bookmarks";
 import { queryKeys } from "@/lib/queries/keys";
 import { useLayoutStore } from "@/lib/stores/layout-store";
 import { useRecentLocationsStore, type RecentLocation } from "@/lib/stores/recent-locations-store";
@@ -36,12 +37,22 @@ export interface TeamItem {
   slug?: string | null;
 }
 
+export interface PinnedItem {
+  id: string;
+  connectionId: string;
+  connectionName: string;
+  bucket: string;
+  prefix: string | null;
+  label: string | null;
+}
+
 export interface PaletteItems {
   recents: RecentLocation[];
   connections: ConnectionItem[];
   buckets: BucketItem[];
   folders: FolderItem[];
   teams: TeamItem[];
+  pinned: PinnedItem[];
   isFoldersTruncated: boolean;
   activeBucket: { connectionId: string; bucket: string; path: string } | null;
 }
@@ -52,6 +63,7 @@ export function usePaletteItems(): PaletteItems {
   const { data: connectionsData = [] } = useConnections();
   const { groups } = useAllBuckets();
   const { data: teamsData = [] } = useTeams();
+  const { data: bookmarks = [] } = useBookmarks();
   const recents = useRecentLocationsStore((state) => state.recents);
   const { panes, focusedPaneId } = useLayoutStore();
 
@@ -78,6 +90,15 @@ export function usePaletteItems(): PaletteItems {
       teamId: t.id,
       name: t.name,
       slug: t.slug,
+    }));
+
+    const pinned: PinnedItem[] = bookmarks.map((bm) => ({
+      id: bm.id,
+      connectionId: bm.connectionId,
+      connectionName: bm.connectionName,
+      bucket: bm.bucket,
+      prefix: bm.prefix,
+      label: bm.label,
     }));
 
     const paneId = focusedPaneId ?? Object.keys(panes)[0] ?? null;
@@ -130,8 +151,9 @@ export function usePaletteItems(): PaletteItems {
       buckets,
       folders,
       teams,
+      pinned,
       isFoldersTruncated,
       activeBucket,
     };
-  }, [connectionsData, groups, teamsData, recents, panes, focusedPaneId, queryClient]);
+  }, [connectionsData, groups, teamsData, bookmarks, recents, panes, focusedPaneId, queryClient]);
 }

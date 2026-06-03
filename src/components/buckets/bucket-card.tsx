@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Database, MoreVertical, Trash2, FolderOpen } from "lucide-react";
+import { Database, MoreVertical, Trash2, FolderOpen, Star } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { S3Bucket } from "@/types";
+import { useBookmarks, useCreateBookmark, useDeleteBookmark } from "@/lib/queries/bookmarks";
+import { isBookmarked, findBookmark } from "@/lib/bookmarks-helpers";
 
 interface BucketCardProps {
   bucket: S3Bucket;
@@ -31,6 +33,11 @@ export function BucketCard({
   canDelete = true,
 }: BucketCardProps) {
   const browserUrl = `/browser/${connectionId}/${bucket.name}`;
+
+  const { data: bookmarks = [] } = useBookmarks();
+  const createBookmark = useCreateBookmark();
+  const deleteBookmark = useDeleteBookmark();
+  const pinned = isBookmarked(bookmarks, connectionId, bucket.name, null);
 
   const handleClick = (e: React.MouseEvent) => {
     if (onOpen) {
@@ -54,31 +61,64 @@ export function BucketCard({
             <Database className="h-4 w-4 text-muted-foreground" />
             {bucket.name}
           </CardTitle>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleBrowse}>
-                <FolderOpen className="h-4 w-4" />
-                Browse
-              </DropdownMenuItem>
-              {canDelete && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (pinned) {
+                  const existing = findBookmark(bookmarks, connectionId, bucket.name, null);
+                  if (existing) deleteBookmark.mutate(existing.id);
+                } else {
+                  createBookmark.mutate({ connectionId, bucket: bucket.name, prefix: null });
+                }
+              }}
+              className={`p-1 rounded hover:bg-accent ${pinned ? "text-yellow-400" : "text-muted-foreground/40 hover:text-muted-foreground"}`}
+              title={pinned ? "Unpin bucket" : "Pin bucket"}
+            >
+              <Star className="size-4" fill={pinned ? "currentColor" : "none"} />
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleBrowse}>
+                  <FolderOpen className="h-4 w-4" />
+                  Browse
+                </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="text-destructive"
                   onClick={(e) => {
                     e.preventDefault();
-                    onDelete(bucket.name);
+                    e.stopPropagation();
+                    if (pinned) {
+                      const existing = findBookmark(bookmarks, connectionId, bucket.name, null);
+                      if (existing) deleteBookmark.mutate(existing.id);
+                    } else {
+                      createBookmark.mutate({ connectionId, bucket: bucket.name, prefix: null });
+                    }
                   }}
                 >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
+                  <Star className="h-4 w-4" fill={pinned ? "currentColor" : "none"} />
+                  {pinned ? "Unpin bucket" : "Pin bucket"}
                 </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {canDelete && (
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onDelete(bucket.name);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </CardHeader>
         <CardContent>
           <p className="text-xs text-muted-foreground">
