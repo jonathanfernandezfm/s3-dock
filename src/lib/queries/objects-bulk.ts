@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "./keys";
+import { useInvalidateNotes } from "./notes";
 
 export interface RenameArgs {
   connectionId: string;
@@ -54,4 +55,13 @@ export async function deleteOneObject(args: DeleteOneArgs): Promise<void> {
 export function useInvalidateObjects() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: queryKeys.objects.all });
+}
+
+export function useInvalidateNotesAndObjects() {
+  const queryClient = useQueryClient();
+  const invalidateNotes = useInvalidateNotes();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.objects.all });
+    invalidateNotes();
+  };
 }

@@ -10,7 +10,7 @@ import {
   deleteOneObject,
   renameObject,
   setObjectTags,
-  useInvalidateObjects,
+  useInvalidateNotesAndObjects,
 } from "@/lib/queries/objects-bulk";
 import { BulkRenameDialog } from "./bulk-rename-dialog";
 import { BulkTagDialog } from "./bulk-tag-dialog";
@@ -58,7 +58,7 @@ export function BulkOpsPanel({
     dismissProgress,
   } = useBulkOpsStore();
   const { addNotification, updateNotification } = useNotificationStore();
-  const invalidateObjects = useInvalidateObjects();
+  const invalidateObjects = useInvalidateNotesAndObjects();
 
   const selection: S3Object[] = objects.filter((o) => selectedItems.has(o.key));
   const dialogOpen = dialog !== null && dialogPaneId === paneId;

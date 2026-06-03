@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "./keys";
 import type { S3Object } from "@/types";
 import { useInvalidateActivity } from "./activity";
+import { useInvalidateNotes } from "./notes";
 
 interface ListObjectsResponse {
   objects: S3Object[];
@@ -104,12 +105,14 @@ export function useObjects(
 export function useDeleteObjects(connectionId: string, bucket: string) {
   const queryClient = useQueryClient();
   const invalidateActivity = useInvalidateActivity();
+  const invalidateNotes = useInvalidateNotes();
 
   return useMutation({
     mutationFn: (keys: string[]) => deleteObjects(connectionId, bucket, keys),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.objects.all });
       invalidateActivity();
+      invalidateNotes();
     },
   });
 }
@@ -160,12 +163,14 @@ async function moveObjects(params: CopyMoveParams): Promise<CopyMoveResponse> {
 export function useCopyObjects() {
   const queryClient = useQueryClient();
   const invalidateActivity = useInvalidateActivity();
+  const invalidateNotes = useInvalidateNotes();
 
   return useMutation({
     mutationFn: copyObjects,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.objects.all });
       invalidateActivity();
+      invalidateNotes();
     },
   });
 }
@@ -173,12 +178,14 @@ export function useCopyObjects() {
 export function useMoveObjects() {
   const queryClient = useQueryClient();
   const invalidateActivity = useInvalidateActivity();
+  const invalidateNotes = useInvalidateNotes();
 
   return useMutation({
     mutationFn: moveObjects,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.objects.all });
       invalidateActivity();
+      invalidateNotes();
     },
   });
 }

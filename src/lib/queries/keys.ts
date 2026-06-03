@@ -34,4 +34,13 @@ export const queryKeys = {
     list: (connectionId: string, bucket: string, prefix?: string, key?: string) =>
       [...queryKeys.activity.all, connectionId, bucket, prefix ?? "", key ?? ""] as const,
   },
+  notes: {
+    all: ["notes"] as const,
+    forKey: (connectionId: string, bucket: string, key: string) =>
+      [...queryKeys.notes.all, "key", connectionId, bucket, key] as const,
+    counts: (connectionId: string, bucket: string, sortedKeys: string[]) =>
+      [...queryKeys.notes.all, "counts", connectionId, bucket, sortedKeys.join("|")] as const,
+    countsForBucket: (connectionId: string, bucket: string) =>
+      [...queryKeys.notes.all, "counts", connectionId, bucket] as const,
+  },
 };
