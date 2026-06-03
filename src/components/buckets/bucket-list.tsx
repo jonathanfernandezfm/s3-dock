@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAllBuckets, type BucketGroup } from "@/lib/queries/buckets";
 import { useWorkspaces, type WorkspaceSummary } from "@/lib/queries/workspaces";
 import { BucketCard } from "./bucket-card";
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { usePaletteIntentStore } from "@/lib/stores/palette-intent-store";
 
 interface BucketListProps {
   onOpenBucket?: (
@@ -33,6 +34,18 @@ export function BucketList({ onOpenBucket }: BucketListProps = {}) {
     name: string;
     connectionId: string;
   } | null>(null);
+
+  const [createBucketForConnection, setCreateBucketForConnection] = useState<
+    string | null
+  >(null);
+  const intent = usePaletteIntentStore((s) => s.intent);
+  const consumeIntent = usePaletteIntentStore((s) => s.consumeIntent);
+
+  useEffect(() => {
+    if (intent?.kind !== "create-bucket") return;
+    consumeIntent();
+    setCreateBucketForConnection(intent.connectionId);
+  }, [intent, consumeIntent]);
 
   const workspaceGroups = useMemo(() => {
     const wsMap = new Map<
@@ -177,6 +190,17 @@ export function BucketList({ onOpenBucket }: BucketListProps = {}) {
         connectionId={deletingBucket?.connectionId || null}
         onClose={() => setDeletingBucket(null)}
       />
+
+      {createBucketForConnection && (
+        <CreateBucketDialog
+          connectionId={createBucketForConnection}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setCreateBucketForConnection(null);
+          }}
+          hideTrigger
+        />
+      )}
     </div>
   );
 }

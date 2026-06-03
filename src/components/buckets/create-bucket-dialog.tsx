@@ -20,17 +20,31 @@ import { Plus, Loader2 } from "lucide-react";
 interface CreateBucketDialogProps {
   connectionId: string;
   disabled?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
-export function CreateBucketDialog({ connectionId, disabled = false }: CreateBucketDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CreateBucketDialog({
+  connectionId,
+  disabled = false,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
+}: CreateBucketDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    if (controlledOpen === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
+
   const [name, setName] = useState("");
   const createBucket = useCreateBucket(connectionId);
   const { addNotification } = useNotificationStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!name.trim()) return;
 
     try {
@@ -55,12 +69,14 @@ export function CreateBucketDialog({ connectionId, disabled = false }: CreateBuc
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline" disabled={disabled}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Bucket
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline" disabled={disabled}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Bucket
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
@@ -84,11 +100,7 @@ export function CreateBucketDialog({ connectionId, disabled = false }: CreateBuc
             />
           </div>
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={createBucket.isPending}>

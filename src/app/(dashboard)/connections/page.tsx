@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ConnectionForm } from "@/components/connections/connection-form";
 import { ConnectionList } from "@/components/connections/connection-list";
@@ -11,8 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { ConnectionResponse } from "@/lib/queries/connections";
+import { usePaletteIntentStore } from "@/lib/stores/palette-intent-store";
 
-export default function ConnectionsPage() {
+function ConnectionsPageContent() {
   const searchParams = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingConnection, setEditingConnection] =
@@ -29,6 +30,17 @@ export default function ConnectionsPage() {
       setDialogOpen(true);
     }
   }, [searchParams]);
+
+  const consumeIntent = usePaletteIntentStore((s) => s.consumeIntent);
+  const intent = usePaletteIntentStore((s) => s.intent);
+
+  useEffect(() => {
+    if (intent?.kind !== "create-connection") return;
+    consumeIntent();
+    setDefaultWorkspaceId(intent.workspaceId);
+    setEditingConnection(null);
+    setDialogOpen(true);
+  }, [intent, consumeIntent]);
 
   const handleAdd = (workspaceId?: string) => {
     setDefaultWorkspaceId(workspaceId);
@@ -75,5 +87,13 @@ export default function ConnectionsPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function ConnectionsPage() {
+  return (
+    <Suspense>
+      <ConnectionsPageContent />
+    </Suspense>
   );
 }

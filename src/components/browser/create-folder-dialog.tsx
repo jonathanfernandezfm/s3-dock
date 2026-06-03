@@ -22,6 +22,9 @@ interface CreateFolderDialogProps {
   bucket: string;
   currentPath: string;
   disabled?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
 export function CreateFolderDialog({
@@ -29,15 +32,23 @@ export function CreateFolderDialog({
   bucket,
   currentPath,
   disabled = false,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: CreateFolderDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    if (controlledOpen === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
+
   const [name, setName] = useState("");
   const createFolder = useCreateFolder(connectionId, bucket);
   const { addNotification } = useNotificationStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!name.trim()) return;
 
     const folderPath = currentPath + name.trim() + "/";
@@ -64,12 +75,14 @@ export function CreateFolderDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" disabled={disabled}>
-          <FolderPlus className="mr-2 h-4 w-4" />
-          New Folder
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="outline" disabled={disabled}>
+            <FolderPlus className="mr-2 h-4 w-4" />
+            New Folder
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
@@ -90,11 +103,7 @@ export function CreateFolderDialog({
             />
           </div>
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={createFolder.isPending}>

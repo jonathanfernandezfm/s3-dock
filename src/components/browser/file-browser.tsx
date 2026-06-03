@@ -11,6 +11,7 @@ import { useConnections } from "@/lib/queries/connections";
 import { useBrowserStore } from "@/lib/stores/browser-store";
 import { useNotificationStore } from "@/lib/stores/notification-store";
 import { usePaneContextSafe } from "@/lib/contexts/pane-context";
+import { usePaletteIntentStore } from "@/lib/stores/palette-intent-store";
 import { Breadcrumb } from "./breadcrumb";
 import { FileList } from "./file-list";
 import { FileGallery } from "./file-gallery";
@@ -87,6 +88,23 @@ export function FileBrowser({
   const [previewObject, setPreviewObject] = useState<S3Object | null>(null);
   const [crossWorkspacePending, setCrossWorkspacePending] =
     useState<PendingDrop | null>(null);
+
+  const [createFolderOpen, setCreateFolderOpen] = useState(false);
+  const intent = usePaletteIntentStore((s) => s.intent);
+  const consumeIntent = usePaletteIntentStore((s) => s.consumeIntent);
+
+  useEffect(() => {
+    if (intent?.kind !== "create-folder") return;
+    if (
+      intent.connectionId !== connectionId ||
+      intent.bucket !== bucket ||
+      intent.path !== currentPath
+    ) {
+      return;
+    }
+    consumeIntent();
+    setCreateFolderOpen(true);
+  }, [intent, consumeIntent, connectionId, bucket, currentPath]);
 
   const guardInHistory = useRef(false);
 
@@ -413,6 +431,8 @@ export function FileBrowser({
             bucket={bucket}
             currentPath={currentPath}
             disabled={!canWrite}
+            open={createFolderOpen}
+            onOpenChange={setCreateFolderOpen}
           />
           <Button variant="outline" size="icon" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4" />

@@ -18,10 +18,25 @@ import { Loader2, Plus } from "lucide-react";
 interface CreateTeamDialogProps {
   onCreate: (data: { name: string; slug?: string }) => Promise<void>;
   isPending: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
-export function CreateTeamDialog({ onCreate, isPending }: CreateTeamDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CreateTeamDialog({
+  onCreate,
+  isPending,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
+}: CreateTeamDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    if (controlledOpen === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
+
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
 
@@ -45,12 +60,14 @@ export function CreateTeamDialog({ onCreate, isPending }: CreateTeamDialogProps)
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Team
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Team
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>

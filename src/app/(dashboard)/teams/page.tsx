@@ -10,6 +10,7 @@ import {
   useRemoveTeamMember,
 } from "@/lib/queries/teams";
 import { useNotificationStore } from "@/lib/stores/notification-store";
+import { usePaletteIntentStore } from "@/lib/stores/palette-intent-store";
 import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 import { TeamMembersCard } from "@/components/teams/team-members-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,16 @@ export default function TeamsPage() {
       setSelectedTeamId(teams[0].id);
     }
   }, [teams, selectedTeamId]);
+
+  const [createTeamOpen, setCreateTeamOpen] = useState(false);
+  const intent = usePaletteIntentStore((s) => s.intent);
+  const consumeIntent = usePaletteIntentStore((s) => s.consumeIntent);
+
+  useEffect(() => {
+    if (intent?.kind !== "create-team") return;
+    consumeIntent();
+    setCreateTeamOpen(true);
+  }, [intent, consumeIntent]);
 
   const selectedTeamSummary = useMemo(
     () => teams.find((team) => team.id === selectedTeamId) ?? null,
@@ -126,6 +137,8 @@ export default function TeamsPage() {
         <div className="flex items-center justify-between gap-2">
           <h1 className="text-xl font-bold">Teams</h1>
           <CreateTeamDialog
+            open={createTeamOpen}
+            onOpenChange={setCreateTeamOpen}
             onCreate={handleCreateTeam}
             isPending={createTeam.isPending}
           />

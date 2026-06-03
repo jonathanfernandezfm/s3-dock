@@ -2,6 +2,7 @@ import { AppSidebar } from "@/components/shared/app-sidebar";
 import { Header } from "@/components/shared/header";
 import { DragProvider } from "@/lib/contexts/drag-context";
 import { Notifications } from "@/components/shared/notifications";
+import { CommandPaletteMount } from "@/components/command-palette/command-palette-mount";
 
 export default function DashboardLayout({
   children,
@@ -18,6 +19,7 @@ export default function DashboardLayout({
         </div>
       </div>
       <Notifications />
+      <CommandPaletteMount />
     </DragProvider>
   );
 }
