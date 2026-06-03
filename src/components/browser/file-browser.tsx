@@ -29,7 +29,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
+import { BulkOpsPanel } from "./bulk-ops-panel";
 import type { S3Object } from "@/types";
 
 interface FileBrowserProps {
@@ -323,29 +324,6 @@ export function FileBrowser({
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (!canWrite) return;
-    if (selectedItems.size === 0) return;
-
-    try {
-      await deleteObjects.mutateAsync(Array.from(selectedItems));
-      addNotification({
-        type: "delete",
-        title: "Deleted",
-        description: `Successfully deleted ${selectedItems.size} item(s)`,
-        status: "completed",
-      });
-      clearSelection(paneId);
-    } catch (error) {
-      addNotification({
-        type: "delete",
-        title: "Failed to delete",
-        error: error instanceof Error ? error.message : "Unknown error",
-        status: "error",
-      });
-    }
-  };
-
   const handleDownload = async (key: string) => {
     try {
       const response = await fetch("/api/objects/download", {
@@ -404,17 +382,6 @@ export function FileBrowser({
             <span className="text-xs uppercase tracking-wide text-muted-foreground border rounded px-2 py-1">
               Viewer
             </span>
-          )}
-          {canWrite && selectedItems.size > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleBulkDelete}
-              disabled={deleteObjects.isPending}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete ({selectedItems.size})
-            </Button>
           )}
           <ViewModeToggle
             value={paneState.viewMode}
@@ -511,6 +478,14 @@ export function FileBrowser({
         bucket={bucket}
         currentPath={currentPath}
         disabled={!canWrite}
+      />
+
+      <BulkOpsPanel
+        paneId={paneId}
+        connectionId={connectionId}
+        bucket={bucket}
+        objects={data?.objects || []}
+        canWrite={canWrite}
       />
 
       <Dialog
