@@ -47,6 +47,7 @@ import {
   Loader2,
   Star,
   GripVertical,
+  Link2,
 } from "lucide-react";
 import {
   DndContext,
@@ -164,6 +165,7 @@ export function AppSidebar() {
   const isConnectionsActive =
     pathname === "/connections" || pathname.startsWith("/connections/");
   const isTeamsActive = pathname === "/teams" || pathname.startsWith("/teams/");
+  const isSharesActive = pathname === "/shares" || pathname.startsWith("/shares/");
   const isBucketsActive =
     pathname === "/buckets" ||
     pathname.startsWith("/buckets/") ||
@@ -264,6 +266,19 @@ export function AppSidebar() {
           >
             <Plug className="h-4 w-4" />
             Connections
+          </Link>
+
+          <Link
+            href="/shares"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+              isSharesActive
+                ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+            )}
+          >
+            <Link2 className="h-4 w-4" />
+            Shares
           </Link>
 
           {bucketPins.length > 0 && (

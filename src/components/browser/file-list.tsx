@@ -44,6 +44,7 @@ interface FileListProps {
   onDragStart?: (items: S3Object[]) => void;
   onDragEnd?: () => void;
   folderNoteCounts?: Record<string, number>;
+  fileShareCounts?: Record<string, number>;
 }
 
 export function FileList({
@@ -64,6 +65,7 @@ export function FileList({
   onDragStart,
   onDragEnd,
   folderNoteCounts = {},
+  fileShareCounts = {},
 }: FileListProps) {
   const getPaneState = useBrowserStore((s) => s.getPaneState);
 
@@ -220,6 +222,7 @@ export function FileList({
               isDragging={isDragging}
               canDropOnFolder={isValidDropTarget && canWrite}
               noteCount={object.isFolder ? (folderNoteCounts[object.key] ?? 0) : 0}
+              shareCount={!object.isFolder ? (fileShareCounts[object.key] ?? 0) : 0}
             />
           ))}
         </TableBody>

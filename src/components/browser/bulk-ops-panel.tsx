@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useBulkOpsStore } from "@/lib/stores/bulk-ops-store";
@@ -22,9 +22,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Pencil, Tag, Trash2, X, Loader2, AlertCircle, Check } from "lucide-react";
+import { Pencil, Tag, Trash2, X, Loader2, AlertCircle, Check, Link2 } from "lucide-react";
 import type { S3Object } from "@/types";
 import type { RenamePreviewItem } from "@/lib/bulk-rename";
+import { useCreateShareLink } from "@/lib/queries/share-links";
 
 interface BulkOpsPanelProps {
   paneId: string;
@@ -59,6 +60,34 @@ export function BulkOpsPanel({
   } = useBulkOpsStore();
   const { addNotification, updateNotification } = useNotificationStore();
   const invalidateObjects = useInvalidateNotesAndObjects();
+  const createShare = useCreateShareLink();
+  const [shareProgress, setShareProgress] = useState<{ done: number; total: number } | null>(null);
+
+  async function shareAll() {
+    const files = selection.filter((o) => !o.isFolder);
+    if (!files.length) return;
+    setShareProgress({ done: 0, total: files.length });
+    const batchId = crypto.randomUUID();
+    const queue = [...files];
+    const workers = Array.from({ length: 5 }, async () => {
+      while (queue.length) {
+        const item = queue.shift()!;
+        await createShare.mutateAsync({
+          connectionId,
+          bucket,
+          key: item.key,
+          expiresIn: 60 * 60 * 24 * 7,
+          password: null,
+          maxUses: null,
+          description: null,
+          batchId,
+        });
+        setShareProgress((p) => p ? { ...p, done: p.done + 1 } : null);
+      }
+    });
+    await Promise.all(workers);
+    setShareProgress(null);
+  }
 
   const selection: S3Object[] = objects.filter((o) => selectedItems.has(o.key));
   const dialogOpen = dialog !== null && dialogPaneId === paneId;
@@ -208,6 +237,15 @@ export function BulkOpsPanel({
           <Button size="sm" variant="ghost" onClick={() => openDialog("tag", paneId)}>
             <Tag className="h-4 w-4" />
             Tag
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={shareAll}
+            disabled={shareProgress !== null}
+          >
+            <Link2 className="h-4 w-4" />
+            {shareProgress ? `${shareProgress.done}/${shareProgress.total}` : "Share"}
           </Button>
           <Button
             size="sm"

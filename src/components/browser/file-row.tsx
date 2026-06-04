@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,9 @@ import {
   Eye,
   Star,
   MessageSquare,
+  Link2,
 } from "lucide-react";
+import { ShareDialog } from "@/components/shares/share-dialog";
 import { formatBytes, formatDate, getFileExtension, isImageFile, cn } from "@/lib/utils";
 import { useFileItemBehavior } from "./use-file-item-behavior";
 import { useBookmarksForBucket, useCreateBookmark, useDeleteBookmark } from "@/lib/queries/bookmarks";
@@ -51,6 +54,7 @@ interface FileRowProps {
   isDragging?: boolean;
   canDropOnFolder?: boolean;
   noteCount?: number;
+  shareCount?: number;
 }
 
 function getFileIcon(key: string, isFolder: boolean) {
@@ -88,6 +92,7 @@ export function FileRow({
   isDragging,
   canDropOnFolder,
   noteCount = 0,
+  shareCount = 0,
 }: FileRowProps) {
   const Icon = getFileIcon(object.key, object.isFolder);
   const { dragHandlers, folderDropHandlers, isFolderDragOver, isBeingDragged, canPreview, fileName } = useFileItemBehavior({
@@ -96,6 +101,7 @@ export function FileRow({
     onDragStart, onDragEnd, onFolderDrop,
   });
 
+  const [shareOpen, setShareOpen] = useState(false);
   const prefixBookmarks = useBookmarksForBucket(connectionId, bucket);
   const createBookmark = useCreateBookmark();
   const deleteBookmark = useDeleteBookmark();
@@ -187,6 +193,15 @@ export function FileRow({
               {noteCount}
             </span>
           )}
+          {!object.isFolder && shareCount > 0 && (
+            <span
+              className="ml-1 inline-flex items-center gap-0.5 text-xs text-muted-foreground"
+              title={`${shareCount} active share link${shareCount === 1 ? "" : "s"}`}
+            >
+              <Link2 className="h-3.5 w-3.5" />
+              {shareCount}
+            </span>
+          )}
         </div>
       </TableCell>
       <TableCell className="text-muted-foreground">
@@ -216,6 +231,12 @@ export function FileRow({
                   Download
                 </DropdownMenuItem>
               )}
+              {!object.isFolder && (
+                <DropdownMenuItem onClick={() => setShareOpen(true)}>
+                  <Link2 className="h-4 w-4" />
+                  Share...
+                </DropdownMenuItem>
+              )}
               {object.isFolder && (() => {
                 const existing = findBookmark(prefixBookmarks, connectionId, bucket, object.key);
                 const pinned = !!existing;
@@ -239,6 +260,15 @@ export function FileRow({
           </DropdownMenu>
         </div>
       </TableCell>
+      {shareOpen && !object.isFolder && (
+        <ShareDialog
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+          connectionId={connectionId}
+          bucket={bucket}
+          fileKey={object.key}
+        />
+      )}
     </TableRow>
   );
 }

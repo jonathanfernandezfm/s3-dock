@@ -8,9 +8,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, RefreshCw, X } from "lucide-react";
+import { Download, Loader2, RefreshCw, X, Link2 } from "lucide-react";
 import { getPreviewKind } from "@/lib/utils";
 import type { S3Object } from "@/types";
+import { ShareDialog } from "@/components/shares/share-dialog";
 
 const ImagePreview = lazy(() => import("./renderers/image-preview"));
 const TextPreview = lazy(() => import("./renderers/text-preview"));
@@ -38,6 +39,7 @@ export function FilePreviewModal({
   onClose,
 }: FilePreviewModalProps) {
   const [urlState, setUrlState] = useState<UrlState>({ status: "loading" });
+  const [shareOpen, setShareOpen] = useState(false);
 
   const fetchUrl = async (obj: S3Object) => {
     setUrlState({ status: "loading" });
@@ -74,6 +76,7 @@ export function FilePreviewModal({
   );
 
   return (
+    <>
     <Dialog open={!!object} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="flex-shrink-0">
@@ -85,6 +88,11 @@ export function FilePreviewModal({
                   <a href={urlState.url} target="_blank" rel="noreferrer">
                     <Download className="h-4 w-4" />
                   </a>
+                </Button>
+              )}
+              {object && !object.isFolder && (
+                <Button variant="outline" size="icon" onClick={() => setShareOpen(true)}>
+                  <Link2 className="h-4 w-4" />
                 </Button>
               )}
               <Button variant="outline" size="icon" onClick={onClose}>
@@ -140,5 +148,15 @@ export function FilePreviewModal({
         </div>
       </DialogContent>
     </Dialog>
+    {shareOpen && object && !object.isFolder && (
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        connectionId={connectionId}
+        bucket={bucket}
+        fileKey={object.key}
+      />
+    )}
+    </>
   );
 }

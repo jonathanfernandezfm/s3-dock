@@ -38,6 +38,15 @@ enum ActivityAction {
   TAG_CHANGE
   BUCKET_CREATE
   BUCKET_DELETE
+  SHARE_CREATED
+  SHARE_REVOKED
+}
+
+enum ShareLinkEventAction {
+  VIEW
+  UNLOCK_ATTEMPT
+  UNLOCK_SUCCESS
+  DOWNLOAD
 }
 
 model User {
@@ -63,6 +72,7 @@ model User {
 
   activityEvents ActivityEvent[]
   fileNotes      FileNote[]      @relation("FileNoteAuthor")
+  createdShareLinks ShareLink[]  @relation("ShareLinkCreator")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -183,6 +193,7 @@ model Connection {
   bookmarks      Bookmark[]
   activityEvents ActivityEvent[]
   fileNotes      FileNote[]
+  shareLinks     ShareLink[]
 
   @@index([workspaceId])
 
@@ -256,4 +267,52 @@ model FileNote {
   @@index([connectionId, bucket, createdAt(sort: Desc)])
   @@index([authorId])
   @@map("file_notes")
+}
+
+model ShareLink {
+  id           String   @id @default(uuid())
+  slug         String   @unique
+
+  connectionId String
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  bucket       String
+  key          String
+
+  createdById          String?
+  createdBy            User?   @relation("ShareLinkCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdByDisplayName String
+  createdByImageUrl    String?
+
+  expiresAt    DateTime?
+  passwordHash String?
+  maxUses      Int?
+  useCount     Int      @default(0)
+  revokedAt    DateTime?
+  description  String?
+
+  events       ShareLinkEvent[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([connectionId, createdAt(sort: Desc)])
+  @@index([connectionId, bucket, key, createdAt(sort: Desc)])
+  @@map("share_links")
+}
+
+model ShareLinkEvent {
+  id           String   @id @default(uuid())
+  shareLinkId  String
+  shareLink    ShareLink @relation(fields: [shareLinkId], references: [id], onDelete: Cascade)
+
+  action       ShareLinkEventAction
+  ip           String?
+  userAgent    String?
+  referrer     String?
+
+  createdAt    DateTime @default(now())
+
+  @@index([shareLinkId, createdAt(sort: Desc)])
+  @@map("share_link_events")
 }

@@ -22,6 +22,8 @@ const ACTION_VERBS: Record<ActivityAction, string> = {
   TAG_CHANGE: "updated tags on",
   BUCKET_CREATE: "created bucket",
   BUCKET_DELETE: "deleted bucket",
+  SHARE_CREATED: "shared",
+  SHARE_REVOKED: "revoked share for",
 };
 
 const ALL_ACTIONS: ActivityAction[] = [
@@ -34,6 +36,8 @@ const ALL_ACTIONS: ActivityAction[] = [
   "TAG_CHANGE",
   "BUCKET_CREATE",
   "BUCKET_DELETE",
+  "SHARE_CREATED",
+  "SHARE_REVOKED",
 ];
 
 const ACTION_LABELS: Record<ActivityAction, string> = {
@@ -46,6 +50,8 @@ const ACTION_LABELS: Record<ActivityAction, string> = {
   TAG_CHANGE: "Tag change",
   BUCKET_CREATE: "Bucket create",
   BUCKET_DELETE: "Bucket delete",
+  SHARE_CREATED: "Share created",
+  SHARE_REVOKED: "Share revoked",
 };
 
 function lastSegment(path: string): string {

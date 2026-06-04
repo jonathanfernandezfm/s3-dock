@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Folder, FileImage, FileText, File, Loader2, MessageSquare } from "lucide-react";
+import { Folder, FileImage, FileText, File, Loader2, MessageSquare, Link2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFileItemBehavior } from "./use-file-item-behavior";
 import type { S3Object } from "@/types";
+import { ShareDialog } from "@/components/shares/share-dialog";
 
 function FileTypeIcon({ filename, className }: { filename: string; className?: string }) {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
@@ -35,6 +36,7 @@ interface FileTileProps {
   isDragging?: boolean;
   canDropOnFolder?: boolean;
   noteCount?: number;
+  shareCount?: number;
 }
 
 export function FileTile({
@@ -56,9 +58,11 @@ export function FileTile({
   isDragging,
   canDropOnFolder,
   noteCount = 0,
+  shareCount = 0,
 }: FileTileProps) {
   const [loaded, setLoaded] = useState(false);
   const [broken, setBroken] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const { dragHandlers, folderDropHandlers, isFolderDragOver, isBeingDragged, fileName } =
     useFileItemBehavior({
@@ -198,9 +202,36 @@ export function FileTile({
           <FileTypeIcon filename={fileName} className="h-12 w-12" />
         )}
       </div>
-      <div className="mt-2 text-sm truncate" title={fileName}>
-        {fileName}
+      {!object.isFolder && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setShareOpen(true); }}
+          className="absolute top-2 right-2 h-6 w-6 flex items-center justify-center rounded bg-white/80 opacity-0 group-hover:opacity-100 z-10 shadow-sm"
+          title="Share"
+        >
+          <Link2 className="h-3.5 w-3.5" />
+        </button>
+      )}
+      <div className="mt-2 flex items-center gap-1 min-w-0">
+        <span className="text-sm truncate" title={fileName}>{fileName}</span>
+        {shareCount > 0 && (
+          <span
+            className="shrink-0 inline-flex items-center gap-0.5 text-xs text-muted-foreground"
+            title={`${shareCount} active share link${shareCount === 1 ? "" : "s"}`}
+          >
+            <Link2 className="h-3 w-3" />
+            {shareCount}
+          </span>
+        )}
       </div>
+      {shareOpen && !object.isFolder && (
+        <ShareDialog
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+          connectionId={connectionId}
+          bucket={bucket}
+          fileKey={object.key}
+        />
+      )}
     </div>
   );
 }
