@@ -7,7 +7,9 @@ import {
   decodeCursor,
   buildWhereClause,
   parseLimit,
+  getActivityRetentionCutoff,
 } from "./query-helpers";
+import { getTierLimits } from "@/lib/subscriptions";
 
 export const GET = withAuth(async (req: NextRequest, { user }) => {
   const { searchParams } = req.nextUrl;
@@ -37,7 +39,11 @@ export const GET = withAuth(async (req: NextRequest, { user }) => {
 
   const cursor = cursorParam ? decodeCursor(cursorParam) : null;
 
-  const where = buildWhereClause({ connectionId, bucket, prefix, key, userId, actions, cursor });
+  const tier = user.subscription?.tier ?? "FREE";
+  const limits = getTierLimits(tier);
+  const retentionCutoff = getActivityRetentionCutoff(limits.activityRetentionDays);
+
+  const where = buildWhereClause({ connectionId, bucket, prefix, key, userId, actions, cursor, sinceDate: retentionCutoff });
 
   const rows = await prisma.activityEvent.findMany({
     where,

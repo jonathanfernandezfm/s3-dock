@@ -38,6 +38,7 @@ type WhereParams = {
   userId?: string | null;
   actions?: string[] | null;
   cursor?: Cursor | null;
+  sinceDate?: Date | null;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,6 +63,10 @@ export function buildWhereClause(params: WhereParams): Record<string, any> {
     where.action = { in: params.actions as ActivityAction[] };
   }
 
+  if (params.sinceDate) {
+    where.createdAt = { gte: params.sinceDate };
+  }
+
   if (params.cursor) {
     const { createdAt, id } = params.cursor;
     where.OR = [
@@ -71,4 +76,12 @@ export function buildWhereClause(params: WhereParams): Record<string, any> {
   }
 
   return where;
+}
+
+export function getActivityRetentionCutoff(retentionDays: number): Date | null {
+  if (retentionDays === -1) return null;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - retentionDays);
+  cutoff.setHours(0, 0, 0, 0);
+  return cutoff;
 }

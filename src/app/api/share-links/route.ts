@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth";
 import { getConnectionAccessById } from "@/lib/db/connections";
+import { canAccessFeature } from "@/lib/subscriptions/gates";
 import {
   createShareLink,
   listShareLinksByConnection,
@@ -61,6 +62,14 @@ function toResponse(link: {
 }
 
 export const POST = withAuth(async (req: NextRequest, { user }) => {
+  const tier = user.subscription?.tier ?? "FREE";
+  if (!canAccessFeature(tier, "shareLinks")) {
+    return NextResponse.json(
+      { error: "Share links require a PRO subscription." },
+      { status: 403 }
+    );
+  }
+
   const body = await req.json();
   const {
     connectionId,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth";
 import prisma from "@/lib/db/prisma";
+import { canAccessFeature } from "@/lib/subscriptions/gates";
 
 function slugify(input: string) {
   return input
@@ -62,6 +63,14 @@ export const GET = withAuth(async (_req, { user }) => {
 });
 
 export const POST = withAuth(async (req, { user }) => {
+  const tier = user.subscription?.tier ?? "FREE";
+  if (!canAccessFeature(tier, "teams")) {
+    return NextResponse.json(
+      { error: "Teams require a PRO subscription." },
+      { status: 403 }
+    );
+  }
+
   const body: { name?: string; slug?: string } = await req.json();
   const name = body.name?.trim();
 
