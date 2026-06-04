@@ -33,12 +33,13 @@ export function buildSubscriptionUpdateFromDeleted(sub: Stripe.Subscription) {
 }
 
 export function buildSubscriptionUpdateFromUpdated(sub: Stripe.Subscription) {
-  const item = sub.items.data[0];
   return {
     where: { stripeSubscriptionId: sub.id },
     data: {
-      currentPeriodStart: new Date(item.current_period_start * 1000),
-      currentPeriodEnd: new Date(item.current_period_end * 1000),
+      tier: "PRO" as const,
+      stripePriceId: sub.items.data[0].price.id,
+      currentPeriodStart: new Date(sub.items.data[0].current_period_start * 1000),
+      currentPeriodEnd: new Date(sub.items.data[0].current_period_end * 1000),
       cancelAtPeriodEnd: sub.cancel_at_period_end,
     },
   };

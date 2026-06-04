@@ -55,6 +55,7 @@ describe("buildSubscriptionUpdateFromUpdated", () => {
       items: {
         data: [
           {
+            price: { id: "price_pro" },
             current_period_start: 1700000000,
             current_period_end: 1702592000,
           },
@@ -64,5 +65,7 @@ describe("buildSubscriptionUpdateFromUpdated", () => {
     const result = buildSubscriptionUpdateFromUpdated(sub as never);
     expect(result.where.stripeSubscriptionId).toBe("sub_xyz");
     expect(result.data.cancelAtPeriodEnd).toBe(true);
+    expect(result.data.tier).toBe("PRO");
+    expect(result.data.stripePriceId).toBe("price_pro");
   });
 });

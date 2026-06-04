@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+        if (!session.subscription) break;
         const sub = await stripe.subscriptions.retrieve(
           session.subscription as string
         );
