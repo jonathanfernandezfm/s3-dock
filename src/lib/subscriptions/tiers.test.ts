@@ -43,4 +43,18 @@ describe("TIER_LIMITS", () => {
   test("ENTERPRISE activity retention is unlimited", () => {
     expect(isUnlimited(TIER_LIMITS.ENTERPRISE.activityRetentionDays)).toBe(true);
   });
+
+  test("ENTERPRISE shareLinks is true", () => {
+    expect(TIER_LIMITS.ENTERPRISE.shareLinks).toBe(true);
+  });
+
+  test("ENTERPRISE teams enabled with unlimited teams", () => {
+    expect(TIER_LIMITS.ENTERPRISE.teams.enabled).toBe(true);
+    expect(isUnlimited(TIER_LIMITS.ENTERPRISE.teams.maxTeams)).toBe(true);
+  });
+
+  test("ENTERPRISE teams enabled with unlimited members", () => {
+    expect(TIER_LIMITS.ENTERPRISE.teams.enabled).toBe(true);
+    expect(isUnlimited(TIER_LIMITS.ENTERPRISE.teams.maxMembersPerTeam)).toBe(true);
+  });
 });

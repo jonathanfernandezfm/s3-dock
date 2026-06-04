@@ -1,18 +1,20 @@
 import type { SubscriptionTier } from "@/generated/prisma/client";
 
 export interface TeamLimits {
-  enabled: boolean;
-  maxTeams: number;       // -1 = unlimited
-  maxMembersPerTeam: number; // -1 = unlimited
+  readonly enabled: boolean;
+  /** Only meaningful when enabled is true. -1 = unlimited, 0 = not applicable */
+  readonly maxTeams: number;
+  /** Only meaningful when enabled is true. -1 = unlimited, 0 = not applicable */
+  readonly maxMembersPerTeam: number;
 }
 
 export interface TierConfig {
-  maxConnections: number;
-  maxUploadSizeMB: number;
-  monthlyOperations: number;
-  shareLinks: boolean;
-  teams: TeamLimits;
-  activityRetentionDays: number; // -1 = unlimited
+  readonly maxConnections: number;
+  readonly maxUploadSizeMB: number;
+  readonly monthlyOperations: number;
+  readonly shareLinks: boolean;
+  readonly teams: TeamLimits;
+  readonly activityRetentionDays: number; // -1 = unlimited
 }
 
 export const TIER_LIMITS: Record<SubscriptionTier, TierConfig> = {
@@ -42,6 +44,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierConfig> = {
   },
 };
 
+/** @deprecated Use TierConfig instead */
 export type TierLimits = TierConfig;
 
 export function getTierLimits(tier: SubscriptionTier): TierConfig {
