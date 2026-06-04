@@ -4,6 +4,7 @@ import { DragProvider } from "@/lib/contexts/drag-context";
 import { Notifications } from "@/components/shared/notifications";
 import { CommandPaletteMount } from "@/components/command-palette/command-palette-mount";
 import { InfoDrawer } from "@/components/info-drawer/info-drawer";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function DashboardLayout({
   children,
@@ -11,6 +12,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
+    <TooltipProvider>
     <DragProvider>
       <div className="flex h-screen overflow-hidden">
         <AppSidebar />
@@ -23,5 +25,6 @@ export default function DashboardLayout({
       <Notifications />
       <CommandPaletteMount />
     </DragProvider>
+    </TooltipProvider>
   );
 }
