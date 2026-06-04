@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queries/keys";
-import { TIER_LIMITS, type TierConfig } from "@/lib/subscriptions";
+import { TIER_LIMITS, type TierConfig } from "@/lib/subscriptions/tiers";
 import { canAccessFeature, type GatedFeature } from "@/lib/subscriptions/gates";
 import type { SubscriptionTier } from "@/generated/prisma/client";
 

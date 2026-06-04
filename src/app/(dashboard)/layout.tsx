@@ -5,6 +5,7 @@ import { Notifications } from "@/components/shared/notifications";
 import { CommandPaletteMount } from "@/components/command-palette/command-palette-mount";
 import { InfoDrawer } from "@/components/info-drawer/info-drawer";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PlansModal } from "@/components/billing/plans-modal";
 
 export default function DashboardLayout({
   children,
@@ -24,6 +25,7 @@ export default function DashboardLayout({
       <InfoDrawer />
       <Notifications />
       <CommandPaletteMount />
+      <PlansModal />
     </DragProvider>
     </TooltipProvider>
   );
