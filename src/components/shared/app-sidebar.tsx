@@ -16,6 +16,7 @@ import {
 import { useNotificationStore } from "@/lib/stores/notification-store";
 import { useBookmarks, useReorderBookmarks } from "@/lib/queries/bookmarks";
 import type { BookmarkResponse } from "@/lib/bookmarks-helpers";
+import { useTier } from "@/hooks/use-tier";
 import { ConnectionForm } from "@/components/connections/connection-form";
 import {
   Dialog,
@@ -122,6 +123,7 @@ export function AppSidebar() {
   const deleteConnection = useDeleteConnection();
   const { addNotification } = useNotificationStore();
   const { data: allBookmarks = [] } = useBookmarks();
+  const { can } = useTier();
 
   const bucketPins = allBookmarks.filter((bm) => bm.prefix === null);
 
@@ -279,6 +281,11 @@ export function AppSidebar() {
           >
             <Link2 className="h-4 w-4" />
             Shares
+            {!can("shareLinks") && (
+              <span className="ml-auto rounded-full border border-blue-500/30 bg-blue-500/20 px-1.5 text-[8px] font-medium text-blue-400">
+                PRO
+              </span>
+            )}
           </Link>
 
           {bucketPins.length > 0 && (
@@ -442,6 +449,11 @@ export function AppSidebar() {
                 >
                   <Plus className="h-3.5 w-3.5" />
                   New team
+                  {!can("teams") && (
+                    <span className="ml-auto rounded-full border border-blue-500/30 bg-blue-500/20 px-1.5 text-[8px] font-medium text-blue-400">
+                      PRO
+                    </span>
+                  )}
                 </Link>
               </div>
             </div>
