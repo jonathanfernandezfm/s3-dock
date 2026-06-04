@@ -4,10 +4,22 @@ import { Briefcase, Loader2, Plug, Users } from "lucide-react";
 import { useConnections, type ConnectionResponse } from "@/lib/queries/connections";
 import { useWorkspaces, type WorkspaceSummary } from "@/lib/queries/workspaces";
 import { ShareListTable } from "@/components/shares/share-list-table";
+import { useTier } from "@/hooks/use-tier";
+import { LockedPageOverlay } from "@/components/billing/locked-page-overlay";
 
 function SharesContent() {
+  const { can } = useTier();
   const { data: connections = [], isLoading: isLoadingConns } = useConnections();
   const { data: workspaces = [], isLoading: isLoadingWs } = useWorkspaces();
+
+  if (!can("shareLinks")) {
+    return (
+      <LockedPageOverlay
+        feature="Share Links"
+        description="Generate secure, shareable links for any file in your buckets — with optional password protection, expiration dates, and usage analytics."
+      />
+    );
+  }
 
   const workspaceGroups = useMemo(() => {
     const wsMap = new Map<

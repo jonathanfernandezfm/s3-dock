@@ -15,8 +15,11 @@ import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 import { TeamMembersCard } from "@/components/teams/team-members-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { useTier } from "@/hooks/use-tier";
+import { LockedPageOverlay } from "@/components/billing/locked-page-overlay";
 
 export default function TeamsPage() {
+  const { can } = useTier();
   const { addNotification } = useNotificationStore();
 
   const { data: teams = [], isLoading: isLoadingTeams } = useTeams();
@@ -130,6 +133,15 @@ export default function TeamsPage() {
       });
     }
   };
+
+  if (!can("teams")) {
+    return (
+      <LockedPageOverlay
+        feature="Teams"
+        description="Create a shared workspace and invite colleagues to collaborate on your S3 connections."
+      />
+    );
+  }
 
   return (
     <div className="flex flex-1 min-h-0 overflow-hidden">
