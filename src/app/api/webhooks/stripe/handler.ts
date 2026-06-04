@@ -1,0 +1,45 @@
+import type Stripe from "stripe";
+
+export function buildSubscriptionUpsertFromCheckout(
+  session: Stripe.Checkout.Session,
+  sub: Stripe.Subscription
+) {
+  const userId = session.metadata?.userId;
+  if (!userId) throw new Error("Missing userId in checkout session metadata");
+
+  const item = sub.items.data[0];
+  return {
+    userId,
+    tier: "PRO" as const,
+    stripeCustomerId: session.customer as string,
+    stripeSubscriptionId: sub.id,
+    stripePriceId: item.price.id,
+    currentPeriodStart: new Date(item.current_period_start * 1000),
+    currentPeriodEnd: new Date(item.current_period_end * 1000),
+    cancelAtPeriodEnd: sub.cancel_at_period_end,
+  };
+}
+
+export function buildSubscriptionUpdateFromDeleted(sub: Stripe.Subscription) {
+  return {
+    where: { stripeSubscriptionId: sub.id },
+    data: {
+      tier: "FREE" as const,
+      stripeSubscriptionId: null,
+      stripePriceId: null,
+      cancelAtPeriodEnd: false,
+    },
+  };
+}
+
+export function buildSubscriptionUpdateFromUpdated(sub: Stripe.Subscription) {
+  const item = sub.items.data[0];
+  return {
+    where: { stripeSubscriptionId: sub.id },
+    data: {
+      currentPeriodStart: new Date(item.current_period_start * 1000),
+      currentPeriodEnd: new Date(item.current_period_end * 1000),
+      cancelAtPeriodEnd: sub.cancel_at_period_end,
+    },
+  };
+}
