@@ -52,4 +52,7 @@ export const queryKeys = {
     counts: (connectionId: string, bucket: string, sortedKeys: string[]) =>
       [...queryKeys.shareLinks.all, "counts", connectionId, bucket, sortedKeys.join("|")] as const,
   },
+  user: {
+    subscription: () => ["user", "subscription"] as const,
+  },
 };
