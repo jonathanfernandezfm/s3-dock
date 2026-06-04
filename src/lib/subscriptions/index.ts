@@ -22,3 +22,5 @@ export {
   recordOperation,
   getMonthlyUsage,
 } from "./usage";
+
+export { canAccessFeature, type GatedFeature } from "./gates";
