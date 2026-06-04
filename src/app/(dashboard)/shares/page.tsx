@@ -8,18 +8,9 @@ import { useTier } from "@/hooks/use-tier";
 import { LockedPageOverlay } from "@/components/billing/locked-page-overlay";
 
 function SharesContent() {
-  const { can } = useTier();
+  const { can, isLoading } = useTier();
   const { data: connections = [], isLoading: isLoadingConns } = useConnections();
   const { data: workspaces = [], isLoading: isLoadingWs } = useWorkspaces();
-
-  if (!can("shareLinks")) {
-    return (
-      <LockedPageOverlay
-        feature="Share Links"
-        description="Generate secure, shareable links for any file in your buckets — with optional password protection, expiration dates, and usage analytics."
-      />
-    );
-  }
 
   const workspaceGroups = useMemo(() => {
     const wsMap = new Map<
@@ -30,6 +21,16 @@ function SharesContent() {
     for (const conn of connections) wsMap.get(conn.workspaceId)?.connections.push(conn);
     return Array.from(wsMap.values()).filter((g) => g.connections.length > 0);
   }, [workspaces, connections]);
+
+  if (isLoading) return null;
+  if (!can("shareLinks")) {
+    return (
+      <LockedPageOverlay
+        feature="Share Links"
+        description="Generate secure, shareable links for any file in your buckets — with optional password protection, expiration dates, and usage analytics."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6 flex-1 p-6 overflow-auto">

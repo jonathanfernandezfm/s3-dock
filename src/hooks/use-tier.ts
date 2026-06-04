@@ -12,7 +12,7 @@ interface SubscriptionResponse {
 }
 
 export function useTier() {
-  const { data } = useQuery<SubscriptionResponse>({
+  const { data, isLoading } = useQuery<SubscriptionResponse>({
     queryKey: queryKeys.user.subscription(),
     queryFn: async () => {
       const res = await fetch("/api/user/subscription");
@@ -28,6 +28,7 @@ export function useTier() {
   return {
     tier,
     limits,
+    isLoading,
     can: (feature: GatedFeature) => canAccessFeature(tier, feature),
   };
 }

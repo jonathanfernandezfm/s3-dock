@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import {
   useTeams,
   useTeam,
@@ -18,8 +18,8 @@ import { Loader2 } from "lucide-react";
 import { useTier } from "@/hooks/use-tier";
 import { LockedPageOverlay } from "@/components/billing/locked-page-overlay";
 
-export default function TeamsPage() {
-  const { can } = useTier();
+function TeamsContent() {
+  const { can, isLoading } = useTier();
   const { addNotification } = useNotificationStore();
 
   const { data: teams = [], isLoading: isLoadingTeams } = useTeams();
@@ -134,6 +134,7 @@ export default function TeamsPage() {
     }
   };
 
+  if (isLoading) return null;
   if (!can("teams")) {
     return (
       <LockedPageOverlay
@@ -231,5 +232,13 @@ export default function TeamsPage() {
         )}
       </section>
     </div>
+  );
+}
+
+export default function TeamsPage() {
+  return (
+    <Suspense>
+      <TeamsContent />
+    </Suspense>
   );
 }
