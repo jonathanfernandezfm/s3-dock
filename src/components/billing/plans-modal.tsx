@@ -54,7 +54,10 @@ export function PlansModal({ open: controlledOpen, onOpenChange }: PlansModalPro
     try {
       const res = await fetch("/api/billing/checkout", { method: "POST" });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
+      if (data.url) {
+        close();
+        window.location.href = data.url;
+      }
     } finally {
       setLoading(false);
     }
