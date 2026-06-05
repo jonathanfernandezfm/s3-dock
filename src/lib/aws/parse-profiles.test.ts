@@ -210,4 +210,52 @@ describe("parseAwsProfiles", () => {
     });
     expect(result[1].kind).toBe("sso");
   });
+
+  test("classifies profiles with aws_session_token as 'unsupported' with the documented reason", () => {
+    const credentials = [
+      "[temp]",
+      "aws_access_key_id = AKIA_TEMP",
+      "aws_secret_access_key = secret_temp",
+      "aws_session_token = FQoGZXIvYXdz...",
+    ].join("\n");
+
+    const result = parseAwsProfiles({ credentials });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      kind: "unsupported",
+      name: "temp",
+      reason: "session-token credentials aren't supported (they expire)",
+    });
+  });
+
+  test("classifies a profile missing only the secret access key as 'unsupported'", () => {
+    const credentials = [
+      "[half]",
+      "aws_access_key_id = AKIA_HALF",
+    ].join("\n");
+
+    const result = parseAwsProfiles({ credentials });
+
+    expect(result[0]).toEqual({
+      kind: "unsupported",
+      name: "half",
+      reason: "missing aws_secret_access_key",
+    });
+  });
+
+  test("classifies a profile missing only the access key id as 'unsupported'", () => {
+    const credentials = [
+      "[half]",
+      "aws_secret_access_key = secret_only",
+    ].join("\n");
+
+    const result = parseAwsProfiles({ credentials });
+
+    expect(result[0]).toEqual({
+      kind: "unsupported",
+      name: "half",
+      reason: "missing aws_access_key_id",
+    });
+  });
 });

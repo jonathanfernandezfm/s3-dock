@@ -86,6 +86,7 @@ export function parseAwsProfiles(input: ParseAwsProfilesInput): ParsedProfile[] 
 function classify(name: string, fields: RawProfile): ParsedProfile {
   const accessKeyId = fields["aws_access_key_id"];
   const secretAccessKey = fields["aws_secret_access_key"];
+  const sessionToken = fields["aws_session_token"];
   const region = fields["region"] ?? "us-east-1";
 
   if (fields["role_arn"] && fields["source_profile"]) {
@@ -104,8 +105,24 @@ function classify(name: string, fields: RawProfile): ParsedProfile {
     };
   }
 
+  if (sessionToken) {
+    return {
+      kind: "unsupported",
+      name,
+      reason: "session-token credentials aren't supported (they expire)",
+    };
+  }
+
   if (accessKeyId && secretAccessKey) {
     return { kind: "static", name, region, accessKeyId, secretAccessKey };
+  }
+
+  if (accessKeyId && !secretAccessKey) {
+    return { kind: "unsupported", name, reason: "missing aws_secret_access_key" };
+  }
+
+  if (!accessKeyId && secretAccessKey) {
+    return { kind: "unsupported", name, reason: "missing aws_access_key_id" };
   }
 
   return {
