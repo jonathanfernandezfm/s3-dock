@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { ActivityAction } from "@/generated/prisma/client";
 
-export type InfoDrawerTab = "activity" | "notes";
+export type InfoDrawerTab = "activity" | "notes" | "versions";
 
 export type InfoDrawerScope = {
   connectionId: string;
@@ -16,7 +16,7 @@ interface InfoDrawerState {
   scope: InfoDrawerScope | null;
 
   userFilter: string | null;
-  actionFilter: ActivityAction[];
+  actionFilter: ActivityAction[] | null;
 
   open: (tab?: InfoDrawerTab) => void;
   close: () => void;
@@ -24,7 +24,7 @@ interface InfoDrawerState {
   setActiveTab: (tab: InfoDrawerTab) => void;
   setScope: (scope: InfoDrawerScope | null) => void;
   setUserFilter: (userId: string | null) => void;
-  setActionFilter: (actions: ActivityAction[]) => void;
+  setActionFilter: (actions: ActivityAction[] | null) => void;
 }
 
 export const useInfoDrawerStore = create<InfoDrawerState>((set, get) => ({
@@ -32,7 +32,7 @@ export const useInfoDrawerStore = create<InfoDrawerState>((set, get) => ({
   activeTab: "activity",
   scope: null,
   userFilter: null,
-  actionFilter: [],
+  actionFilter: null,
 
   open: (tab) =>
     set((state) => ({
@@ -41,7 +41,7 @@ export const useInfoDrawerStore = create<InfoDrawerState>((set, get) => ({
     })),
 
   close: () =>
-    set({ isOpen: false, userFilter: null, actionFilter: [] }),
+    set({ isOpen: false, userFilter: null, actionFilter: null }),
 
   toggle: (tab) => {
     const state = get();
@@ -49,7 +49,7 @@ export const useInfoDrawerStore = create<InfoDrawerState>((set, get) => ({
       if (tab && state.activeTab !== tab) {
         set({ activeTab: tab });
       } else {
-        set({ isOpen: false, userFilter: null, actionFilter: [] });
+        set({ isOpen: false, userFilter: null, actionFilter: null });
       }
     } else {
       set({ isOpen: true, activeTab: tab ?? state.activeTab });

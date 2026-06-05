@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { X, Activity, MessageSquare } from "lucide-react";
+import { X, Activity, MessageSquare, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useInfoDrawerStore } from "@/lib/stores/info-drawer-store";
 import { ActivityTab } from "./activity-tab";
 import { NotesTab } from "./notes-tab";
+import { VersionsTab } from "./versions-tab";
 
 export function InfoDrawer() {
   const { isOpen, scope, activeTab, setActiveTab, close } = useInfoDrawerStore();
@@ -62,11 +63,13 @@ export function InfoDrawer() {
             <div className="flex items-center gap-1.5">
               {activeTab === "activity" ? (
                 <Activity className="h-4 w-4 text-muted-foreground" />
-              ) : (
+              ) : activeTab === "notes" ? (
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <History className="h-4 w-4 text-muted-foreground" />
               )}
               <h2 className="text-sm font-semibold">
-                {activeTab === "activity" ? "Activity" : "Notes"}
+                {activeTab === "activity" ? "Activity" : activeTab === "notes" ? "Notes" : "Versions"}
               </h2>
             </div>
             {scopeLabel && (
@@ -112,6 +115,17 @@ export function InfoDrawer() {
           >
             Notes
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("versions")}
+            className={`flex-1 text-xs font-medium py-2 border-b-2 transition-colors ${
+              activeTab === "versions"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Versions
+          </button>
         </div>
 
         {/* Body */}
@@ -123,8 +137,10 @@ export function InfoDrawer() {
           </div>
         ) : activeTab === "activity" ? (
           <ActivityTab />
-        ) : (
+        ) : activeTab === "notes" ? (
           <NotesTab />
+        ) : (
+          <VersionsTab />
         )}
       </div>
     </>
