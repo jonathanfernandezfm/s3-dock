@@ -64,15 +64,24 @@ export function VersionsTab() {
       ? all.filter((v) => v.isDeleteMarker)
       : all.filter((v) => !v.isLatest && !v.isDeleteMarker);
 
-  if (filtered.length === 0) {
-    return <div className="p-4 text-xs text-muted-foreground">No versions match this filter.</div>;
-  }
+  const filterChips = (
+    <div className="flex gap-1 text-xs">
+      <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />
+      <FilterChip label="Deleted only" active={filter === "deleted"} onClick={() => setFilter("deleted")} />
+      <FilterChip label="Older versions" active={filter === "older"} onClick={() => setFilter("older")} />
+    </div>
+  );
+
+  const emptyState = (
+    <div className="text-xs text-muted-foreground">No versions match this filter.</div>
+  );
 
   // File scope: flat list
   if (scope.objectKey) {
     return (
       <div className="flex flex-col gap-2 p-3 overflow-y-auto">
-        {filtered.map((v) => (
+        {filterChips}
+        {filtered.length === 0 ? emptyState : filtered.map((v) => (
           <VersionRow key={v.versionId} version={v} onOpenDialog={() => openDialog({
             connectionId,
             bucket,
@@ -102,12 +111,8 @@ export function VersionsTab() {
 
   return (
     <div className="flex flex-col gap-2 p-3 overflow-y-auto">
-      <div className="flex gap-1 text-xs">
-        <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />
-        <FilterChip label="Deleted only" active={filter === "deleted"} onClick={() => setFilter("deleted")} />
-        <FilterChip label="Older versions" active={filter === "older"} onClick={() => setFilter("older")} />
-      </div>
-      {[...byKey.entries()].map(([k, group]) => {
+      {filterChips}
+      {filtered.length === 0 ? emptyState : [...byKey.entries()].map(([k, group]) => {
         const expanded = expandedKeys.has(k);
         return (
           <div key={k} className="border rounded">
