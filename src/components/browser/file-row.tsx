@@ -276,8 +276,8 @@ export function FileRow({
                     })
                   }
                 >
-                  <History className="h-3.5 w-3.5 mr-2" />
-                  Version history
+                  <History className="h-3.5 w-3.5" />
+                  History
                 </DropdownMenuItem>
               )}
               {canWrite && (

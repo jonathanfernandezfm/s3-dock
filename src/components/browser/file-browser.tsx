@@ -31,7 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, Star, History, MessageSquare } from "lucide-react";
+import { Loader2, RefreshCw, Star, History, MessageSquare, Activity } from "lucide-react";
 import { useInfoDrawerStore } from "@/lib/stores/info-drawer-store";
 import { useNotesForKey, useNoteCounts } from "@/lib/queries/notes";
 import { useShareLinkCounts } from "@/lib/queries/share-links";
@@ -470,7 +470,7 @@ export function FileBrowser({
             title="Activity"
             className={infoTab === "activity" && isInfoOpen ? "text-primary" : ""}
           >
-            <History className="h-4 w-4" />
+            <Activity className="h-4 w-4" />
           </Button>
           <Button
             variant="secondary"
@@ -485,6 +485,15 @@ export function FileBrowser({
                 {noteButtonCount > 9 ? "9+" : noteButtonCount}
               </span>
             )}
+          </Button>
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => toggleInfoDrawer("versions")}
+            title="Versions"
+            className={infoTab === "versions" && isInfoOpen ? "text-primary" : ""}
+          >
+            <History className="h-4 w-4" />
           </Button>
           <UploadButton
             connectionId={connectionId}

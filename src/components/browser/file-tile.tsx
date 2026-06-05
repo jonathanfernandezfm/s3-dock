@@ -204,15 +204,17 @@ export function FileTile({
         )}
       </div>
       {!object.isFolder && (
-        <FeatureGate feature="shareLinks" label="Share Links">
-          <button
-            onClick={(e) => { e.stopPropagation(); setShareOpen(true); }}
-            className="absolute top-2 right-2 h-6 w-6 flex items-center justify-center rounded bg-white/80 opacity-0 group-hover:opacity-100 z-10 shadow-sm"
-            title="Share"
-          >
-            <Link2 className="h-3.5 w-3.5" />
-          </button>
-        </FeatureGate>
+        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+          <FeatureGate feature="shareLinks" label="Share Links">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShareOpen(true); }}
+              className="h-7 w-7 inline-flex items-center justify-center rounded-md border bg-background/80 backdrop-blur-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-foreground"
+              title="Share"
+            >
+              <Link2 className="h-3.5 w-3.5" />
+            </button>
+          </FeatureGate>
+        </div>
       )}
       <div className="mt-2 flex items-center gap-1 min-w-0">
         <span className="text-sm truncate" title={fileName}>{fileName}</span>

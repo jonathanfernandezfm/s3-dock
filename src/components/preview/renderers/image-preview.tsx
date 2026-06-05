@@ -52,7 +52,7 @@ export default function ImagePreview({ presignedUrl, filename }: RendererProps) 
           <img
             src={presignedUrl}
             alt={filename}
-            className="max-w-full max-h-full object-contain transition-transform"
+            className="w-full h-full object-contain transition-transform"
             style={{ transform: `scale(${zoom})`, display: loaded ? undefined : "none" }}
             onLoad={() => setLoaded(true)}
             onError={() => {
