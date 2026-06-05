@@ -19,3 +19,12 @@ export interface ListObjectsResponse {
   isTruncated: boolean;
   nextContinuationToken?: string;
 }
+
+export interface IncompleteUpload {
+  key: string;
+  uploadId: string;
+  initiated: string; // ISO timestamp
+  storageClass: string | null;
+  initiatorDisplayName: string | null;
+  initiatorId: string | null;
+}

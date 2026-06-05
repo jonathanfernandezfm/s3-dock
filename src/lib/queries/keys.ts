@@ -52,6 +52,11 @@ export const queryKeys = {
     counts: (connectionId: string, bucket: string, sortedKeys: string[]) =>
       [...queryKeys.shareLinks.all, "counts", connectionId, bucket, sortedKeys.join("|")] as const,
   },
+  multipartUploads: {
+    all: ["multipart-uploads"] as const,
+    byBucket: (connectionId: string, bucket: string) =>
+      [...queryKeys.multipartUploads.all, connectionId, bucket] as const,
+  },
   user: {
     subscription: () => ["user", "subscription"] as const,
   },
