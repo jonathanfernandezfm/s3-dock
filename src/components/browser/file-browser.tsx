@@ -36,6 +36,8 @@ import { useInfoDrawerStore } from "@/lib/stores/info-drawer-store";
 import { useNotesForKey, useNoteCounts } from "@/lib/queries/notes";
 import { useShareLinkCounts } from "@/lib/queries/share-links";
 import { BulkOpsPanel } from "./bulk-ops-panel";
+import { BucketVersioningToggle } from "@/components/buckets/bucket-versioning-toggle";
+import { useBucketVersioning } from "@/lib/queries/buckets";
 import type { S3Object } from "@/types";
 
 interface FileBrowserProps {
@@ -80,6 +82,7 @@ export function FileBrowser({
   const selectedItems = paneState.selectedItems;
   const connection = connections.find((item) => item.id === connectionId);
   const canWrite = connection ? connection.role === "ADMIN" : true;
+  const versioning = useBucketVersioning(connectionId, bucket);
 
   const currentPath = path.length > 0 ? path.join("/") + "/" : "";
 
@@ -451,6 +454,11 @@ export function FileBrowser({
               Viewer
             </span>
           )}
+          <BucketVersioningToggle
+            connectionId={connectionId}
+            bucket={bucket}
+            canEdit={canWrite}
+          />
           <ViewModeToggle
             value={paneState.viewMode}
             onChange={(m) => setViewMode(paneId, m)}
@@ -499,6 +507,11 @@ export function FileBrowser({
       </div>
 
       <div className="relative flex-1 flex flex-col">
+        {versioning.data?.status === "Suspended" && (
+          <div className="px-3 py-2 text-xs bg-yellow-500/10 border border-yellow-500/30 rounded mb-2">
+            Versioning suspended — new uploads won&apos;t be versioned. Existing versions are preserved.
+          </div>
+        )}
         {showLoadingOverlay && (
           <div className="absolute inset-0 bg-background/60 flex items-center justify-center z-10 rounded-lg">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
