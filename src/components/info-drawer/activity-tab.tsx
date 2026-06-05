@@ -25,6 +25,11 @@ const ACTION_VERBS: Record<ActivityAction, string> = {
   SHARE_CREATED: "shared",
   SHARE_REVOKED: "revoked share for",
   MULTIPART_ABORT: "aborted",
+  VERSION_RESTORE: "restored a version of",
+  VERSION_UNDELETE: "undeleted",
+  VERSION_PURGE: "permanently deleted a version of",
+  BUCKET_VERSIONING_ENABLE: "enabled versioning on",
+  BUCKET_VERSIONING_SUSPEND: "suspended versioning on",
 };
 
 const ALL_ACTIONS: ActivityAction[] = [
@@ -40,6 +45,11 @@ const ALL_ACTIONS: ActivityAction[] = [
   "SHARE_CREATED",
   "SHARE_REVOKED",
   "MULTIPART_ABORT",
+  "VERSION_RESTORE",
+  "VERSION_UNDELETE",
+  "VERSION_PURGE",
+  "BUCKET_VERSIONING_ENABLE",
+  "BUCKET_VERSIONING_SUSPEND",
 ];
 
 const ACTION_LABELS: Record<ActivityAction, string> = {
@@ -55,6 +65,11 @@ const ACTION_LABELS: Record<ActivityAction, string> = {
   SHARE_CREATED: "Share created",
   SHARE_REVOKED: "Share revoked",
   MULTIPART_ABORT: "Multipart abort",
+  VERSION_RESTORE: "Version restore",
+  VERSION_UNDELETE: "Version undelete",
+  VERSION_PURGE: "Version purge",
+  BUCKET_VERSIONING_ENABLE: "Versioning enable",
+  BUCKET_VERSIONING_SUSPEND: "Versioning suspend",
 };
 
 function lastSegment(path: string): string {
@@ -195,9 +210,9 @@ function FilterStrip({
 }: {
   events: ActivityEventResponse[];
   userFilter: string | null;
-  actionFilter: ActivityAction[];
+  actionFilter: ActivityAction[] | null;
   setUserFilter: (v: string | null) => void;
-  setActionFilter: (v: ActivityAction[]) => void;
+  setActionFilter: (v: ActivityAction[] | null) => void;
 }) {
   const userMap = new Map<string, string>();
   for (const e of events) {
@@ -206,14 +221,14 @@ function FilterStrip({
   const users = Array.from(userMap.entries());
 
   function toggleAction(action: ActivityAction) {
-    if (actionFilter.length === 0) {
+    if (actionFilter === null) {
       setActionFilter(ALL_ACTIONS.filter((a) => a !== action));
     } else if (actionFilter.includes(action)) {
       const next = actionFilter.filter((a) => a !== action);
-      setActionFilter(next.length === 0 ? [] : next);
+      setActionFilter(next);
     } else {
       const next = [...actionFilter, action];
-      setActionFilter(next.length === ALL_ACTIONS.length ? [] : next);
+      setActionFilter(next.length === ALL_ACTIONS.length ? null : next);
     }
   }
 
@@ -236,7 +251,7 @@ function FilterStrip({
         <div className="text-xs text-muted-foreground mb-1.5">Actions</div>
         <div className="flex flex-wrap gap-1">
           {ALL_ACTIONS.map((action) => {
-            const active = actionFilter.length === 0 || actionFilter.includes(action);
+            const active = actionFilter === null || actionFilter.includes(action);
             return (
               <button
                 key={action}
@@ -270,7 +285,7 @@ export function ActivityTab() {
     prefix: storeScope?.prefix,
     key: storeScope?.objectKey,
     userId: userFilter ?? undefined,
-    actions: actionFilter.length > 0 ? actionFilter : undefined,
+    actions: actionFilter !== null && actionFilter.length > 0 ? actionFilter : undefined,
   };
 
   const { events, hasMore, fetchNextPage, refetch, isLoading, isError } =
@@ -278,12 +293,12 @@ export function ActivityTab() {
 
   const filteredEvents = events.filter((e) => {
     if (userFilter && e.userId !== userFilter) return false;
-    if (actionFilter.length > 0 && !actionFilter.includes(e.action)) return false;
+    if (actionFilter !== null && !actionFilter.includes(e.action)) return false;
     return true;
   });
 
   const rows = groupActivityEvents(filteredEvents);
-  const hasActiveFilters = !!userFilter || actionFilter.length > 0;
+  const hasActiveFilters = !!userFilter || actionFilter !== null;
 
   if (!hasScope) {
     return (
