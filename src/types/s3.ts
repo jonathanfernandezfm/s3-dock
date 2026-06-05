@@ -28,3 +28,29 @@ export interface IncompleteUpload {
   initiatorDisplayName: string | null;
   initiatorId: string | null;
 }
+
+export type BucketVersioningStatus = "Enabled" | "Suspended" | "Disabled";
+
+export interface S3BucketVersioning {
+  status: BucketVersioningStatus;
+  mfaDeleteEnabled: boolean;
+}
+
+export interface S3ObjectVersion {
+  key: string;
+  versionId: string;
+  isLatest: boolean;
+  isDeleteMarker: boolean;
+  lastModified?: Date;
+  size?: number;
+  etag?: string;
+  storageClass?: string;
+  owner?: { id?: string; displayName?: string };
+}
+
+export interface ListObjectVersionsResponse {
+  versions: S3ObjectVersion[];
+  isTruncated: boolean;
+  nextKeyMarker?: string;
+  nextVersionIdMarker?: string;
+}
