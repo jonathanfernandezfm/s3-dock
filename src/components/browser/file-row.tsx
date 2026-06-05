@@ -24,7 +24,10 @@ import {
   Star,
   MessageSquare,
   Link2,
+  History,
 } from "lucide-react";
+import { useBucketVersioning } from "@/lib/queries/buckets";
+import { useVersionHistoryDialogStore } from "@/lib/stores/version-history-dialog-store";
 import { ShareDialog } from "@/components/shares/share-dialog";
 import { formatBytes, formatDate, getFileExtension, isImageFile, cn } from "@/lib/utils";
 import { useFileItemBehavior } from "./use-file-item-behavior";
@@ -109,6 +112,9 @@ export function FileRow({
   const prefixBookmarks = useBookmarksForBucket(connectionId, bucket);
   const createBookmark = useCreateBookmark();
   const deleteBookmark = useDeleteBookmark();
+  const versioning = useBucketVersioning(connectionId, bucket);
+  const hasVersioning = versioning.data?.status === "Enabled" || versioning.data?.status === "Suspended";
+  const openVersionDialog = useVersionHistoryDialogStore((s) => s.open);
 
   const href = object.isFolder
     ? `/browser/${connectionId}/${bucket}/${object.key}`
@@ -260,6 +266,20 @@ export function FileRow({
                   </DropdownMenuItem>
                 );
               })()}
+              {hasVersioning && !object.isFolder && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    openVersionDialog({
+                      connectionId,
+                      bucket,
+                      key: object.key,
+                    })
+                  }
+                >
+                  <History className="h-3.5 w-3.5 mr-2" />
+                  Version history
+                </DropdownMenuItem>
+              )}
               {canWrite && (
                 <DropdownMenuItem className="text-destructive" onClick={onDelete}>
                   <Trash2 className="h-4 w-4" />
