@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +39,15 @@ export function VersionHistoryDialog() {
     { enabled: isOpen && (versioning.data?.status === "Enabled" || versioning.data?.status === "Suspended") },
   );
 
+  const list = versions.data?.versions ?? [];
+
+  // Auto-select the latest version when the dialog opens with nothing pre-selected
+  useEffect(() => {
+    if (isOpen && !selectedVersionId && list.length > 0) {
+      selectVersion(list[0].versionId);
+    }
+  }, [isOpen, selectedVersionId, list, selectVersion]);
+
   const selected = useMemo(
     () => versions.data?.versions.find((v) => v.versionId === selectedVersionId) ?? null,
     [versions.data, selectedVersionId],
@@ -62,7 +71,6 @@ export function VersionHistoryDialog() {
   );
 
   const showingDiff = diffGuard.ok;
-  const list = versions.data?.versions ?? [];
 
   if (!target) {
     return (
