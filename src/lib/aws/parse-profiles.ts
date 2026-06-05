@@ -96,6 +96,14 @@ function classify(name: string, fields: RawProfile): ParsedProfile {
     };
   }
 
+  if (fields["sso_session"] || fields["sso_start_url"]) {
+    return {
+      kind: "sso",
+      name,
+      reason: "SSO / IAM Identity Center profiles are not yet supported",
+    };
+  }
+
   if (accessKeyId && secretAccessKey) {
     return { kind: "static", name, region, accessKeyId, secretAccessKey };
   }

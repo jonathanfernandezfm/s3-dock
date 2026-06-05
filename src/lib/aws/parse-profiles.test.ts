@@ -184,4 +184,30 @@ describe("parseAwsProfiles", () => {
       reason: "role-chain profiles (role_arn + source_profile) are not yet supported",
     });
   });
+
+  test("classifies SSO profiles (sso_session or sso_start_url) as 'sso'", () => {
+    const config = [
+      "[profile via-sso]",
+      "sso_session = my-corp-sso",
+      "sso_account_id = 123456789012",
+      "sso_role_name = AdminAccess",
+      "region = us-east-1",
+      "",
+      "[profile legacy-sso]",
+      "sso_start_url = https://example.awsapps.com/start",
+      "sso_account_id = 999999999999",
+      "sso_role_name = ReadOnly",
+      "region = us-east-1",
+    ].join("\n");
+
+    const result = parseAwsProfiles({ config });
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({
+      kind: "sso",
+      name: "via-sso",
+      reason: "SSO / IAM Identity Center profiles are not yet supported",
+    });
+    expect(result[1].kind).toBe("sso");
+  });
 });
