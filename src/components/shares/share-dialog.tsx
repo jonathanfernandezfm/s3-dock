@@ -116,7 +116,7 @@ export function ShareDialog({ open, onOpenChange, connectionId, bucket, fileKey 
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs gap-1"
+                  className="h-7 w-[88px] text-xs gap-1"
                   onClick={() => handleCopy(s.id, `${window.location.origin}/s/${s.slug}`)}
                 >
                   {copiedId === s.id ? (
@@ -226,7 +226,7 @@ export function ShareDialog({ open, onOpenChange, connectionId, bucket, fileKey 
               <code className="flex-1 text-xs truncate">{created.url}</code>
               <Button
                 size="sm"
-                className="gap-1"
+                className="w-[72px] gap-1"
                 onClick={() => handleCopy("created", created.url)}
               >
                 {copiedId === "created" ? (

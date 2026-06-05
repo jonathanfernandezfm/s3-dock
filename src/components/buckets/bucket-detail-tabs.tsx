@@ -44,7 +44,7 @@ export function BucketDetailTabs({ connectionId, bucket }: BucketDetailTabsProps
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <header className="border-b px-6 py-4 space-y-3">
+      <header className="border-b px-6 py-4 space-y-3 pb-0">
         <Link
           href="/buckets"
           className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"

@@ -76,7 +76,7 @@ export function ShareListTable({ connectionId }: { connectionId: string }) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 gap-1 text-xs"
+                    className="h-7 w-[72px] gap-1 text-xs"
                     onClick={() => handleCopy(s.id, `${window.location.origin}/s/${s.slug}`)}
                   >
                     {copiedId === s.id ? (

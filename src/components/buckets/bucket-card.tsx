@@ -76,7 +76,7 @@ export function BucketCard({
                 }
               }}
               className={`p-1 rounded hover:bg-accent ${pinned ? "text-yellow-400" : "text-muted-foreground/40 hover:text-muted-foreground"}`}
-              title={pinned ? "Unpin bucket" : "Pin bucket"}
+              title={pinned ? "Unpin" : "Pin"}
             >
               <Star className="size-4" fill={pinned ? "currentColor" : "none"} />
             </button>
@@ -95,18 +95,6 @@ export function BucketCard({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    router.push(
-                      `/buckets/${connectionId}/${encodeURIComponent(bucket.name)}?tab=multipart`
-                    );
-                  }}
-                >
-                  <Settings className="h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
                     if (pinned) {
                       const existing = findBookmark(bookmarks, connectionId, bucket.name, null);
                       if (existing) deleteBookmark.mutate(existing.id);
@@ -116,7 +104,19 @@ export function BucketCard({
                   }}
                 >
                   <Star className="h-4 w-4" fill={pinned ? "currentColor" : "none"} />
-                  {pinned ? "Unpin bucket" : "Pin bucket"}
+                  {pinned ? "Unpin" : "Pin"}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    router.push(
+                      `/buckets/${connectionId}/${encodeURIComponent(bucket.name)}?tab=multipart`
+                    );
+                  }}
+                >
+                  <Settings className="h-4 w-4" />
+                  Settings
                 </DropdownMenuItem>
                 {canDelete && (
                   <DropdownMenuItem
