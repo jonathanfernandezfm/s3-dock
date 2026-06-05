@@ -88,6 +88,14 @@ function classify(name: string, fields: RawProfile): ParsedProfile {
   const secretAccessKey = fields["aws_secret_access_key"];
   const region = fields["region"] ?? "us-east-1";
 
+  if (fields["role_arn"] && fields["source_profile"]) {
+    return {
+      kind: "role-chain",
+      name,
+      reason: "role-chain profiles (role_arn + source_profile) are not yet supported",
+    };
+  }
+
   if (accessKeyId && secretAccessKey) {
     return { kind: "static", name, region, accessKeyId, secretAccessKey };
   }

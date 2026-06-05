@@ -166,4 +166,22 @@ describe("parseAwsProfiles", () => {
     expect(parseAwsProfiles({ credentials: "" })).toEqual([]);
     expect(parseAwsProfiles({ credentials: "# only a comment" })).toEqual([]);
   });
+
+  test("classifies role-chain profiles (role_arn + source_profile) as 'role-chain'", () => {
+    const config = [
+      "[profile prod]",
+      "role_arn = arn:aws:iam::123456789012:role/admin",
+      "source_profile = default",
+      "region = us-west-2",
+    ].join("\n");
+
+    const result = parseAwsProfiles({ config });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      kind: "role-chain",
+      name: "prod",
+      reason: "role-chain profiles (role_arn + source_profile) are not yet supported",
+    });
+  });
 });
