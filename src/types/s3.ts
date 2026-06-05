@@ -41,7 +41,7 @@ export interface S3ObjectVersion {
   versionId: string;
   isLatest: boolean;
   isDeleteMarker: boolean;
-  lastModified?: Date;
+  lastModified?: string;
   size?: number;
   etag?: string;
   storageClass?: string;

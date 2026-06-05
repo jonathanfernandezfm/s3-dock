@@ -155,7 +155,7 @@ function VersionRow({ version, onOpenDialog }: { version: S3ObjectVersion; onOpe
             <span className="text-[10px] uppercase font-semibold text-destructive">Deleted</span>
           )}
           <span className="text-muted-foreground truncate">
-            {version.lastModified ? formatRelativeTime(version.lastModified.toISOString()) : "—"}
+            {version.lastModified ? formatRelativeTime(version.lastModified) : "—"}
             {version.size !== undefined && ` · ${formatBytes(version.size)}`}
           </span>
         </div>

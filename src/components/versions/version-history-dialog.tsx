@@ -187,7 +187,7 @@ function VersionListRow({
           )}
         </div>
         <div className="text-muted-foreground truncate">
-          {v.lastModified ? formatRelativeTime(v.lastModified.toISOString()) : "—"}
+          {v.lastModified ? formatRelativeTime(v.lastModified) : "—"}
           {v.size !== undefined && ` · ${formatBytes(v.size)}`}
         </div>
       </div>

@@ -7,14 +7,13 @@ describe("normalizeVersions", () => {
   });
 
   test("converts a Versions entry into an S3ObjectVersion with isDeleteMarker=false", () => {
-    const lastModified = new Date("2026-06-01T10:00:00.000Z");
     const result = normalizeVersions({
       Versions: [
         {
           Key: "a.txt",
           VersionId: "v1",
           IsLatest: true,
-          LastModified: lastModified,
+          LastModified: new Date("2026-06-01T10:00:00.000Z"),
           Size: 100,
           ETag: '"abc"',
           StorageClass: "STANDARD",
@@ -27,19 +26,19 @@ describe("normalizeVersions", () => {
         versionId: "v1",
         isLatest: true,
         isDeleteMarker: false,
-        lastModified,
+        lastModified: "2026-06-01T10:00:00.000Z",
         size: 100,
         etag: '"abc"',
         storageClass: "STANDARD",
+        owner: undefined,
       },
     ]);
   });
 
   test("converts a DeleteMarkers entry into an S3ObjectVersion with isDeleteMarker=true and no size", () => {
-    const lastModified = new Date("2026-06-02T10:00:00.000Z");
     const result = normalizeVersions({
       DeleteMarkers: [
-        { Key: "a.txt", VersionId: "dm1", IsLatest: true, LastModified: lastModified },
+        { Key: "a.txt", VersionId: "dm1", IsLatest: true, LastModified: new Date("2026-06-02T10:00:00.000Z") },
       ],
     });
     expect(result).toEqual([
@@ -48,10 +47,11 @@ describe("normalizeVersions", () => {
         versionId: "dm1",
         isLatest: true,
         isDeleteMarker: true,
-        lastModified,
+        lastModified: "2026-06-02T10:00:00.000Z",
         size: undefined,
         etag: undefined,
         storageClass: undefined,
+        owner: undefined,
       },
     ]);
   });

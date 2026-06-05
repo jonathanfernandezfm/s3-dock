@@ -32,7 +32,7 @@ export function normalizeVersions(input: SdkListResponse): S3ObjectVersion[] {
       versionId: v.VersionId,
       isLatest: v.IsLatest ?? false,
       isDeleteMarker: false,
-      lastModified: v.LastModified,
+      lastModified: v.LastModified?.toISOString(),
       size: v.Size,
       etag: v.ETag,
       storageClass: v.StorageClass,
@@ -46,7 +46,7 @@ export function normalizeVersions(input: SdkListResponse): S3ObjectVersion[] {
       versionId: m.VersionId,
       isLatest: m.IsLatest ?? false,
       isDeleteMarker: true,
-      lastModified: m.LastModified,
+      lastModified: m.LastModified?.toISOString(),
       size: undefined,
       etag: undefined,
       storageClass: undefined,
@@ -67,9 +67,9 @@ export function normalizeVersions(input: SdkListResponse): S3ObjectVersion[] {
   for (const k of sortedKeys) {
     const group = byKey.get(k)!;
     group.sort((a, b) => {
-      const at = a.lastModified?.getTime() ?? 0;
-      const bt = b.lastModified?.getTime() ?? 0;
-      return bt - at;
+      const at = a.lastModified ?? "";
+      const bt = b.lastModified ?? "";
+      return bt < at ? -1 : bt > at ? 1 : 0;
     });
     result.push(...group);
   }
