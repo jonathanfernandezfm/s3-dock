@@ -9,7 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Database, MoreVertical, Trash2, FolderOpen, Star } from "lucide-react";
+import { Database, MoreVertical, Trash2, FolderOpen, Star, Settings } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/utils";
 import type { S3Bucket } from "@/types";
 import { useBookmarks, useCreateBookmark, useDeleteBookmark } from "@/lib/queries/bookmarks";
@@ -35,6 +36,7 @@ export function BucketCard({
   const browserUrl = `/browser/${connectionId}/${bucket.name}`;
 
   const { data: bookmarks = [] } = useBookmarks();
+  const router = useRouter();
   const createBookmark = useCreateBookmark();
   const deleteBookmark = useDeleteBookmark();
   const pinned = isBookmarked(bookmarks, connectionId, bucket.name, null);
@@ -88,6 +90,18 @@ export function BucketCard({
                 <DropdownMenuItem onClick={handleBrowse}>
                   <FolderOpen className="h-4 w-4" />
                   Browse
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    router.push(
+                      `/buckets/${connectionId}/${encodeURIComponent(bucket.name)}?tab=multipart`
+                    );
+                  }}
+                >
+                  <Settings className="h-4 w-4" />
+                  Bucket settings
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={(e) => {
