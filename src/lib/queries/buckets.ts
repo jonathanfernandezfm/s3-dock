@@ -5,6 +5,7 @@ import { useConnections, type ConnectionResponse } from "./connections";
 import { queryKeys } from "./keys";
 import { useInvalidateActivity } from "./activity";
 import type { S3Bucket } from "@/types";
+import type { S3BucketVersioning } from "@/types/s3";
 
 async function fetchBuckets(connectionId: string): Promise<S3Bucket[]> {
   const response = await fetch("/api/buckets", {
@@ -126,6 +127,57 @@ export function useDeleteBucket(connectionId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.buckets.all });
       invalidateActivity();
+    },
+  });
+}
+
+async function fetchBucketVersioning(
+  connectionId: string,
+  bucket: string,
+): Promise<S3BucketVersioning> {
+  const url = `/api/buckets/${encodeURIComponent(bucket)}/versioning?connectionId=${encodeURIComponent(connectionId)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to fetch bucket versioning");
+  }
+  return res.json();
+}
+
+async function setBucketVersioning(
+  connectionId: string,
+  bucket: string,
+  enabled: boolean,
+): Promise<{ success: true; status: "Enabled" | "Suspended" }> {
+  const res = await fetch(`/api/buckets/${encodeURIComponent(bucket)}/versioning`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ connectionId, enabled }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to update bucket versioning");
+  }
+  return res.json();
+}
+
+export function useBucketVersioning(connectionId: string, bucket: string) {
+  return useQuery({
+    queryKey: queryKeys.bucketVersioning.status(connectionId, bucket),
+    queryFn: () => fetchBucketVersioning(connectionId, bucket),
+    enabled: !!connectionId && !!bucket,
+  });
+}
+
+export function useSetBucketVersioning(connectionId: string, bucket: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (enabled: boolean) => setBucketVersioning(connectionId, bucket, enabled),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.bucketVersioning.status(connectionId, bucket),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.versions.all });
     },
   });
 }
