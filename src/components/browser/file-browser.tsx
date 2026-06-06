@@ -481,15 +481,17 @@ export function FileBrowser({
               </span>
             )}
           </Button>
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={() => toggleInfoDrawer("versions")}
-            title="Versions"
-            className={infoTab === "versions" && isInfoOpen ? "text-primary" : ""}
-          >
-            <History className="h-4 w-4" />
-          </Button>
+          <CapabilityGate connectionId={connectionId} bucket={bucket} capability="list-versions">
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => toggleInfoDrawer("versions")}
+              title="Versions"
+              className={infoTab === "versions" && isInfoOpen ? "text-primary" : ""}
+            >
+              <History className="h-4 w-4" />
+            </Button>
+          </CapabilityGate>
           <CapabilityGate connectionId={connectionId} bucket={bucket} capability="upload-objects">
             <UploadButton
               connectionId={connectionId}
