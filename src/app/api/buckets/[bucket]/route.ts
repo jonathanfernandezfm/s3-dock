@@ -5,6 +5,7 @@ import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { recordActivity } from "@/lib/db/activity";
 import prisma from "@/lib/db/prisma";
+import { indexDeleteBucket } from "@/lib/search/index-ops";
 
 type RouteContext = { params: Promise<{ bucket: string }> };
 
@@ -46,6 +47,8 @@ export const DELETE = withAuth<RouteContext>(async (req, { user, params }) => {
       action: "BUCKET_DELETE",
       bucket,
     });
+
+    await indexDeleteBucket({ connectionId, bucket });
 
     try {
       await prisma.fileNote.deleteMany({

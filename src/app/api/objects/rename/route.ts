@@ -5,6 +5,7 @@ import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { recordActivity } from "@/lib/db/activity";
 import prisma from "@/lib/db/prisma";
+import { indexRename } from "@/lib/search/index-ops";
 
 interface RenameRequest {
   connectionId: string;
@@ -69,6 +70,17 @@ export const POST = withAuth(async (req, { user }) => {
       bucket,
       key: sourceKey,
       targetKey,
+    });
+
+    await indexRename({
+      workspaceId: access.workspaceId,
+      connectionId,
+      bucket,
+      fromKey: sourceKey,
+      toKey: targetKey,
+      size: 0n,
+      lastModified: new Date(),
+      etag: null,
     });
 
     try {

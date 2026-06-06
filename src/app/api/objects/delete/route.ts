@@ -5,6 +5,7 @@ import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { recordActivityBatch } from "@/lib/db/activity";
 import prisma from "@/lib/db/prisma";
+import { indexDelete } from "@/lib/search/index-ops";
 
 export const POST = withAuth(async (req, { user }) => {
   try {
@@ -56,6 +57,8 @@ export const POST = withAuth(async (req, { user }) => {
       bucket,
       items: keys.map((k) => ({ key: k })),
     });
+
+    await Promise.all(keys.map((k) => indexDelete({ connectionId, bucket, key: k })));
 
     try {
       await prisma.fileNote.deleteMany({

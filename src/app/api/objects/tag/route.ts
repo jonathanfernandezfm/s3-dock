@@ -4,6 +4,7 @@ import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { recordActivity } from "@/lib/db/activity";
+import { indexUpdateTags } from "@/lib/search/index-ops";
 
 interface TagRequest {
   connectionId: string;
@@ -59,6 +60,9 @@ export const POST = withAuth(async (req, { user }) => {
       bucket,
       key,
     });
+
+    const nextTags = tags.map((t) => t.value);
+    await indexUpdateTags({ connectionId, bucket, key, tags: nextTags });
 
     return NextResponse.json({ success: true });
   } catch (error) {

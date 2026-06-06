@@ -11,6 +11,7 @@ import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { recordActivityBatch } from "@/lib/db/activity";
 import prisma from "@/lib/db/prisma";
+import { indexDelete, indexUpsert } from "@/lib/search/index-ops";
 
 interface MoveRequest {
   sourceConnectionId: string;
@@ -167,6 +168,21 @@ export const POST = withAuth(async (req, { user }) => {
         });
       }
     }
+
+    await Promise.all(
+      successfulResults.flatMap((r) => [
+        indexDelete({ connectionId: sourceConnectionId, bucket: sourceBucket, key: r.sourceKey }),
+        indexUpsert({
+          workspaceId: targetAccess.workspaceId,
+          connectionId: targetConnectionId,
+          bucket: targetBucket,
+          key: r.targetKey,
+          size: 0n,
+          lastModified: new Date(),
+          etag: null,
+        }),
+      ])
+    );
 
     try {
       const successfulResults = results.filter((r) => r.success);

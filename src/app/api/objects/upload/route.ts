@@ -8,6 +8,7 @@ import {
   recordUpload,
 } from "@/lib/subscriptions";
 import { recordActivity } from "@/lib/db/activity";
+import { indexUpsert } from "@/lib/search/index-ops";
 
 export const POST = withAuth(async (req, { user }) => {
   try {
@@ -70,6 +71,16 @@ export const POST = withAuth(async (req, { user }) => {
       bucket,
       key,
       byteSize: BigInt(file.size),
+    });
+
+    await indexUpsert({
+      workspaceId: access.workspaceId,
+      connectionId,
+      bucket,
+      key,
+      size: BigInt(file.size),
+      lastModified: new Date(),
+      etag: null,
     });
 
     // Record usage

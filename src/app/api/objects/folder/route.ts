@@ -4,6 +4,7 @@ import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { recordActivity } from "@/lib/db/activity";
+import { indexUpsert } from "@/lib/search/index-ops";
 
 export const POST = withAuth(async (req, { user }) => {
   try {
@@ -52,6 +53,16 @@ export const POST = withAuth(async (req, { user }) => {
       action: "FOLDER_CREATE",
       bucket,
       key: folderKey,
+    });
+
+    await indexUpsert({
+      workspaceId: access.workspaceId,
+      connectionId,
+      bucket,
+      key: folderKey,
+      size: 0n,
+      lastModified: new Date(),
+      etag: null,
     });
 
     return NextResponse.json({ success: true });
