@@ -36,7 +36,6 @@ import { useInfoDrawerStore } from "@/lib/stores/info-drawer-store";
 import { useNotesForKey, useNoteCounts } from "@/lib/queries/notes";
 import { useShareLinkCounts } from "@/lib/queries/share-links";
 import { BulkOpsPanel } from "./bulk-ops-panel";
-import { BucketVersioningToggle } from "@/components/buckets/bucket-versioning-toggle";
 import { useBucketVersioning } from "@/lib/queries/buckets";
 import type { S3Object } from "@/types";
 
@@ -454,11 +453,6 @@ export function FileBrowser({
               Viewer
             </span>
           )}
-          <BucketVersioningToggle
-            connectionId={connectionId}
-            bucket={bucket}
-            canEdit={canWrite}
-          />
           <ViewModeToggle
             value={paneState.viewMode}
             onChange={(m) => setViewMode(paneId, m)}
