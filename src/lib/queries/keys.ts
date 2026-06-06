@@ -72,4 +72,9 @@ export const queryKeys = {
     status: (connectionId: string, bucket: string) =>
       [...queryKeys.bucketVersioning.all, connectionId, bucket] as const,
   },
+  bucketStats: {
+    all: ["bucket-stats"] as const,
+    byBucket: (connectionId: string, bucket: string) =>
+      [...queryKeys.bucketStats.all, connectionId, bucket] as const,
+  },
 };
