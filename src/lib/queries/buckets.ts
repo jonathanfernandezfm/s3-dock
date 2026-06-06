@@ -181,3 +181,38 @@ export function useSetBucketVersioning(connectionId: string, bucket: string) {
     },
   });
 }
+
+export interface BucketStats {
+  objectCount: number;
+  totalSize: number;
+  storageClasses: Array<{ class: string; count: number; size: number }>;
+}
+
+async function fetchBucketStats(
+  connectionId: string,
+  bucket: string,
+): Promise<BucketStats> {
+  const res = await fetch(
+    `/api/buckets/${encodeURIComponent(bucket)}/stats`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ connectionId }),
+    },
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to fetch bucket stats");
+  }
+  return res.json();
+}
+
+export function useBucketStats(connectionId: string, bucket: string) {
+  return useQuery({
+    queryKey: queryKeys.bucketStats.byBucket(connectionId, bucket),
+    queryFn: () => fetchBucketStats(connectionId, bucket),
+    enabled: false,
+    staleTime: Infinity,
+    gcTime: 5 * 60 * 1000,
+  });
+}
