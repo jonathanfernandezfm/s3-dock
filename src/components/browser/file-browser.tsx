@@ -155,6 +155,16 @@ export function FileBrowser({
     setCreateFolderOpen(true);
   }, [intent, consumeIntent, connectionId, bucket, currentPath]);
 
+  useEffect(() => {
+    if (intent?.kind !== "open-preview") return;
+    if (intent.connectionId !== connectionId || intent.bucket !== bucket) return;
+    consumeIntent();
+    setPreviewObject({
+      key: intent.key,
+      isFolder: intent.key.endsWith("/"),
+    });
+  }, [intent, consumeIntent, connectionId, bucket]);
+
   const guardInHistory = useRef(false);
 
   useEffect(() => {

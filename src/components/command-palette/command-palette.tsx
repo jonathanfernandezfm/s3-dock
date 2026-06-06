@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Clock,
@@ -25,6 +26,27 @@ import { useRecentLocationsStore } from "@/lib/stores/recent-locations-store";
 import { usePaletteIntentStore } from "@/lib/stores/palette-intent-store";
 import { usePaletteItems } from "./use-palette-items";
 import type { PinnedItem } from "./use-palette-items";
+import { useGlobalSearch } from "@/lib/queries/search";
+import { useTier } from "@/hooks/use-tier";
+import { useUpgradeModalStore } from "@/lib/stores/upgrade-modal-store";
+import { SearchResultsGroup } from "./search-results-group";
+import { OperatorChips } from "./operator-chips";
+import { parseSearchQuery } from "@/lib/search/query";
+
+function mapParsedToEcho(p: ReturnType<typeof parseSearchQuery>) {
+  return {
+    freeText: p.freeText,
+    mime: p.mime,
+    ext: p.ext,
+    sizeMin: p.sizeMin?.toString(),
+    sizeMax: p.sizeMax?.toString(),
+    before: p.before?.toISOString(),
+    after: p.after?.toISOString(),
+    bucket: p.bucket,
+    connection: p.connection,
+    tag: p.tag,
+  };
+}
 
 interface CommandPaletteProps {
   open: boolean;
@@ -48,7 +70,17 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const paneId = focusedPaneId ?? Object.keys(panes)[0] ?? null;
   const activeTab = paneId ? getActiveTab(paneId) : null;
 
-  const close = () => onOpenChange(false);
+  const [searchValue, setSearchValue] = useState("");
+  const parsedQuery = useMemo(() => parseSearchQuery(searchValue), [searchValue]);
+  const { tier } = useTier();
+  const isPro = tier === "PRO" || tier === "ENTERPRISE";
+  const search = useGlobalSearch(searchValue);
+  const openUpgrade = useUpgradeModalStore((s) => s.open);
+
+  const close = () => {
+    setSearchValue("");
+    onOpenChange(false);
+  };
 
   const navigateToBucket = (item: {
     connectionId: string;
@@ -219,9 +251,42 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput placeholder="Search or run a command..." />
+      <CommandInput
+        placeholder="Search or run a command..."
+        value={searchValue}
+        onValueChange={setSearchValue}
+      />
+      <OperatorChips parsed={mapParsedToEcho(parsedQuery)} query={searchValue} onQueryChange={setSearchValue} />
       <CommandList>
         <CommandEmpty>No results.</CommandEmpty>
+
+        <SearchResultsGroup
+          query={searchValue}
+          data={search.data}
+          isLoading={search.isLoading || search.isFetching}
+          isError={search.isError}
+          showLockedTeaser={!isPro}
+          onUpgradeClick={() => {
+            openUpgrade();
+            close();
+          }}
+          onSelectFile={(r) => {
+            if (!paneId || !activeTab) return;
+            updateTabBucket(paneId, activeTab.id, r.connectionId, r.connectionName ?? r.connectionId, r.bucket);
+            const dir = r.key.lastIndexOf("/") >= 0 ? r.key.slice(0, r.key.lastIndexOf("/") + 1) : "";
+            if (dir) updateTabPath(paneId, activeTab.id, dir);
+            requestIntent({ kind: "open-preview", connectionId: r.connectionId, bucket: r.bucket, key: r.key });
+            pushRecent({ connectionId: r.connectionId, connectionName: r.connectionName ?? r.connectionId, bucket: r.bucket, path: dir });
+            close();
+          }}
+          onSelectFolder={(r) => {
+            if (!paneId || !activeTab) return;
+            updateTabBucket(paneId, activeTab.id, r.connectionId, r.connectionName ?? r.connectionId, r.bucket);
+            updateTabPath(paneId, activeTab.id, r.key);
+            pushRecent({ connectionId: r.connectionId, connectionName: r.connectionName ?? r.connectionId, bucket: r.bucket, path: r.key });
+            close();
+          }}
+        />
 
         {items.pinned.length > 0 && (
           <>
