@@ -48,7 +48,32 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // Find connections needing a new RECONCILE.
-  const connections = await prisma.connection.findMany({ select: { id: true } });
+  // Only index connections belonging to PRO/ENTERPRISE workspaces; FREE users are excluded.
+  const connections = await prisma.connection.findMany({
+    where: {
+      workspace: {
+        OR: [
+          // Personal workspace: owner must have PRO or ENTERPRISE subscription
+          {
+            userId: { not: null },
+            user: { subscription: { tier: { in: ["PRO", "ENTERPRISE"] } } },
+          },
+          // Team workspace: at least one team member must have PRO or ENTERPRISE
+          {
+            teamId: { not: null },
+            team: {
+              members: {
+                some: {
+                  user: { subscription: { tier: { in: ["PRO", "ENTERPRISE"] } } },
+                },
+              },
+            },
+          },
+        ],
+      },
+    },
+    select: { id: true },
+  });
   const fired: string[] = [];
   for (const conn of connections) {
     const recent = await prisma.crawlJob.findFirst({

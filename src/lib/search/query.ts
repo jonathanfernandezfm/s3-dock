@@ -50,7 +50,7 @@ function parseSize(value: string): { min?: bigint; max?: bigint } | null {
   const [, cmp, num, unit] = m;
   const factor = UNITS[(unit ?? "b").toLowerCase()];
   const bytes = BigInt(num) * factor;
-  if (cmp === ">") return { min: bytes };
+  if (cmp === ">") return { min: bytes + 1n };
   if (cmp === ">=") return { min: bytes };
   if (cmp === "<") return { max: bytes - 1n };
   if (cmp === "<=") return { max: bytes };
