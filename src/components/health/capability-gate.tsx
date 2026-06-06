@@ -52,7 +52,7 @@ export function CapabilityGate({
 
   const reportHref = bucket
     ? `/buckets/${connectionId}/${encodeURIComponent(bucket)}?tab=permissions`
-    : `/connections/${connectionId}/health`;
+    : `/connections/${connectionId}?tab=permissions`;
 
   return (
     <TooltipProvider delayDuration={200}>
