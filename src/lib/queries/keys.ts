@@ -86,4 +86,8 @@ export const queryKeys = {
     summary: (id: string) =>
       [...queryKeys.health.all, "summary", id] as const,
   },
+  search: {
+    all: ["search"] as const,
+    query: (q: string) => [...queryKeys.search.all, "query", q] as const,
+  },
 };
