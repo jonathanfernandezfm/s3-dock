@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   useConnections,
   useDeleteConnection,
@@ -33,6 +34,7 @@ import {
   Loader2,
   Briefcase,
   Users,
+  ShieldCheck,
 } from "lucide-react";
 
 interface ConnectionListProps {
@@ -226,6 +228,15 @@ export function ConnectionList({ onAdd, onEdit, onImport }: ConnectionListProps)
                     <p className="text-xs text-muted-foreground mt-1 truncate pl-6">
                       {connection.endpoint}
                     </p>
+                    <div className="mt-2 pl-6">
+                      <Link
+                        href={`/connections/${connection.id}/health`}
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:underline"
+                      >
+                        <ShieldCheck className="h-3 w-3" />
+                        Health check
+                      </Link>
+                    </div>
                   </Card>
                 ))}
               </div>
