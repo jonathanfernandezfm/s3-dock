@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useConnections } from "@/lib/queries/connections";
 import { ComingSoonTab } from "./coming-soon-tab";
 import { MultipartUploadsTab } from "./multipart-uploads-tab";
+import { OverviewTab } from "./overview-tab";
 
 const TAB_DEFINITIONS = [
   { key: "overview", label: "Overview", icon: BarChart3 },
@@ -30,7 +31,7 @@ export function BucketDetailTabs({ connectionId, bucket }: BucketDetailTabsProps
   const router = useRouter();
   const searchParams = useSearchParams();
   const rawTab = searchParams.get("tab");
-  const activeTab: TabKey = isTabKey(rawTab) ? rawTab : "multipart";
+  const activeTab: TabKey = isTabKey(rawTab) ? rawTab : "overview";
 
   const { data: connections = [] } = useConnections();
   const connection = connections.find((c) => c.id === connectionId);
@@ -83,10 +84,7 @@ export function BucketDetailTabs({ connectionId, bucket }: BucketDetailTabsProps
 
       <div className="flex-1 overflow-y-auto p-6">
         {activeTab === "overview" && (
-          <ComingSoonTab
-            title="Overview coming soon"
-            description="A snapshot of this bucket: region, object count, total size, and storage-class breakdown."
-          />
+          <OverviewTab connectionId={connectionId} bucket={bucket} />
         )}
         {activeTab === "multipart" && (
           <MultipartUploadsTab
