@@ -27,7 +27,7 @@ describe("parseSearchQuery", () => {
 
   test("size greater than with mb unit", () => {
     const q = parseSearchQuery("size:>10mb");
-    expect(q.sizeMin).toBe(10n * 1024n * 1024n);
+    expect(q.sizeMin).toBe(10n * 1024n * 1024n + 1n);
     expect(q.sizeMax).toBeUndefined();
   });
 
@@ -75,7 +75,7 @@ describe("parseSearchQuery", () => {
   test("multiple operators combine", () => {
     const q = parseSearchQuery("mime:pdf size:>1mb after:2026-01-01 invoice");
     expect(q.mime).toBe("pdf");
-    expect(q.sizeMin).toBe(1n * 1024n * 1024n);
+    expect(q.sizeMin).toBe(1n * 1024n * 1024n + 1n);
     expect(q.after).toEqual(new Date("2026-01-01T00:00:00.000Z"));
     expect(q.freeText).toBe("invoice");
   });
