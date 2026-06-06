@@ -36,6 +36,7 @@ import { findBookmark } from "@/lib/bookmarks-helpers";
 import type { S3Object } from "@/types";
 import { useTier } from "@/hooks/use-tier";
 import { useUpgradeModalStore } from "@/lib/stores/upgrade-modal-store";
+import { CapabilityGate } from "@/components/health/capability-gate";
 
 interface FileRowProps {
   object: S3Object;
@@ -235,10 +236,12 @@ export function FileRow({
                 </DropdownMenuItem>
               )}
               {!object.isFolder && (
-                <DropdownMenuItem onClick={onDownload}>
-                  <Download className="h-4 w-4" />
-                  Download
-                </DropdownMenuItem>
+                <CapabilityGate connectionId={connectionId} bucket={bucket} capability="download-objects">
+                  <DropdownMenuItem onClick={onDownload}>
+                    <Download className="h-4 w-4" />
+                    Download
+                  </DropdownMenuItem>
+                </CapabilityGate>
               )}
               {!object.isFolder && (
                 <DropdownMenuItem
@@ -281,10 +284,12 @@ export function FileRow({
                 </DropdownMenuItem>
               )}
               {canWrite && (
-                <DropdownMenuItem className="text-destructive" onClick={onDelete}>
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
+                <CapabilityGate connectionId={connectionId} bucket={bucket} capability="delete-objects">
+                  <DropdownMenuItem className="text-destructive" onClick={onDelete}>
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </CapabilityGate>
               )}
             </DropdownMenuContent>
           </DropdownMenu>

@@ -27,6 +27,7 @@ import type { S3Object } from "@/types";
 import type { RenamePreviewItem } from "@/lib/bulk-rename";
 import { useCreateShareLink } from "@/lib/queries/share-links";
 import { FeatureGate } from "@/components/shared/feature-gate";
+import { CapabilityGate } from "@/components/health/capability-gate";
 
 interface BulkOpsPanelProps {
   paneId: string;
@@ -250,15 +251,17 @@ export function BulkOpsPanel({
               {shareProgress ? `${shareProgress.done}/${shareProgress.total}` : "Share"}
             </Button>
           </FeatureGate>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-destructive hover:text-destructive"
-            onClick={() => openDialog("delete", paneId)}
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </Button>
+          <CapabilityGate connectionId={connectionId} bucket={bucket} capability="delete-objects">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={() => openDialog("delete", paneId)}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
+          </CapabilityGate>
           <div className="h-5 w-px bg-border" />
           <Button
             size="icon"
