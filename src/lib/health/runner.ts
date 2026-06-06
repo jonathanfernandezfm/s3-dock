@@ -28,15 +28,19 @@ interface ConnectionRecord {
   updatedAt: Date;
 }
 
-async function timeoutAfter(ms: number): Promise<never> {
-  return new Promise((_resolve, reject) => {
-    setTimeout(() => {
-      const err = Object.assign(new Error("Probe timed out"), {
-        name: "TimeoutError",
-      });
-      reject(err);
+interface CancellableTimeout {
+  promise: Promise<never>;
+  clear: () => void;
+}
+
+function createTimeout(ms: number, message: string): CancellableTimeout {
+  let timerId: ReturnType<typeof setTimeout>;
+  const promise = new Promise<never>((_resolve, reject) => {
+    timerId = setTimeout(() => {
+      reject(Object.assign(new Error(message), { name: "TimeoutError" }));
     }, ms);
   });
+  return { promise, clear: () => clearTimeout(timerId) };
 }
 
 async function runProbeWithTimeout(
@@ -44,13 +48,10 @@ async function runProbeWithTimeout(
   ctx: { client: ReturnType<typeof createS3Client>; bucket?: string; randomKey: string },
 ): Promise<ProbeResultRecord> {
   const start = performance.now();
+  const timeout = createTimeout(PROBE_TIMEOUT_MS, "Probe timed out");
   try {
-    const outcome = await Promise.race([
-      probe.run(ctx),
-      timeoutAfter(PROBE_TIMEOUT_MS).then(() => {
-        throw Object.assign(new Error("timeout"), { name: "TimeoutError" });
-      }),
-    ]);
+    const outcome = await Promise.race([probe.run(ctx), timeout.promise]);
+    timeout.clear();
     return {
       key: probe.key,
       capability: probe.capability,
@@ -60,6 +61,7 @@ async function runProbeWithTimeout(
       durationMs: outcome.durationMs,
     };
   } catch (err) {
+    timeout.clear();
     const e = err as { name?: string };
     const isTimeout = e?.name === "TimeoutError";
     return {
@@ -190,19 +192,20 @@ async function runScope(
     ),
   );
 
-  const records = await Promise.race([
-    runAll,
-    timeoutAfter(RUN_TIMEOUT_MS),
-  ]).catch(() =>
-    probes.map((p) => ({
-      key: p.key,
-      capability: p.capability,
-      required: p.required,
-      result: "error" as ProbeResult,
-      errorCode: "timeout",
-      durationMs: RUN_TIMEOUT_MS,
-    })),
-  );
+  const runTimeout = createTimeout(RUN_TIMEOUT_MS, "Run timed out");
+  const records = await Promise.race([runAll, runTimeout.promise])
+    .then((result) => { runTimeout.clear(); return result; })
+    .catch(() => {
+      runTimeout.clear();
+      return probes.map((p) => ({
+        key: p.key,
+        capability: p.capability,
+        required: p.required,
+        result: "error" as ProbeResult,
+        errorCode: "timeout",
+        durationMs: RUN_TIMEOUT_MS,
+      }));
+    });
 
   const checkedAt = new Date();
   const durationMs = performance.now() - overallStart;

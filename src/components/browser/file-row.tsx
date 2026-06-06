@@ -236,7 +236,7 @@ export function FileRow({
                 </DropdownMenuItem>
               )}
               {!object.isFolder && (
-                <CapabilityGate connectionId={connectionId} bucket={bucket} capability="download-objects">
+                <CapabilityGate connectionId={connectionId} bucket={bucket} capability="download-objects" disableOnly>
                   <DropdownMenuItem onClick={onDownload}>
                     <Download className="h-4 w-4" />
                     Download
@@ -284,7 +284,7 @@ export function FileRow({
                 </DropdownMenuItem>
               )}
               {canWrite && (
-                <CapabilityGate connectionId={connectionId} bucket={bucket} capability="delete-objects">
+                <CapabilityGate connectionId={connectionId} bucket={bucket} capability="delete-objects" disableOnly>
                   <DropdownMenuItem className="text-destructive" onClick={onDelete}>
                     <Trash2 className="h-4 w-4" />
                     Delete

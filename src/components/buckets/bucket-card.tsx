@@ -131,6 +131,7 @@ export function BucketCard({
                   <CapabilityGate
                     connectionId={connectionId}
                     capability="delete-buckets"
+                    disableOnly
                   >
                     <DropdownMenuItem
                       className="text-destructive"

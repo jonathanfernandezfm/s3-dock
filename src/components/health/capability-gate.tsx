@@ -17,6 +17,12 @@ interface CapabilityGateProps {
   bucket?: string;
   capability: CapabilityKey;
   children: ReactNode;
+  /**
+   * Use inside DropdownMenuContent. Skips the tooltip <span> wrapper so Radix's
+   * DropdownMenuItem accessibility tree is not broken by an intervening element.
+   * The item is still visually disabled via Radix's data-[disabled] styling.
+   */
+  disableOnly?: boolean;
 }
 
 export function CapabilityGate({
@@ -24,6 +30,7 @@ export function CapabilityGate({
   bucket,
   capability,
   children,
+  disableOnly,
 }: CapabilityGateProps) {
   const { status, reason } = useCapability(connectionId, bucket, capability);
 
@@ -31,7 +38,6 @@ export function CapabilityGate({
     return <>{children}</>;
   }
 
-  // Disable the first child element and wrap with tooltip.
   const child = Children.only(children);
   const disabledChild = isValidElement(child)
     ? cloneElement(child as React.ReactElement<{ disabled?: boolean; "aria-disabled"?: boolean }>, {
@@ -39,6 +45,10 @@ export function CapabilityGate({
         "aria-disabled": true,
       })
     : child;
+
+  if (disableOnly) {
+    return <>{disabledChild}</>;
+  }
 
   const reportHref = bucket
     ? `/buckets/${connectionId}/${encodeURIComponent(bucket)}/health`
