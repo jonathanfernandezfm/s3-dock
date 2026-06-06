@@ -77,4 +77,13 @@ export const queryKeys = {
     byBucket: (connectionId: string, bucket: string) =>
       [...queryKeys.bucketStats.all, connectionId, bucket] as const,
   },
+  health: {
+    all: ["health"] as const,
+    connection: (id: string) =>
+      [...queryKeys.health.all, "connection", id] as const,
+    bucket: (id: string, bucket: string) =>
+      [...queryKeys.health.all, "bucket", id, bucket] as const,
+    summary: (id: string) =>
+      [...queryKeys.health.all, "summary", id] as const,
+  },
 };
