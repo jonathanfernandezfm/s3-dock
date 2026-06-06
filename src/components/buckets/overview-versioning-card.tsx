@@ -85,7 +85,7 @@ export function OverviewVersioningCard({
               <span
                 className={cn(
                   "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold",
-                  STATUS_PILL[status],
+                  STATUS_PILL[status] ?? "bg-muted text-muted-foreground border-border",
                 )}
               >
                 {status}
@@ -95,7 +95,7 @@ export function OverviewVersioningCard({
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              {STATUS_EXPLAINER[status]}
+              {STATUS_EXPLAINER[status] ?? "Versioning status unknown."}
             </p>
             {canEdit ? (
               <div className="flex items-center gap-2">

@@ -65,7 +65,7 @@ export function OverviewStorageStatsCard({
           </div>
         )}
 
-        {hasData && !stats.isFetching && stats.data && (
+        {hasData && !stats.isFetching && (
           <>
             <div className="grid grid-cols-2 gap-3">
               <div>
