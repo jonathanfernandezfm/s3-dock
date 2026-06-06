@@ -201,6 +201,9 @@ model Connection {
   fileNotes      FileNote[]
   shareLinks     ShareLink[]
 
+  healthCheck         ConnectionHealthCheck?
+  bucketHealthChecks  BucketHealthCheck[]
+
   @@index([workspaceId])
 
   @@map("connections")
@@ -321,4 +324,57 @@ model ShareLinkEvent {
 
   @@index([shareLinkId, createdAt(sort: Desc)])
   @@map("share_link_events")
+}
+
+model ConnectionHealthCheck {
+  id           String   @id @default(uuid())
+  connectionId String   @unique
+  checkedAt    DateTime
+  durationMs   Int
+  connectivity String   // "ok" | "unreachable"
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  probes       ConnectionPermissionCheck[]
+
+  @@map("connection_health_checks")
+}
+
+model ConnectionPermissionCheck {
+  id            String   @id @default(uuid())
+  healthCheckId String
+  probeKey      String
+  result        String   // "granted" | "denied" | "unsupported" | "error" | "skipped"
+  errorCode     String?
+  durationMs    Int
+  healthCheck   ConnectionHealthCheck @relation(fields: [healthCheckId], references: [id], onDelete: Cascade)
+
+  @@unique([healthCheckId, probeKey])
+  @@map("connection_permission_checks")
+}
+
+model BucketHealthCheck {
+  id           String   @id @default(uuid())
+  connectionId String
+  bucket       String
+  checkedAt    DateTime
+  durationMs   Int
+  connectivity String   // "ok" | "unreachable" | "missing-bucket"
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  probes       BucketPermissionCheck[]
+
+  @@unique([connectionId, bucket])
+  @@index([connectionId])
+  @@map("bucket_health_checks")
+}
+
+model BucketPermissionCheck {
+  id            String   @id @default(uuid())
+  healthCheckId String
+  probeKey      String
+  result        String
+  errorCode     String?
+  durationMs    Int
+  healthCheck   BucketHealthCheck @relation(fields: [healthCheckId], references: [id], onDelete: Cascade)
+
+  @@unique([healthCheckId, probeKey])
+  @@map("bucket_permission_checks")
 }
