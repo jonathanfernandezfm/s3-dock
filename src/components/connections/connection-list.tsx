@@ -36,6 +36,7 @@ import {
   Users,
   ShieldCheck,
 } from "lucide-react";
+import { SearchIndexStatus } from "./search-index-status";
 
 interface ConnectionListProps {
   onAdd: (workspaceId?: string) => void;
@@ -236,6 +237,9 @@ export function ConnectionList({ onAdd, onEdit, onImport }: ConnectionListProps)
                         <ShieldCheck className="h-3 w-3" />
                         Health check
                       </Link>
+                    </div>
+                    <div className="mt-1 pl-6">
+                      <SearchIndexStatus connectionId={connection.id} />
                     </div>
                   </Card>
                 ))}
