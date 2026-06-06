@@ -9,6 +9,12 @@ export type PaletteIntent =
       connectionId: string;
       bucket: string;
       path: string;
+    }
+  | {
+      kind: "open-preview";
+      connectionId: string;
+      bucket: string;
+      key: string;
     };
 
 interface PaletteIntentState {
