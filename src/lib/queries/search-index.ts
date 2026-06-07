@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useUpgradeModalStore } from "@/lib/stores/upgrade-modal-store";
 import { queryKeys } from "./keys";
 
 export type SearchIndexStatus =
@@ -24,5 +25,52 @@ export function useSearchIndexStatus(connectionId: string) {
     refetchInterval: (q) =>
       q.state.data?.state === "indexing" ? 5_000 : false,
     staleTime: 10_000,
+  });
+}
+
+type TriggerError = { status?: number; body?: { error?: string; jobId?: string } };
+
+export function useTriggerSearchIndex() {
+  const qc = useQueryClient();
+  const openUpgrade = useUpgradeModalStore((s) => s.open);
+
+  return useMutation<
+    { ok: true; jobId: string; state: "indexing" },
+    TriggerError,
+    string
+  >({
+    mutationFn: async (connectionId) => {
+      const res = await fetch(
+        `/api/connections/${connectionId}/search-index/trigger`,
+        { method: "POST" },
+      );
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw { status: res.status, body } satisfies TriggerError;
+      return body as { ok: true; jobId: string; state: "indexing" };
+    },
+    onMutate: async (connectionId) => {
+      await qc.cancelQueries({
+        queryKey: queryKeys.searchIndex.status(connectionId),
+      });
+      const previous = qc.getQueryData<SearchIndexStatus>(
+        queryKeys.searchIndex.status(connectionId),
+      );
+      qc.setQueryData<SearchIndexStatus>(
+        queryKeys.searchIndex.status(connectionId),
+        { state: "indexing", indexed: 0 },
+      );
+      return { previous };
+    },
+    onSuccess: (_data, connectionId) => {
+      qc.invalidateQueries({
+        queryKey: queryKeys.searchIndex.status(connectionId),
+      });
+    },
+    onError: (err, connectionId) => {
+      qc.invalidateQueries({
+        queryKey: queryKeys.searchIndex.status(connectionId),
+      });
+      if (err?.status === 402) openUpgrade();
+    },
   });
 }
