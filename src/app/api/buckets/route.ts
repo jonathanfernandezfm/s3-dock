@@ -7,6 +7,8 @@ import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { recordActivity } from "@/lib/db/activity";
+import { classifyError } from "@/lib/health/classify";
+import { recordConnectionProbeObservation } from "@/lib/health/observe";
 
 // POST /api/buckets - List buckets for a connection
 export const POST = withAuth(async (req, { user }) => {
@@ -73,7 +75,26 @@ export const PUT = withAuth(async (req, { user }) => {
 
     const client = createS3Client(access.connection);
     const command = new CreateBucketCommand({ Bucket: name });
-    await client.send(command);
+    try {
+      await client.send(command);
+    } catch (s3Error) {
+      const { result, errorCode } = classifyError(s3Error);
+      if (result === "denied") {
+        await recordConnectionProbeObservation(
+          connectionId,
+          "create-bucket",
+          "denied",
+          errorCode,
+        );
+      }
+      throw s3Error;
+    }
+
+    await recordConnectionProbeObservation(
+      connectionId,
+      "create-bucket",
+      "granted",
+    );
 
     await recordActivity({
       connectionId,

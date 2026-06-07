@@ -109,7 +109,7 @@ export function CapabilityRow({ capability, defaultOpen = false }: CapabilityRow
             </div>
           )}
 
-          {capability.affects.length > 0 && (
+          {capability.status !== "untested" && capability.affects.length > 0 && (
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
                 Affects

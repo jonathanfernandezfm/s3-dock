@@ -33,6 +33,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const now = new Date();
   const reconcileThreshold = new Date(now.getTime() - RECONCILE_INTERVAL_MIN * 60_000);
   const stuckThreshold = new Date(now.getTime() - STUCK_AFTER_MIN * 60_000);
+  // Jobs that have been PENDING for >2 min were never fired (e.g. token missing at creation time).
+  const stalePendingThreshold = new Date(now.getTime() - 2 * 60_000);
 
   // Stuck-job rescue: reset RUNNING jobs whose lastTickAt is too old.
   const stuck = await prisma.crawlJob.findMany({
@@ -44,6 +46,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       where: { id: j.id },
       data: { status: "PENDING" },
     });
+    await fireCrawl(j.id, req.nextUrl.origin);
+  }
+
+  // Stale-pending rescue: fire any PENDING job that was never started.
+  const stalePending = await prisma.crawlJob.findMany({
+    where: { status: "PENDING", createdAt: { lt: stalePendingThreshold } },
+    select: { id: true },
+  });
+  for (const j of stalePending) {
     await fireCrawl(j.id, req.nextUrl.origin);
   }
 
@@ -102,6 +113,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   return NextResponse.json({
     ok: true,
     stuckRescued: stuck.length,
+    pendingRescued: stalePending.length,
     reconcileQueued: fired.length,
   });
 }

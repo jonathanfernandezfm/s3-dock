@@ -71,6 +71,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const activeTab = paneId ? getActiveTab(paneId) : null;
 
   const [searchValue, setSearchValue] = useState("");
+  const isFileSearch = searchValue.trim().length >= 2;
   const parsedQuery = useMemo(() => parseSearchQuery(searchValue), [searchValue]);
   const { tier } = useTier();
   const isPro = tier === "PRO" || tier === "ENTERPRISE";
@@ -250,7 +251,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   );
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange}>
+    <CommandDialog open={open} onOpenChange={onOpenChange} shouldFilter={!isFileSearch}>
       <CommandInput
         placeholder="Search or run a command..."
         value={searchValue}
@@ -288,7 +289,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           }}
         />
 
-        {items.pinned.length > 0 && (
+        {!isFileSearch && items.pinned.length > 0 && (
           <>
             <CommandGroup heading="Pinned">
               {items.pinned.map((item) => {
@@ -317,7 +318,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </>
         )}
 
-        {items.recents.length > 0 && (
+        {!isFileSearch && items.recents.length > 0 && (
           <>
             <CommandGroup heading="Recent">
               {items.recents.slice(0, 5).map((r) => {
@@ -337,7 +338,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </>
         )}
 
-        <CommandGroup heading="Actions">
+        {!isFileSearch && <CommandGroup heading="Actions">
           {renderItem(
             "action-new-connection",
             "create new connection add",
@@ -383,9 +384,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               close();
             }
           )}
-        </CommandGroup>
+        </CommandGroup>}
 
-        {items.connections.length > 0 && (
+        {!isFileSearch && items.connections.length > 0 && (
           <>
             <CommandSeparator />
             <CommandGroup heading="Connections">
@@ -404,7 +405,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </>
         )}
 
-        {items.buckets.length > 0 && (
+        {!isFileSearch && items.buckets.length > 0 && (
           <>
             <CommandSeparator />
             <CommandGroup heading="Buckets">
@@ -423,7 +424,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </>
         )}
 
-        {items.folders.length > 0 && (
+        {!isFileSearch && items.folders.length > 0 && (
           <>
             <CommandSeparator />
             <CommandGroup
@@ -448,7 +449,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </>
         )}
 
-        {items.teams.length > 0 && (
+        {!isFileSearch && items.teams.length > 0 && (
           <>
             <CommandSeparator />
             <CommandGroup heading="Teams">

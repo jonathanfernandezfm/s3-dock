@@ -240,11 +240,13 @@ async function runScope(
           connectivity: report.connectivity,
         },
       });
+      const writtenRecords = records.filter((r) => r.result !== "skipped");
+      const writtenKeys = writtenRecords.map((r) => r.key);
       await tx.connectionPermissionCheck.deleteMany({
-        where: { healthCheckId: upserted.id },
+        where: { healthCheckId: upserted.id, probeKey: { in: writtenKeys } },
       });
       await tx.connectionPermissionCheck.createMany({
-        data: records.map((r) => ({
+        data: writtenRecords.map((r) => ({
           healthCheckId: upserted.id,
           probeKey: r.key,
           result: r.result,
@@ -268,11 +270,13 @@ async function runScope(
           connectivity: report.connectivity,
         },
       });
+      const writtenRecords = records.filter((r) => r.result !== "skipped");
+      const writtenKeys = writtenRecords.map((r) => r.key);
       await tx.bucketPermissionCheck.deleteMany({
-        where: { healthCheckId: upserted.id },
+        where: { healthCheckId: upserted.id, probeKey: { in: writtenKeys } },
       });
       await tx.bucketPermissionCheck.createMany({
-        data: records.map((r) => ({
+        data: writtenRecords.map((r) => ({
           healthCheckId: upserted.id,
           probeKey: r.key,
           result: r.result,

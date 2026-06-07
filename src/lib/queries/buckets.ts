@@ -115,6 +115,14 @@ export function useCreateBucket(connectionId: string) {
       queryClient.invalidateQueries({ queryKey: queryKeys.buckets.all });
       invalidateActivity();
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.health.summary(connectionId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.health.connection(connectionId),
+      });
+    },
   });
 }
 

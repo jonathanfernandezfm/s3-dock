@@ -396,44 +396,61 @@ export function AppSidebar() {
 
                       {!isCollapsed && workspaceConns.length > 0 && (
                         <ul className="ml-7 mt-0.5 space-y-0.5">
-                          {workspaceConns.map((conn) => (
-                            <li key={conn.id}>
-                              <div className="group flex items-center gap-2 px-3 py-1.5 rounded-md text-xs hover:bg-sidebar-accent/50 text-sidebar-foreground/80 hover:text-sidebar-foreground">
-                                <Plug className="h-3 w-3 shrink-0" />
-                                <span className="truncate flex-1">
-                                  {getDisplayName(conn)}
-                                </span>
-                                {conn.role === "ADMIN" && (
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity -mr-1"
-                                      >
-                                        <MoreHorizontal className="h-3 w-3" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-36">
-                                      <DropdownMenuItem
-                                        onClick={() => setEditingConnection(conn)}
-                                      >
-                                        <Pencil className="h-3.5 w-3.5" />
-                                        Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive"
-                                        onClick={() => setDeletingConnection(conn)}
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                )}
-                              </div>
-                            </li>
-                          ))}
+                          {workspaceConns.map((conn) => {
+                            const isConnActive = pathname.startsWith(
+                              `/connections/${conn.id}`
+                            );
+                            return (
+                              <li key={conn.id}>
+                                <div
+                                  className={cn(
+                                    "group flex items-center gap-2 rounded-md text-xs",
+                                    isConnActive
+                                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                                  )}
+                                >
+                                  <Link
+                                    href={`/connections/${conn.id}?tab=overview`}
+                                    className="flex items-center gap-2 flex-1 min-w-0 px-3 py-1.5"
+                                  >
+                                    <Plug className="h-3 w-3 shrink-0" />
+                                    <span className="truncate">
+                                      {getDisplayName(conn)}
+                                    </span>
+                                  </Link>
+                                  {conn.role === "ADMIN" && (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mr-1"
+                                        >
+                                          <MoreHorizontal className="h-3 w-3" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="w-36">
+                                        <DropdownMenuItem
+                                          onClick={() => setEditingConnection(conn)}
+                                        >
+                                          <Pencil className="h-3.5 w-3.5" />
+                                          Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          className="text-destructive focus:text-destructive"
+                                          onClick={() => setDeletingConnection(conn)}
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  )}
+                                </div>
+                              </li>
+                            );
+                          })}
                         </ul>
                       )}
                     </div>

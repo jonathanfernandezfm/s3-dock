@@ -1,4 +1,4 @@
-import { ListObjectsV2Command, type S3Client } from "@aws-sdk/client-s3";
+import { ListObjectsV2Command, type ListObjectsV2CommandOutput, type S3Client } from "@aws-sdk/client-s3";
 import { indexBulkUpsert, type IndexUpsertInput } from "@/lib/search/index-ops";
 
 export type CrawlState = {
@@ -39,12 +39,21 @@ export async function runCrawlTick(
       return { done: true, partialLimitHit: true, state };
     }
 
-    const page = await client.send(
-      new ListObjectsV2Command({
-        Bucket: state.currentBucket,
-        ContinuationToken: state.nextContinuationToken ?? undefined,
-      })
-    );
+    let page: ListObjectsV2CommandOutput;
+    try {
+      page = await client.send(
+        new ListObjectsV2Command({
+          Bucket: state.currentBucket,
+          ContinuationToken: state.nextContinuationToken ?? undefined,
+        })
+      );
+    } catch (err) {
+      console.warn(`[search-index] skipping bucket "${state.currentBucket}" due to error:`, err instanceof Error ? err.message : err);
+      state.currentBucket = state.bucketsRemaining.shift() ?? null;
+      state.nextContinuationToken = null;
+      pagesThisTick += 1;
+      continue;
+    }
     pagesThisTick += 1;
 
     const contents = page.Contents ?? [];

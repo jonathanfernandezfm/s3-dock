@@ -82,34 +82,34 @@ export const GET = withAuth(async (req, { user }) => {
   // Use Prisma.$queryRaw with parameterized tagged template.
   const rows = await prisma.$queryRaw<SearchRow[]>`
     SELECT
-      oi.id::text                AS id,
-      oi.workspace_id::text      AS workspace_id,
-      oi.connection_id::text     AS connection_id,
-      oi.bucket                  AS bucket,
-      oi.key                     AS key,
-      oi.size                    AS size,
-      oi.last_modified           AS last_modified,
-      oi.mime                    AS mime,
-      oi.extension               AS extension,
-      oi.tags                    AS tags,
-      c.name                     AS connection_name,
-      c.endpoint                 AS connection_endpoint,
+      oi.id::text                   AS id,
+      oi."workspaceId"::text        AS workspace_id,
+      oi."connectionId"::text       AS connection_id,
+      oi.bucket                     AS bucket,
+      oi.key                        AS key,
+      oi.size                       AS size,
+      oi."lastModified"             AS last_modified,
+      oi.mime                       AS mime,
+      oi.extension                  AS extension,
+      oi.tags                       AS tags,
+      c.name                        AS connection_name,
+      c.endpoint                    AS connection_endpoint,
       CASE WHEN ${queryText}::text = '' THEN 0
-           ELSE similarity(oi.search_text, ${queryText}::text) END AS score
+           ELSE word_similarity(${queryText}::text, oi.search_text) END AS score
     FROM object_index oi
-    JOIN connections c ON c.id = oi.connection_id
-    WHERE oi.workspace_id = ANY(${workspaceIds}::text[])
-      AND (${queryText}::text = '' OR oi.search_text % ${queryText}::text)
+    JOIN connections c ON c.id = oi."connectionId"
+    WHERE oi."workspaceId" = ANY(${workspaceIds}::text[])
+      AND (${queryText}::text = '' OR ${queryText}::text <% oi.search_text)
       AND (${mimePattern}::text IS NULL OR oi.mime LIKE ${mimePattern}::text)
       AND (${ext}::text IS NULL OR oi.extension = ${ext}::text)
       AND (${sizeMin}::bigint IS NULL OR oi.size >= ${sizeMin}::bigint)
       AND (${sizeMax}::bigint IS NULL OR oi.size <= ${sizeMax}::bigint)
-      AND (${before}::timestamptz IS NULL OR oi.last_modified < ${before}::timestamptz)
-      AND (${after}::timestamptz IS NULL OR oi.last_modified >= ${after}::timestamptz)
+      AND (${before}::timestamptz IS NULL OR oi."lastModified" < ${before}::timestamptz)
+      AND (${after}::timestamptz IS NULL OR oi."lastModified" >= ${after}::timestamptz)
       AND (${bucket}::text IS NULL OR oi.bucket = ${bucket}::text)
       AND (${connectionPattern}::text IS NULL OR c.name ILIKE ${connectionPattern}::text)
       AND (${tag}::text IS NULL OR oi.tags ? ${tag}::text)
-    ORDER BY score DESC, oi.last_modified DESC
+    ORDER BY score DESC, oi."lastModified" DESC
     LIMIT ${limit}
   `;
 

@@ -30,12 +30,14 @@ Command.displayName = CommandPrimitive.displayName;
 interface CommandDialogProps extends React.ComponentProps<typeof Dialog> {
   title?: string;
   description?: string;
+  shouldFilter?: boolean;
 }
 
 function CommandDialog({
   title = "Command Palette",
   description = "Search and run commands",
   children,
+  shouldFilter,
   ...props
 }: CommandDialogProps) {
   return (
@@ -45,7 +47,7 @@ function CommandDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <Command className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-input-wrapper]_svg]:h-4 [&_[cmdk-input-wrapper]_svg]:w-4 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-2">
+        <Command shouldFilter={shouldFilter} className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-input-wrapper]_svg]:h-4 [&_[cmdk-input-wrapper]_svg]:w-4 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-2">
           {children}
         </Command>
       </DialogContent>

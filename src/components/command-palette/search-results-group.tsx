@@ -79,7 +79,7 @@ export function SearchResultsGroup({
     return (
       <CommandGroup heading={heading}>
         {[0, 1].map((i) => (
-          <CommandItem key={`sk-${i}`} value={`sk-${i}-${query}`} forceMount disabled>
+          <CommandItem key={`sk-${i}`} value={`${query} sk-${i}`} forceMount disabled>
             <div className="flex w-full animate-pulse items-center gap-2 py-1">
               <div className="h-4 w-4 rounded bg-muted" />
               <div className="flex-1 space-y-1">
@@ -97,7 +97,7 @@ export function SearchResultsGroup({
   if (results.length === 0) {
     return (
       <CommandGroup heading={heading}>
-        <CommandItem value={`empty-${query}`} forceMount disabled>
+        <CommandItem value={`${query} empty`} forceMount disabled>
           <span className="text-sm text-muted-foreground">No files match.</span>
         </CommandItem>
       </CommandGroup>
@@ -113,7 +113,7 @@ export function SearchResultsGroup({
         return (
           <CommandItem
             key={r.id}
-            value={r.id}
+            value={`${query} ${r.bucket} ${r.key} ${r.connectionName ?? ""}`}
             forceMount
             onSelect={() => (isFolder ? onSelectFolder(r) : onSelectFile(r))}
           >

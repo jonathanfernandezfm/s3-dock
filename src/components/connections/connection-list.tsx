@@ -197,42 +197,46 @@ export function ConnectionList({ onAdd, onEdit, onImport }: ConnectionListProps)
                           {connection.role}
                         </span>
                       </div>
-                      <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 shrink-0"
-                            >
-                              <MoreVertical className="h-3.5 w-3.5" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/connections/${connection.id}?tab=overview`}>
-                                <Settings className="h-4 w-4" />
-                                Settings
-                              </Link>
-                            </DropdownMenuItem>
-                            {canManage(connection) && (
-                              <>
-                                <DropdownMenuItem
-                                  onClick={() => onEdit(connection)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-destructive"
-                                  onClick={() => setDeletingConnection(connection)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          asChild
+                        >
+                          <Link href={`/connections/${connection.id}?tab=overview`}>
+                            <Settings className="h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
+                        {canManage(connection) && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                              >
+                                <MoreVertical className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => onEdit(connection)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => setDeletingConnection(connection)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 truncate pl-6">
                       {connection.endpoint}

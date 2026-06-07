@@ -1,4 +1,5 @@
 import prisma from "@/lib/db/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import { extOf, mimeFromExt } from "./mime-from-ext";
 import { isSearchIndexEnabled } from "./feature-flag";
 
@@ -64,28 +65,25 @@ export async function indexBulkUpsert(items: IndexUpsertInput[]): Promise<void> 
   if (!isSearchIndexEnabled()) return;
   if (items.length === 0) return;
   try {
-    await prisma.$transaction(
-      items.map((i) =>
-        prisma.objectIndex.upsert({
-          where: {
-            connectionId_bucket_key: {
-              connectionId: i.connectionId,
-              bucket: i.bucket,
-              key: i.key,
-            },
-          },
-          create: buildIndexFields(i),
-          update: {
-            size: i.size,
-            lastModified: i.lastModified,
-            etag: i.etag,
-            extension: extOf(i.key),
-            mime: mimeFromExt(extOf(i.key)),
-            lastSeenAt: new Date(),
-          },
-        })
-      )
-    );
+    const now = new Date();
+    const values = items.map((i) => {
+      const f = buildIndexFields(i);
+      return Prisma.sql`(${crypto.randomUUID()}, ${f.workspaceId}, ${f.connectionId}, ${f.bucket}, ${f.key}, ${f.size}, ${f.lastModified}, ${f.etag}, ${f.extension}, ${f.mime}, ${Prisma.raw("'[]'::jsonb")}, ${now}, ${now}, ${now})`;
+    });
+    await prisma.$executeRaw`
+      INSERT INTO "object_index"
+        ("id", "workspaceId", "connectionId", "bucket", "key", "size", "lastModified",
+         "etag", "extension", "mime", "tags", "lastSeenAt", "createdAt", "updatedAt")
+      VALUES ${Prisma.join(values)}
+      ON CONFLICT ("connectionId", "bucket", "key") DO UPDATE SET
+        "size"         = EXCLUDED."size",
+        "lastModified" = EXCLUDED."lastModified",
+        "etag"         = EXCLUDED."etag",
+        "extension"    = EXCLUDED."extension",
+        "mime"         = EXCLUDED."mime",
+        "lastSeenAt"   = EXCLUDED."lastSeenAt",
+        "updatedAt"    = EXCLUDED."updatedAt"
+    `;
   } catch (err) {
     logFailure("bulkUpsert", { count: items.length }, err);
   }

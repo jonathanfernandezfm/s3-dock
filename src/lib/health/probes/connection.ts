@@ -45,4 +45,16 @@ const deleteBucket: Probe = {
   },
 };
 
-export const CONNECTION_PROBES: Probe[] = [listBuckets, deleteBucket];
+// Observed, not probed: actually calling CreateBucket would create a real
+// bucket as a side effect. The result is recorded by PUT /api/buckets.
+const createBucket: Probe = {
+  key: "create-bucket",
+  capability: "create-buckets",
+  scope: "connection",
+  required: true,
+  async run(): Promise<ProbeRunOutcome> {
+    return { result: "skipped", durationMs: 0 };
+  },
+};
+
+export const CONNECTION_PROBES: Probe[] = [listBuckets, deleteBucket, createBucket];

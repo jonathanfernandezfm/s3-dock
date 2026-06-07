@@ -1,0 +1,102 @@
+
+> s3-dock@0.1.0 build E:\development\other projects\s3client
+> prisma generate && next build
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+
+✔ Generated Prisma Client (7.2.0) to .\src\generated\prisma in 97ms
+
+▲ Next.js 16.1.1 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 3.1s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/48) ...
+  Generating static pages using 15 workers (12/48) 
+  Generating static pages using 15 workers (24/48) 
+  Generating static pages using 15 workers (36/48) 
+✓ Generating static pages using 15 workers (48/48) in 324.0ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/activity
+├ ƒ /api/billing/checkout
+├ ƒ /api/billing/portal
+├ ƒ /api/bookmarks
+├ ƒ /api/bookmarks/[id]
+├ ƒ /api/bookmarks/reorder
+├ ƒ /api/buckets
+├ ƒ /api/buckets/[bucket]
+├ ƒ /api/buckets/[bucket]/multipart-uploads
+├ ƒ /api/buckets/[bucket]/stats
+├ ƒ /api/buckets/[bucket]/versioning
+├ ƒ /api/connections
+├ ƒ /api/connections/[id]
+├ ƒ /api/connections/[id]/buckets/[bucket]/health-check
+├ ƒ /api/connections/[id]/health-check
+├ ƒ /api/connections/[id]/health-check/summary
+├ ƒ /api/connections/import
+├ ƒ /api/connections/test
+├ ƒ /api/internal/crawl
+├ ƒ /api/internal/reconcile
+├ ƒ /api/notes
+├ ƒ /api/notes/[id]
+├ ƒ /api/notes/counts
+├ ƒ /api/objects
+├ ƒ /api/objects/copy
+├ ƒ /api/objects/delete
+├ ƒ /api/objects/download
+├ ƒ /api/objects/folder
+├ ƒ /api/objects/move
+├ ƒ /api/objects/presign-batch
+├ ƒ /api/objects/rename
+├ ƒ /api/objects/tag
+├ ƒ /api/objects/upload
+├ ƒ /api/objects/versions
+├ ƒ /api/objects/versions/copy
+├ ƒ /api/objects/versions/presign
+├ ƒ /api/objects/versions/purge
+├ ƒ /api/objects/versions/restore
+├ ƒ /api/objects/versions/undelete
+├ ƒ /api/search
+├ ƒ /api/share-links
+├ ƒ /api/share-links/[id]
+├ ƒ /api/share-links/counts
+├ ƒ /api/teams
+├ ƒ /api/teams/[teamId]
+├ ƒ /api/teams/[teamId]/members
+├ ƒ /api/teams/[teamId]/members/[memberId]
+├ ƒ /api/user/subscription
+├ ƒ /api/webhooks/clerk
+├ ƒ /api/webhooks/stripe
+├ ƒ /api/workspaces
+├ ƒ /browser/[connectionId]/[bucket]/[[...path]]
+├ ○ /buckets
+├ ƒ /buckets/[connectionId]/[bucket]
+├ ƒ /buckets/[connectionId]/[bucket]/health
+├ ○ /connections
+├ ƒ /connections/[id]/health
+├ ○ /icon.png
+├ ƒ /s/[slug]
+├ ƒ /s/[slug]/download
+├ ƒ /s/[slug]/unlock
+├ ƒ /settings
+├ ƒ /settings/billing
+├ ○ /settings/connections
+├ ○ /shares
+├ ƒ /sign-in/[[...sign-in]]
+├ ƒ /sign-up/[[...sign-up]]
+└ ○ /teams
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
