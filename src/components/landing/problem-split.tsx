@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { Parallax } from "./primitives/parallax";
 import { Reveal } from "./primitives/reveal";
+import { useReducedMotionSafe } from "./primitives/use-reduced-motion-safe";
 import { AppWindow } from "./mocks/app-window";
 import { FileGrid, type FileItem } from "./mocks/file-grid";
 
@@ -18,7 +19,7 @@ const DOCK_FILES: FileItem[] = [
 /** Desaturated, dense AWS-console caricature (left half of the split). */
 function ConsoleMock() {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#141414] p-4 opacity-60 saturate-50">
+    <div aria-hidden className="rounded-xl border border-white/10 bg-[#141414] p-4 opacity-60 saturate-50">
       <div className="mb-3 flex items-center gap-2">
         <div className="h-5 w-36 rounded bg-white/10" />
         <div className="h-5 w-20 rounded bg-white/10" />
@@ -44,6 +45,7 @@ function ConsoleMock() {
 }
 
 export function ProblemSplit() {
+  const reduced = useReducedMotionSafe();
   return (
     <section className="relative overflow-hidden px-6 py-32">
       <Reveal className="mx-auto mb-16 max-w-3xl">
@@ -57,7 +59,7 @@ export function ProblemSplit() {
         {/* animated divider, desktop only */}
         <motion.div
           aria-hidden
-          initial={{ scaleY: 0 }}
+          initial={reduced ? false : { scaleY: 0 }}
           whileInView={{ scaleY: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: "easeOut" }}
