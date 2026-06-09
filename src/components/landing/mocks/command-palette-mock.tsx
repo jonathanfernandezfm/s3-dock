@@ -25,7 +25,7 @@ export function CommandPaletteMock({
   const [sceneIndex, setSceneIndex] = useState(0);
   const [chars, setChars] = useState(0);
   const scene = scenes[sceneIndex];
-  const done = chars >= scene.query.length;
+  const done = chars >= (scene?.query.length ?? 0);
 
   // type the query one character at a time
   useEffect(() => {
@@ -43,6 +43,10 @@ export function CommandPaletteMock({
     }, 1800);
     return () => clearTimeout(id);
   }, [active, done, scenes.length]);
+
+  if (!scene) {
+    return null;
+  }
 
   return (
     <div
