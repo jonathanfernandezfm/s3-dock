@@ -7,6 +7,7 @@ import { TransferArc } from "./transfer-arc";
 import { Compatibility } from "./compatibility";
 import { Teams } from "./teams";
 import { Pricing } from "./pricing";
+import { FinalCta } from "./final-cta";
 import { Footer } from "./footer";
 
 /**
@@ -17,7 +18,7 @@ import { Footer } from "./footer";
  */
 export function LandingPage() {
   return (
-    <div className="landing dark min-h-screen bg-[var(--landing-bg)] text-white antialiased">
+    <div id="top" className="landing dark min-h-screen bg-[var(--landing-bg)] text-white antialiased">
       <Nav />
       <main>
         <Hero />
@@ -28,6 +29,7 @@ export function LandingPage() {
         <Compatibility />
         <Teams />
         <Pricing />
+        <FinalCta />
       </main>
       <Footer />
     </div>
