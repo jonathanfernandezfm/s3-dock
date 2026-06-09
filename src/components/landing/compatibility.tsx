@@ -17,6 +17,12 @@ const PROVIDERS = [
   "Ceph",
 ];
 
+/** One marquee pass: provider chips plus the amber catch-all. Rendered twice for a seamless -50% loop. */
+const TRACK = [
+  ...PROVIDERS.map((name) => ({ name, amber: false })),
+  { name: "+ any S3-compatible endpoint", amber: true },
+];
+
 /** Auto-filling 3-field connection form: empty → filled → connected. */
 function ConnectDemo({ active }: { active: boolean }) {
   const step = useLoop(3, 1600, active);
@@ -86,17 +92,18 @@ export function Compatibility() {
           className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-[var(--landing-bg)] to-transparent"
         />
         <div className="animate-marquee flex w-max gap-3">
-          {[...PROVIDERS, ...PROVIDERS].map((name, i) => (
+          {[...TRACK, ...TRACK].map((item, i) => (
             <span
-              key={`${name}-${i}`}
-              className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-2.5 font-mono text-sm text-white/60"
+              key={`${item.name}-${i}`}
+              className={
+                item.amber
+                  ? "rounded-full border border-[var(--accent-amber)]/40 bg-[var(--accent-amber)]/10 px-5 py-2.5 font-mono text-sm text-[var(--accent-amber)]"
+                  : "rounded-full border border-white/10 bg-white/[0.03] px-5 py-2.5 font-mono text-sm text-white/60"
+              }
             >
-              {name}
+              {item.name}
             </span>
           ))}
-          <span className="rounded-full border border-[var(--accent-amber)]/40 bg-[var(--accent-amber)]/10 px-5 py-2.5 font-mono text-sm text-[var(--accent-amber)]">
-            + any S3-compatible endpoint
-          </span>
         </div>
       </div>
 
