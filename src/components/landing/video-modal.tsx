@@ -17,7 +17,13 @@ export function VideoModal({ open, onOpenChange }: VideoModalProps) {
   const [failed, setFailed] = useState(false);
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (next) setFailed(false);
+        onOpenChange(next);
+      }}
+    >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(90vw,1100px)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_0_80px_var(--accent-amber-glow)] focus:outline-none">
