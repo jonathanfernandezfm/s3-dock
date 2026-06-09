@@ -1,6 +1,7 @@
 import { Nav } from "./nav";
 import { Hero } from "./hero";
 import { ProblemSplit } from "./problem-split";
+import { FeatureBento } from "./feature-bento";
 import { Footer } from "./footer";
 
 /**
@@ -16,6 +17,7 @@ export function LandingPage() {
       <main>
         <Hero />
         <ProblemSplit />
+        <FeatureBento />
       </main>
       <Footer />
     </div>
