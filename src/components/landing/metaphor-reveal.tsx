@@ -38,7 +38,7 @@ function BrowseScene() {
   );
 }
 
-function DragScene() {
+function DragScene({ animated = true }: { animated?: boolean }) {
   return (
     <div className="relative">
       <div className="border-b border-white/5 px-4 py-2 font-mono text-xs text-white/40">
@@ -53,13 +53,15 @@ function DragScene() {
           { name: "readme.md", kind: "doc" },
         ]}
       />
-      <motion.div
-        animate={{ x: [0, 110, 110], y: [0, 40, 40], opacity: [1, 1, 0] }}
-        transition={{ duration: 3, repeat: Infinity, times: [0.25, 0.7, 0.95] }}
-        className="absolute left-8 top-16 z-10 rounded-md border border-[var(--accent-amber)]/50 bg-[var(--accent-amber)]/20 px-2 py-1 font-mono text-[10px] text-[var(--accent-amber)]"
-      >
-        deploy.tar.gz
-      </motion.div>
+      {animated && (
+        <motion.div
+          animate={{ x: [0, 110, 110], y: [0, 40, 40], opacity: [1, 1, 0] }}
+          transition={{ duration: 3, repeat: Infinity, times: [0.25, 0.7, 0.95] }}
+          className="absolute left-8 top-16 z-10 rounded-md border border-[var(--accent-amber)]/50 bg-[var(--accent-amber)]/20 px-2 py-1 font-mono text-[10px] text-[var(--accent-amber)]"
+        >
+          deploy.tar.gz
+        </motion.div>
+      )}
       <div className="absolute bottom-3 right-3 rounded-lg border border-white/10 bg-black/80 px-3 py-2 font-mono text-[11px] text-white/70 shadow-xl">
         Uploading 3 files… <span className="text-green-400">✓</span>
       </div>
@@ -90,24 +92,24 @@ function SearchScene() {
 interface Beat {
   title: string;
   body: string;
-  scene: ReactNode;
+  Scene: (props: { animated?: boolean }) => ReactNode;
 }
 
 const BEATS: Beat[] = [
   {
     title: "Folders, not prefixes.",
     body: "Navigate buckets the way you navigate your laptop — breadcrumbs, folders, and a grid of files. No key-prefix mental gymnastics.",
-    scene: <BrowseScene />,
+    Scene: BrowseScene,
   },
   {
     title: "Drag, don't aws s3 cp.",
     body: "Upload, move, and reorganize with your mouse. Progress lives in a toast, not a terminal scrollback.",
-    scene: <DragScene />,
+    Scene: DragScene,
   },
   {
     title: "Search like you mean it.",
     body: "Hit ⌘K and find any file across every bucket you've connected. Indexed, instant, everywhere.",
-    scene: <SearchScene />,
+    Scene: SearchScene,
   },
 ];
 
@@ -116,12 +118,14 @@ function StaticBeats() {
   return (
     <section className="px-6 py-32">
       <div className="mx-auto max-w-6xl space-y-20">
-        {BEATS.map((beat) => (
+        {BEATS.map((beat) => {
+          const Scene = beat.Scene;
+          return (
           <div
             key={beat.title}
             className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.4fr_1fr]"
           >
-            <AppWindow title="s3dock.app">{beat.scene}</AppWindow>
+            <AppWindow title="s3dock.app"><Scene animated={false} /></AppWindow>
             <div>
               <h3 className="text-2xl font-semibold tracking-tight text-white">
                 {beat.title}
@@ -129,7 +133,8 @@ function StaticBeats() {
               <p className="mt-3 text-[var(--landing-muted)]">{beat.body}</p>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
@@ -153,6 +158,8 @@ export function MetaphorReveal() {
     return <StaticBeats />;
   }
 
+  const ActiveScene = BEATS[beat].Scene;
+
   return (
     <section ref={ref} className="relative h-[250svh]">
       <div className="sticky top-0 flex h-svh items-center overflow-hidden">
@@ -166,7 +173,7 @@ export function MetaphorReveal() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.35 }}
               >
-                {BEATS[beat].scene}
+                <ActiveScene />
               </motion.div>
             </AnimatePresence>
           </AppWindow>
