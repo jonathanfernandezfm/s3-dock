@@ -1,6 +1,7 @@
 import { Nav } from "./nav";
 import { Hero } from "./hero";
 import { ProblemSplit } from "./problem-split";
+import { MetaphorReveal } from "./metaphor-reveal";
 import { FeatureBento } from "./feature-bento";
 import { Compatibility } from "./compatibility";
 import { Teams } from "./teams";
@@ -19,6 +20,7 @@ export function LandingPage() {
       <main>
         <Hero />
         <ProblemSplit />
+        <MetaphorReveal />
         <FeatureBento />
         <Compatibility />
         <Teams />
