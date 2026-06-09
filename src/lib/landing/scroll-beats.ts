@@ -11,8 +11,8 @@ export interface BeatState {
  * is on stage and how far through it we are.
  */
 export function getBeat(progress: number, beatCount: number): BeatState {
-  if (beatCount <= 0) {
-    throw new Error("beatCount must be positive");
+  if (!Number.isInteger(beatCount) || beatCount <= 0) {
+    throw new Error("beatCount must be a positive integer");
   }
   const clamped = Math.min(Math.max(progress, 0), 1);
   const scaled = clamped * beatCount;
