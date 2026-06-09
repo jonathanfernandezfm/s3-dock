@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PLAN_DISPLAYS } from "@/lib/subscriptions/plan-display";
+import { PLAN_DISPLAYS, type PlanDisplay } from "@/lib/subscriptions/plan-display";
 import { Reveal } from "./primitives/reveal";
 
 const FAQS = [
@@ -15,7 +15,7 @@ const FAQS = [
   },
   {
     q: "Is my data secure?",
-    a: "Credentials are encrypted at rest, all traffic runs over HTTPS, and secret keys are never returned by our API after you save them.",
+    a: "Credentials are encrypted at rest, all traffic runs over HTTPS, and secret keys are never exposed in list responses.",
   },
   {
     q: "Can I cancel anytime?",
@@ -27,7 +27,7 @@ const FAQS = [
   },
 ];
 
-function PlanCta({ planId }: { planId: string }) {
+function PlanCta({ planId }: { planId: PlanDisplay["id"] }) {
   if (planId === "enterprise") {
     return (
       <a
