@@ -20,6 +20,8 @@ export const landingClerkAppearance = {
     socialButtonsBlockButton:
       "border border-white/15 bg-white/5 text-white hover:bg-white/10",
     socialButtonsBlockButtonText: "font-medium text-white",
+    // GitHub's glyph is black — invert it so it survives the dark canvas
+    socialButtonsProviderIcon__github: "invert",
     dividerLine: "bg-white/10",
     dividerText: "text-white/40",
     formFieldLabel: "text-white/80 font-medium",
@@ -27,6 +29,8 @@ export const landingClerkAppearance = {
       "bg-black/40 border-white/10 text-white focus:border-[var(--accent-amber)] focus:ring-[var(--accent-amber)]",
     formButtonPrimary:
       "bg-[var(--accent-amber)] text-black hover:opacity-90 shadow-none font-semibold",
+    footer: "bg-none bg-transparent",
+    footerAction: "bg-transparent",
     footerActionLink: "text-[var(--accent-amber)] hover:opacity-80 font-medium",
     identityPreviewEditButton: "text-[var(--accent-amber)]",
     formFieldAction: "text-[var(--accent-amber)] hover:opacity-80",
