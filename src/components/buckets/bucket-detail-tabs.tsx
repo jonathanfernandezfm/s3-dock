@@ -41,14 +41,14 @@ export function BucketDetailTabs({ connectionId, bucket }: BucketDetailTabsProps
   const setTab = (key: TabKey) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", key);
-    router.push(`/buckets/${connectionId}/${encodeURIComponent(bucket)}?${params.toString()}`);
+    router.push(`/app/buckets/${connectionId}/${encodeURIComponent(bucket)}?${params.toString()}`);
   };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <header className="border-b px-6 py-4 space-y-3 pb-0">
         <Link
-          href="/buckets"
+          href="/app/buckets"
           className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

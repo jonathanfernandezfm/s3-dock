@@ -102,7 +102,7 @@ export function OverviewIdentityCard({
             value={
               connection ? (
                 <Link
-                  href={`/connections#connection-${connection.id}`}
+                  href={`/app/connections#connection-${connection.id}`}
                   className="hover:underline"
                 >
                   {connectionLabel}

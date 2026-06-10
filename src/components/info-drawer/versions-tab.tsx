@@ -50,7 +50,7 @@ export function VersionsTab() {
       <div className="p-4 text-xs text-muted-foreground space-y-2">
         <p>Versioning is not enabled for this bucket.</p>
         <Link
-          href={`/buckets/${connectionId}/${encodeURIComponent(bucket)}?tab=overview`}
+          href={`/app/buckets/${connectionId}/${encodeURIComponent(bucket)}?tab=overview`}
           className="inline-flex items-center gap-1 text-foreground underline underline-offset-2 hover:opacity-70"
         >
           Enable versioning in bucket settings

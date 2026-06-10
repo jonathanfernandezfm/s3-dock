@@ -83,7 +83,7 @@ export function BucketList({ onOpenBucket }: BucketListProps = {}) {
           Add an S3 connection to view buckets
         </p>
         <Button asChild>
-          <Link href="/connections">Add Connection</Link>
+          <Link href="/app/connections">Add Connection</Link>
         </Button>
       </div>
     );

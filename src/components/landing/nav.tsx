@@ -51,7 +51,7 @@ export function Nav() {
           </SignedOut>
           <SignedIn>
             <Link
-              href="/buckets"
+              href="/app/buckets"
               className="rounded-lg bg-[var(--accent-amber)] px-3.5 py-1.5 text-sm font-semibold text-black transition-opacity hover:opacity-90"
             >
               Open app

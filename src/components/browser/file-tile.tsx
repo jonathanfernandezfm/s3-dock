@@ -113,7 +113,7 @@ export function FileTile({
           className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 data-[selected=true]:opacity-100 z-10"
         />
         <Link
-          href={`/browser/${connectionId}/${bucket}/${object.key}`}
+          href={`/app/browser/${connectionId}/${bucket}/${object.key}`}
           onClick={(e) => {
             if (onNavigate) {
               e.preventDefault();

@@ -182,7 +182,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     if (paneId && activeTab) {
       resetTabToBuckets(paneId, activeTab.id);
     }
-    router.push("/buckets");
+    router.push("/app/buckets");
     setTimeout(() => {
       document
         .getElementById(`connection-${connectionId}`)
@@ -192,19 +192,19 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   };
 
   const navigateToTeam = (teamId: string) => {
-    router.push(`/teams?teamId=${teamId}`);
+    router.push(`/app/teams?teamId=${teamId}`);
     close();
   };
 
   const runCreateConnection = () => {
     requestIntent({ kind: "create-connection" });
-    router.push("/connections");
+    router.push("/app/connections");
     close();
   };
 
   const runCreateTeam = () => {
     requestIntent({ kind: "create-team" });
-    router.push("/teams");
+    router.push("/app/teams");
     close();
   };
 
@@ -214,7 +214,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       kind: "create-bucket",
       connectionId: items.activeBucket.connectionId,
     });
-    router.push("/buckets");
+    router.push("/app/buckets");
     close();
   };
 
@@ -380,7 +380,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             "Open settings",
             undefined,
             () => {
-              router.push("/settings");
+              router.push("/app/settings");
               close();
             }
           )}

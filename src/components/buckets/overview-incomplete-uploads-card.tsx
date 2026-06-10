@@ -21,7 +21,7 @@ export function OverviewIncompleteUploadsCard({
   );
   const count = uploads?.length ?? 0;
 
-  const multipartHref = `/buckets/${connectionId}/${encodeURIComponent(
+  const multipartHref = `/app/buckets/${connectionId}/${encodeURIComponent(
     bucket,
   )}?tab=multipart`;
 

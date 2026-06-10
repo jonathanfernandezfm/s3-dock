@@ -135,7 +135,7 @@ export const GET = withAuth(async (req, { user }) => {
     extension: r.extension,
     tags: r.tags,
     score: r.score,
-    href: `/browser/${r.connection_id}/${r.bucket}/${dirOf(r.key)}`,
+    href: `/app/browser/${r.connection_id}/${r.bucket}/${dirOf(r.key)}`,
   }));
 
   return NextResponse.json({

@@ -6,5 +6,5 @@ export default async function BucketHealthPage({
   params: Promise<{ connectionId: string; bucket: string }>;
 }) {
   const { connectionId, bucket } = await params;
-  redirect(`/buckets/${connectionId}/${encodeURIComponent(bucket)}?tab=permissions`);
+  redirect(`/app/buckets/${connectionId}/${encodeURIComponent(bucket)}?tab=permissions`);
 }

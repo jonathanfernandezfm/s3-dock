@@ -37,14 +37,14 @@ export function ConnectionDetailTabs({ connectionId }: ConnectionDetailTabsProps
   const setTab = (key: TabKey) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", key);
-    router.push(`/connections/${connectionId}?${params.toString()}`);
+    router.push(`/app/connections/${connectionId}?${params.toString()}`);
   };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <header className="border-b px-6 py-4 space-y-3 pb-0">
         <Link
-          href="/connections"
+          href="/app/connections"
           className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

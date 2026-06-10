@@ -16,9 +16,17 @@ const clerkProxy = clerkMiddleware(async (auth, req) => {
   if (req.nextUrl.pathname === "/") {
     const { userId } = await auth();
     if (userId) {
-      return NextResponse.redirect(new URL("/buckets", req.url));
+      return NextResponse.redirect(new URL("/app/buckets", req.url));
     }
     return;
+  }
+
+  // Legacy dashboard URLs moved under /app — keep old bookmarks working
+  const legacyPrefix = /^\/(buckets|connections|shares|teams|settings|browser)(\/.*)?$/;
+  if (legacyPrefix.test(req.nextUrl.pathname)) {
+    const url = req.nextUrl.clone();
+    url.pathname = `/app${url.pathname}`;
+    return NextResponse.redirect(url, 308);
   }
 
   // Protect all routes except public ones

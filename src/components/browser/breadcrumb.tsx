@@ -34,7 +34,7 @@ export function Breadcrumb({
 
   const buildHref = (index: number) => {
     const pathParts = parts.slice(0, index + 1);
-    return `/browser/${connectionId}/${bucket}/${pathParts.join("/")}`;
+    return `/app/browser/${connectionId}/${bucket}/${pathParts.join("/")}`;
   };
 
   const handleClick = (e: React.MouseEvent, targetPath: string) => {
@@ -87,7 +87,7 @@ export function Breadcrumb({
     <div className="flex items-center gap-1.5 min-w-0">
     <nav className="flex items-center text-sm min-w-0 overflow-hidden">
       <Link
-        href="/buckets"
+        href="/app/buckets"
         className="flex items-center hover:text-foreground text-muted-foreground shrink-0"
         onClick={handleHomeClick}
         title="Back to buckets"
@@ -98,7 +98,7 @@ export function Breadcrumb({
       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mx-1" />
 
       <Link
-        href={`/browser/${connectionId}/${bucket}`}
+        href={`/app/browser/${connectionId}/${bucket}`}
         className={`hover:text-foreground truncate shrink-0 max-w-[120px] ${
           parts.length === 0 ? "font-medium" : "text-muted-foreground"
         }`}
@@ -109,7 +109,7 @@ export function Breadcrumb({
       </Link>
 
       <Link
-        href={`/buckets/${connectionId}/${encodeURIComponent(bucket)}?tab=overview`}
+        href={`/app/buckets/${connectionId}/${encodeURIComponent(bucket)}?tab=overview`}
         className="ml-1 p-1 rounded hover:bg-accent text-muted-foreground/60 hover:text-foreground shrink-0"
         title="Bucket settings"
         onClick={(e) => e.stopPropagation()}

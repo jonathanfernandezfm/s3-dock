@@ -51,8 +51,8 @@ export function CapabilityGate({
   }
 
   const reportHref = bucket
-    ? `/buckets/${connectionId}/${encodeURIComponent(bucket)}?tab=permissions`
-    : `/connections/${connectionId}?tab=permissions`;
+    ? `/app/buckets/${connectionId}/${encodeURIComponent(bucket)}?tab=permissions`
+    : `/app/connections/${connectionId}?tab=permissions`;
 
   return (
     <TooltipProvider delayDuration={200}>

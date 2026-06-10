@@ -118,7 +118,7 @@ export function FileRow({
   const openVersionDialog = useVersionHistoryDialogStore((s) => s.open);
 
   const href = object.isFolder
-    ? `/browser/${connectionId}/${bucket}/${object.key}`
+    ? `/app/browser/${connectionId}/${bucket}/${object.key}`
     : undefined;
 
   const handleFolderClick = (e: React.MouseEvent) => {

@@ -35,7 +35,7 @@ export function BucketCard({
   onOpen,
   canDelete = true,
 }: BucketCardProps) {
-  const browserUrl = `/browser/${connectionId}/${bucket.name}`;
+  const browserUrl = `/app/browser/${connectionId}/${bucket.name}`;
 
   const { data: bookmarks = [] } = useBookmarks();
   const router = useRouter();
@@ -120,7 +120,7 @@ export function BucketCard({
                     e.preventDefault();
                     e.stopPropagation();
                     router.push(
-                      `/buckets/${connectionId}/${encodeURIComponent(bucket.name)}?tab=overview`
+                      `/app/buckets/${connectionId}/${encodeURIComponent(bucket.name)}?tab=overview`
                     );
                   }}
                 >

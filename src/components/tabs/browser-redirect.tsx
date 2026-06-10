@@ -59,7 +59,7 @@ export function BrowserRedirect({ connectionId, bucket, path = [] }: BrowserRedi
       }
     }
 
-    router.replace("/buckets");
+    router.replace("/app/buckets");
   }, [connections, connectionId, bucket, path, addTab, setActiveTab, updateTabPath, router]);
 
   return (

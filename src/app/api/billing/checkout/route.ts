@@ -24,8 +24,8 @@ export const POST = withAuth(async (req, { user }) => {
       line_items: [{ price: process.env.STRIPE_PRO_PRICE_ID, quantity: 1 }],
       customer_email: user.email,
       metadata: { userId: user.id },
-      success_url: `${origin}/settings/billing?upgraded=true`,
-      cancel_url: `${origin}/settings/billing`,
+      success_url: `${origin}/app/settings/billing?upgraded=true`,
+      cancel_url: `${origin}/app/settings/billing`,
     });
 
     return NextResponse.json({ url: session.url });

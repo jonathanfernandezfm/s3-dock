@@ -164,16 +164,16 @@ export function AppSidebar() {
   }, {});
 
   const isSettingsActive =
-    pathname === "/settings" || pathname.startsWith("/settings/");
-  const isBillingActive = pathname === "/settings/billing";
+    pathname === "/app/settings" || pathname.startsWith("/app/settings/");
+  const isBillingActive = pathname === "/app/settings/billing";
   const isConnectionsActive =
-    pathname === "/connections" || pathname.startsWith("/connections/");
-  const isTeamsActive = pathname === "/teams" || pathname.startsWith("/teams/");
-  const isSharesActive = pathname === "/shares" || pathname.startsWith("/shares/");
+    pathname === "/app/connections" || pathname.startsWith("/app/connections/");
+  const isTeamsActive = pathname === "/app/teams" || pathname.startsWith("/app/teams/");
+  const isSharesActive = pathname === "/app/shares" || pathname.startsWith("/app/shares/");
   const isBucketsActive =
-    pathname === "/buckets" ||
-    pathname.startsWith("/buckets/") ||
-    pathname.startsWith("/browser/");
+    pathname === "/app/buckets" ||
+    pathname.startsWith("/app/buckets/") ||
+    pathname.startsWith("/app/browser/");
 
   const handleBucketsClick = () => {
     const targetPaneId = focusedPaneId || Object.keys(panes)[0];
@@ -191,7 +191,7 @@ export function AppSidebar() {
       const pane = panes[targetPaneId];
       if (pane?.activeTabId) {
         updateTabBucket(targetPaneId, pane.activeTabId, connectionId, connectionName, bucket);
-        router.push("/buckets");
+        router.push("/app/buckets");
       }
     }
   };
@@ -200,7 +200,7 @@ export function AppSidebar() {
     const targetPaneId = focusedPaneId || Object.keys(panes)[0];
     if (targetPaneId) {
       addTab(targetPaneId, { type: "browser", connectionId, connectionName, bucket, path: "" });
-      router.push("/buckets");
+      router.push("/app/buckets");
     }
   };
 
@@ -235,7 +235,7 @@ export function AppSidebar() {
       <aside className="w-64 border-r bg-sidebar-background min-h-screen flex flex-col">
         <div className="h-14 px-4 border-b flex items-center">
           <Link
-            href="/buckets"
+            href="/app/buckets"
             className="flex items-center gap-2"
             onClick={handleBucketsClick}
           >
@@ -246,7 +246,7 @@ export function AppSidebar() {
 
         <nav className="flex-1 p-4 overflow-y-auto space-y-1">
           <Link
-            href="/buckets"
+            href="/app/buckets"
             onClick={handleBucketsClick}
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
@@ -260,7 +260,7 @@ export function AppSidebar() {
           </Link>
 
           <Link
-            href="/connections"
+            href="/app/connections"
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
               isConnectionsActive
@@ -273,7 +273,7 @@ export function AppSidebar() {
           </Link>
 
           <Link
-            href="/shares"
+            href="/app/shares"
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
               isSharesActive
@@ -369,13 +369,13 @@ export function AppSidebar() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-44">
                                 <DropdownMenuItem
-                                  onClick={() => router.push(`/connections?workspaceId=${workspace.id}`)}
+                                  onClick={() => router.push(`/app/connections?workspaceId=${workspace.id}`)}
                                 >
                                   <Plug className="h-3.5 w-3.5" />
                                   Add connection
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => router.push("/teams")}
+                                  onClick={() => router.push("/app/teams")}
                                 >
                                   <Users className="h-3.5 w-3.5" />
                                   Add member
@@ -384,7 +384,7 @@ export function AppSidebar() {
                             </DropdownMenu>
                           ) : (
                             <Link
-                              href={`/connections?workspaceId=${workspace.id}`}
+                              href={`/app/connections?workspaceId=${workspace.id}`}
                               title="Add connection"
                               className="p-1 rounded hover:bg-sidebar-accent/50 text-muted-foreground hover:text-foreground shrink-0"
                             >
@@ -398,7 +398,7 @@ export function AppSidebar() {
                         <ul className="ml-7 mt-0.5 space-y-0.5">
                           {workspaceConns.map((conn) => {
                             const isConnActive = pathname.startsWith(
-                              `/connections/${conn.id}`
+                              `/app/connections/${conn.id}`
                             );
                             return (
                               <li key={conn.id}>
@@ -411,7 +411,7 @@ export function AppSidebar() {
                                   )}
                                 >
                                   <Link
-                                    href={`/connections/${conn.id}?tab=overview`}
+                                    href={`/app/connections/${conn.id}?tab=overview`}
                                     className="flex items-center gap-2 flex-1 min-w-0 px-3 py-1.5"
                                   >
                                     <Plug className="h-3 w-3 shrink-0" />
@@ -458,7 +458,7 @@ export function AppSidebar() {
                 })}
 
                 <Link
-                  href="/teams"
+                  href="/app/teams"
                   className={cn(
                     "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs transition-colors mt-1",
                     isTeamsActive
@@ -481,7 +481,7 @@ export function AppSidebar() {
 
         <div className="p-4 border-t space-y-1">
           <Link
-            href="/settings"
+            href="/app/settings"
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
               isSettingsActive && !isBillingActive
@@ -493,7 +493,7 @@ export function AppSidebar() {
             Settings
           </Link>
           <Link
-            href="/settings/billing"
+            href="/app/settings/billing"
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
               isBillingActive

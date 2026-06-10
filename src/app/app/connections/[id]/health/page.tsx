@@ -6,5 +6,5 @@ export default async function ConnectionHealthRedirect({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  redirect(`/connections/${id}?tab=permissions`);
+  redirect(`/app/connections/${id}?tab=permissions`);
 }
