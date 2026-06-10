@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
 import { motion, useScroll, useTransform } from "motion/react";
@@ -57,20 +57,22 @@ export function Hero() {
 
         <h1 className="mt-6 text-5xl font-semibold tracking-[-0.03em] text-white sm:text-6xl md:text-7xl">
           {HEADLINE.map((word, i) => (
-            <motion.span
-              key={word}
-              className="inline-block"
-              initial={reduced ? false : { opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.6,
-                delay: 0.15 + i * 0.12,
-                ease: [0.21, 0.47, 0.32, 0.98],
-              }}
-            >
-              {word}
+            <Fragment key={word}>
+              <motion.span
+                className="inline-block"
+                initial={reduced ? false : { opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.15 + i * 0.12,
+                  ease: [0.21, 0.47, 0.32, 0.98],
+                }}
+              >
+                {word}
+              </motion.span>
+              {/* space must live outside the inline-block span or it collapses */}
               {i < HEADLINE.length - 1 ? " " : ""}
-            </motion.span>
+            </Fragment>
           ))}
         </h1>
 
