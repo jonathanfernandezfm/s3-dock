@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, X } from "lucide-react";
 import type { S3Object } from "@/types";
+import { validateTagSet } from "@/lib/tags";
 
 interface TagRow {
   id: string;
@@ -45,13 +46,9 @@ export function BulkTagDialog({ open, onClose, selection, onApply }: BulkTagDial
     [rows]
   );
 
-  const duplicateKeys = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const t of validTags) counts[t.key] = (counts[t.key] ?? 0) + 1;
-    return Object.entries(counts).filter(([, c]) => c > 1).map(([k]) => k);
-  }, [validTags]);
+  const validationError = useMemo(() => validateTagSet(validTags), [validTags]);
 
-  const canApply = fileSelection.length > 0 && duplicateKeys.length === 0;
+  const canApply = fileSelection.length > 0 && validationError === null;
 
   const updateRow = (id: string, patch: Partial<TagRow>) =>
     setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -102,10 +99,8 @@ export function BulkTagDialog({ open, onClose, selection, onApply }: BulkTagDial
             <Plus className="h-4 w-4" />
             Add tag
           </Button>
-          {duplicateKeys.length > 0 && (
-            <p className="text-sm text-destructive">
-              Duplicate keys: {duplicateKeys.join(", ")}
-            </p>
+          {validationError && (
+            <p className="text-sm text-destructive">{validationError}</p>
           )}
         </div>
 
