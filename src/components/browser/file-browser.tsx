@@ -97,9 +97,14 @@ export function FileBrowser({
       connectionId,
       bucket,
       prefix: currentPath || undefined,
-      objectKey: prevObjectKey?.startsWith(currentPath)
-        ? prevObjectKey
-        : undefined,
+      // Keep objectKey only if it's a direct child of currentPath (not a deeper
+      // descendant). startsWith("") is always true, so without the slice check
+      // navigating back to root would preserve any objectKey.
+      objectKey:
+        prevObjectKey?.startsWith(currentPath) &&
+        !prevObjectKey.slice(currentPath.length).includes("/")
+          ? prevObjectKey
+          : undefined,
     });
   }, [isInfoOpen, connectionId, bucket, currentPath, setInfoScope]);
 
