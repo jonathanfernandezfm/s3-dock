@@ -9,6 +9,7 @@ export type UploaderStatus =
   | "canceled";
 
 export interface UploaderCallbacks {
+  /** Total bytes uploaded. May briefly regress when a part fails and retries. */
   onProgress: (loadedBytes: number) => void;
   onStatus: (status: UploaderStatus, error?: string) => void;
 }
@@ -39,6 +40,7 @@ export interface UploaderDeps {
 
 const PART_CONCURRENCY = 4;
 const PART_ATTEMPTS = 3;
+// Must stay <= MAX_SIGN_BATCH in src/lib/uploads/validate.ts (server cap 100).
 const SIGN_BATCH = 50;
 
 /** Error that must not be retried (e.g. CORS misconfiguration). */
@@ -89,11 +91,14 @@ export class FileUploader {
           parts,
         });
       }
-      this.cb.onStatus("completed");
+      if (!this.cancelRequested) this.cb.onStatus("completed");
     } catch (err) {
       if (this.cancelRequested) {
         // cancel() reports the canceled status after aborting remotely.
       } else if (this.pauseRequested) {
+        // Single-PUT uploads restart from zero on resume; drop the created
+        // state so resume re-signs the URL (the pause may outlive its expiry).
+        if (this.created?.mode === "single") this.created = null;
         this.cb.onStatus("paused");
       } else {
         this.cb.onStatus(
@@ -167,6 +172,9 @@ export class FileUploader {
     // Sign lazily in batches so presigned URLs are always fresh, even for
     // uploads that run longer than the 1-hour expiry.
     for (let i = 0; i < pending.length; i += SIGN_BATCH) {
+      if (this.abortController!.signal.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
       const batch = pending.slice(i, i + SIGN_BATCH);
       const { urls } = await this.deps.signParts({
         ...this.target,

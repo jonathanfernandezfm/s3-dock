@@ -102,6 +102,36 @@ describe("FileUploader — single PUT mode", () => {
   });
 });
 
+describe("FileUploader — single PUT mode (pause/resume)", () => {
+  it("re-creates the upload on resume after a paused single PUT", async () => {
+    const { putBlob, pending } = makeControlledPut();
+    const deps = makeDeps({
+      createUpload: vi.fn(async () => ({
+        mode: "single" as const,
+        url: "https://signed/put",
+      })),
+      putBlob: putBlob as unknown as UploaderDeps["putBlob"],
+    });
+    const { statuses, cb } = collectStatuses();
+    const uploader = new FileUploader(makeFile(5), target, deps, cb);
+
+    const run = uploader.start();
+    await flush();
+    expect(pending.length).toBe(1);
+
+    uploader.pause();
+    await run;
+    expect(statuses.at(-1)?.status).toBe("paused");
+
+    const resumed = uploader.start();
+    await flush();
+    expect(deps.createUpload).toHaveBeenCalledTimes(2); // URL re-signed
+    pending[1].resolve("etag-1");
+    await resumed;
+    expect(statuses.at(-1)?.status).toBe("completed");
+  });
+});
+
 describe("FileUploader — multipart mode", () => {
   it("uploads all parts and completes with ordered part list", async () => {
     let counter = 0;
@@ -228,5 +258,31 @@ describe("FileUploader — multipart mode", () => {
     expect(deps.abortUpload).toHaveBeenCalledWith({ ...target, uploadId: "up-1" });
     expect(statuses.at(-1)?.status).toBe("canceled");
     expect(deps.completeUpload).not.toHaveBeenCalled();
+  });
+
+  it("late cancel during completeUpload suppresses the completed status", async () => {
+    let resolveComplete!: () => void;
+    const deps = makeDeps({
+      completeUpload: vi.fn(
+        () =>
+          new Promise<{ success: boolean }>((resolve) => {
+            resolveComplete = () => resolve({ success: true });
+          })
+      ),
+    });
+    const { statuses, cb } = collectStatuses();
+    const uploader = new FileUploader(makeFile(10), target, deps, cb);
+
+    const run = uploader.start();
+    await flush();
+    // all parts done instantly (default putBlob fake); completeUpload now hanging
+    expect(deps.completeUpload).toHaveBeenCalledTimes(1);
+
+    await uploader.cancel();
+    resolveComplete();
+    await run;
+
+    expect(statuses.filter((s) => s.status === "completed")).toHaveLength(0);
+    expect(statuses.at(-1)?.status).toBe("canceled");
   });
 });

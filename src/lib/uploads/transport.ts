@@ -18,6 +18,10 @@ export function putBlob(
   opts: PutBlobOptions
 ): Promise<PutBlobResult> {
   return new Promise((resolve, reject) => {
+    if (opts.signal.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", url);
     if (opts.contentType) {
