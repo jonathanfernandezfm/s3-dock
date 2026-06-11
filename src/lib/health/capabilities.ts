@@ -7,6 +7,7 @@ export interface CapabilityDefinition {
   scope: "connection" | "bucket";
   requiredIamActions: string[];
   affects: string[];
+  fixAction?: string;
 }
 
 export const CAPABILITIES: Record<CapabilityKey, CapabilityDefinition> = {
