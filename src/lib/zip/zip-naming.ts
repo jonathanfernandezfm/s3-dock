@@ -23,7 +23,6 @@ export function zipDownloadName(
 }
 
 export function sanitizeZipFilename(name: string): string {
-  // eslint-disable-next-line no-control-regex
   const cleaned = name.replace(/[\\/:*?"<>| -]/g, "_").trim();
   if (!cleaned) return "download.zip";
   return cleaned.toLowerCase().endsWith(".zip") ? cleaned : `${cleaned}.zip`;
