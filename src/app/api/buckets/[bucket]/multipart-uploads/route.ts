@@ -8,6 +8,7 @@ import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { recordActivityBatch } from "@/lib/db/activity";
 import { withAuth } from "@/lib/auth";
+import { canManageFiles } from "@/lib/roles";
 import type { IncompleteUpload } from "@/types/s3";
 
 type RouteContext = { params: Promise<{ bucket: string }> };
@@ -97,7 +98,7 @@ export const DELETE = withAuth<RouteContext>(async (req, { user, params }) => {
     if (!access) {
       return NextResponse.json({ error: "Connection not found" }, { status: 404 });
     }
-    if (access.role !== "ADMIN") {
+    if (!canManageFiles(access.role)) {
       return NextResponse.json(
         { error: "You do not have permission to abort uploads for this connection" },
         { status: 403 }

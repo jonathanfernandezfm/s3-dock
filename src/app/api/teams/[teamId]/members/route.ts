@@ -3,6 +3,7 @@ import { withAuth } from "@/lib/auth";
 import prisma from "@/lib/db/prisma";
 import { isTeamAdmin } from "@/lib/db/teams";
 import type { TeamRole } from "@/generated/prisma/client";
+import { isTeamRole } from "@/lib/roles";
 
 type RouteContext = { params: Promise<{ teamId: string }> };
 
@@ -22,7 +23,7 @@ export const POST = withAuth<RouteContext>(async (req, { user, params }) => {
     return NextResponse.json({ error: "Email is required" }, { status: 400 });
   }
 
-  if (role !== "ADMIN" && role !== "VIEWER") {
+  if (!isTeamRole(role)) {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
   }
 
