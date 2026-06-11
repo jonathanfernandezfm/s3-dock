@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Upload,
+  Ban,
 } from "lucide-react";
 
 function ItemControls({ item }: { item: UploadItem }) {
@@ -31,6 +32,7 @@ function ItemControls({ item }: { item: UploadItem }) {
             size="icon"
             className="h-6 w-6"
             onClick={() => pauseUpload(item.id)}
+            aria-label="Pause"
             title="Pause"
           >
             <Pause className="h-3.5 w-3.5" />
@@ -40,6 +42,7 @@ function ItemControls({ item }: { item: UploadItem }) {
             size="icon"
             className="h-6 w-6"
             onClick={() => cancelUpload(item.id)}
+            aria-label="Cancel"
             title="Cancel"
           >
             <X className="h-3.5 w-3.5" />
@@ -53,6 +56,7 @@ function ItemControls({ item }: { item: UploadItem }) {
           size="icon"
           className="h-6 w-6"
           onClick={() => cancelUpload(item.id)}
+          aria-label="Cancel"
           title="Cancel"
         >
           <X className="h-3.5 w-3.5" />
@@ -66,6 +70,7 @@ function ItemControls({ item }: { item: UploadItem }) {
             size="icon"
             className="h-6 w-6"
             onClick={() => resumeUpload(item.id)}
+            aria-label="Resume"
             title="Resume"
           >
             <Play className="h-3.5 w-3.5" />
@@ -75,6 +80,7 @@ function ItemControls({ item }: { item: UploadItem }) {
             size="icon"
             className="h-6 w-6"
             onClick={() => cancelUpload(item.id)}
+            aria-label="Cancel"
             title="Cancel"
           >
             <X className="h-3.5 w-3.5" />
@@ -89,6 +95,7 @@ function ItemControls({ item }: { item: UploadItem }) {
             size="icon"
             className="h-6 w-6"
             onClick={() => resumeUpload(item.id)}
+            aria-label="Retry"
             title="Retry"
           >
             <RotateCcw className="h-3.5 w-3.5" />
@@ -98,24 +105,32 @@ function ItemControls({ item }: { item: UploadItem }) {
             size="icon"
             className="h-6 w-6"
             onClick={() => removeUpload(item.id)}
+            aria-label="Dismiss"
             title="Dismiss"
           >
             <X className="h-3.5 w-3.5" />
           </Button>
         </>
       );
-    default: // completed | canceled
+    case "completed":
+    case "canceled":
       return (
         <Button
           variant="ghost"
           size="icon"
           className="h-6 w-6"
           onClick={() => removeUpload(item.id)}
+          aria-label="Dismiss"
           title="Dismiss"
         >
           <X className="h-3.5 w-3.5" />
         </Button>
       );
+    default: {
+      const exhaustive: never = item.status;
+      void exhaustive;
+      return null;
+    }
   }
 }
 
@@ -124,6 +139,8 @@ function StatusIcon({ status }: { status: UploadItem["status"] }) {
     return <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />;
   if (status === "error")
     return <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />;
+  if (status === "canceled")
+    return <Ban className="h-4 w-4 shrink-0 text-muted-foreground" />;
   return <Upload className="h-4 w-4 shrink-0 text-muted-foreground" />;
 }
 
@@ -160,7 +177,7 @@ export function UploadManager() {
   );
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 w-96 rounded-lg border bg-background shadow-lg">
+    <div className="fixed bottom-4 left-4 md:left-72 z-50 w-96 rounded-lg border bg-card shadow-lg">
       <div className="flex items-center justify-between border-b px-3 py-2">
         <p className="text-sm font-medium">
           Uploads{activeCount > 0 ? ` (${activeCount} active)` : ""}
