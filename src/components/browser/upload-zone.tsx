@@ -10,6 +10,7 @@ import {
   type FileWithPath,
 } from "@/lib/uploads/folder-walk";
 import { Upload, FolderUp } from "lucide-react";
+import { notify } from "@/lib/stores/notification-store";
 
 interface UploadZoneProps {
   connectionId: string;
@@ -26,7 +27,10 @@ function useEnqueueFiles(
   const queryClient = useQueryClient();
   return useCallback(
     (files: FileWithPath[]) => {
-      if (files.length === 0) return;
+      if (files.length === 0) {
+        notify("info", "Nothing to upload", "No files were found in the selection.");
+        return;
+      }
       enqueueUploads(
         files.map(({ file, relativePath }) => ({
           file,
@@ -167,7 +171,7 @@ export function UploadButton({
   );
 
   return (
-    <label>
+    <label onClick={disabled ? (e) => e.preventDefault() : undefined}>
       <input
         type="file"
         multiple
@@ -211,7 +215,7 @@ export function UploadFolderButton({
   );
 
   return (
-    <label>
+    <label onClick={disabled ? (e) => e.preventDefault() : undefined}>
       <input
         type="file"
         multiple
