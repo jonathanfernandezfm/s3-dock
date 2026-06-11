@@ -522,9 +522,9 @@ export function FileBrowser({
           />
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {!canWrite && (
+          {!canWrite && connection && (
             <span className="text-xs uppercase tracking-wide text-muted-foreground border rounded px-2 py-1">
-              Viewer
+              {connection.role.toLowerCase()}
             </span>
           )}
           <ViewModeToggle
