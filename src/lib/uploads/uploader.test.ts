@@ -176,6 +176,7 @@ describe("FileUploader — multipart mode", () => {
     await uploader.start();
     expect(statuses.at(-1)?.status).toBe("error");
     expect(statuses.at(-1)?.error).toContain("ExposeHeaders");
+    expect(deps.putBlob).toHaveBeenCalledTimes(1); // hard error — no retries
   });
 
   it("pause keeps completed parts; resume uploads only the remainder", async () => {

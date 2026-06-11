@@ -41,6 +41,9 @@ const PART_CONCURRENCY = 4;
 const PART_ATTEMPTS = 3;
 const SIGN_BATCH = 50;
 
+/** Error that must not be retried (e.g. CORS misconfiguration). */
+class HardUploadError extends Error {}
+
 export class FileUploader {
   private created: CreateUploadResponse | null = null;
   private completedParts = new Map<number, string>();
@@ -202,7 +205,7 @@ export class FileUploader {
           },
         });
         if (!etag) {
-          throw new Error(
+          throw new HardUploadError(
             "S3 did not return an ETag for an uploaded part. The bucket's CORS configuration must list ETag under ExposeHeaders (see docs/DIRECT_UPLOADS_CORS.md)."
           );
         }
@@ -212,6 +215,7 @@ export class FileUploader {
         return;
       } catch (err) {
         if (this.abortController!.signal.aborted) throw err;
+        if (err instanceof HardUploadError) throw err;
         lastError = err;
         this.partLoaded.set(partNumber, 0);
       }
