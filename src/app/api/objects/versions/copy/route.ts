@@ -3,6 +3,7 @@ import { CopyObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
+import { canManageFiles } from "@/lib/roles";
 import { recordActivity } from "@/lib/db/activity";
 
 interface CopyVersionBody {
@@ -53,7 +54,7 @@ export const POST = withAuth(async (req, { user }) => {
     if (!targetAccess) {
       return NextResponse.json({ error: "Target connection not found" }, { status: 404 });
     }
-    if (sourceAccess.role !== "ADMIN" || targetAccess.role !== "ADMIN") {
+    if (!canManageFiles(sourceAccess.role) || !canManageFiles(targetAccess.role)) {
       return NextResponse.json(
         { error: "You do not have permission to copy versions" },
         { status: 403 },
