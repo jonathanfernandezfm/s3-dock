@@ -10,7 +10,7 @@ let posthogInitialized = false;
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 if (posthogKey && !posthogInitialized) {
   posthog.init(posthogKey, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
+    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com",
     capture_pageview: false,
     capture_pageleave: true,
   });
