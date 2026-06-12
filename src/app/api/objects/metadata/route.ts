@@ -3,6 +3,7 @@ import { CopyObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
+import { canManageFiles } from "@/lib/roles";
 import { recordActivity } from "@/lib/db/activity";
 import {
   buildMetadataCopyParams,
@@ -59,7 +60,7 @@ export const POST = withAuth(async (req, { user }) => {
         { status: 404 }
       );
     }
-    if (access.role !== "ADMIN") {
+    if (!canManageFiles(access.role)) {
       return NextResponse.json(
         { error: "You do not have permission to modify objects for this connection" },
         { status: 403 }

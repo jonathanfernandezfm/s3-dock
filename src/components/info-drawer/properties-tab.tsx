@@ -9,6 +9,7 @@ import { useInfoDrawerStore } from "@/lib/stores/info-drawer-store";
 import { useObjectHead, useUpdateObjectMetadata } from "@/lib/queries/objects";
 import { useConnections } from "@/lib/queries/connections";
 import { useBucketVersioning } from "@/lib/queries/buckets";
+import { canManageFiles } from "@/lib/roles";
 import { formatBytes, formatDate } from "@/lib/utils";
 import type { ObjectProperties } from "@/types";
 
@@ -59,7 +60,7 @@ export function PropertiesTab() {
   const head = useObjectHead(connectionId, bucket, objectKey);
   const { data: connections = [] } = useConnections();
   const connection = connections.find((c) => c.id === connectionId);
-  const canWrite = connection?.role === "ADMIN" ?? false;
+  const canWrite = canManageFiles(connection?.role ?? null);
 
   if (!objectKey) {
     return (

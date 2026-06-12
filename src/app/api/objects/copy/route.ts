@@ -8,6 +8,7 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
+import { canManageFiles } from "@/lib/roles";
 import { recordActivityBatch } from "@/lib/db/activity";
 import { indexUpsert } from "@/lib/search/index-ops";
 
@@ -71,7 +72,8 @@ export const POST = withAuth(async (req, { user }) => {
       );
     }
 
-    if (targetAccess.role !== "ADMIN") {
+    // Copy reads from source and writes to target, so only the target requires write access.
+    if (!canManageFiles(targetAccess.role)) {
       return NextResponse.json(
         { error: "You do not have permission to write to the target connection" },
         { status: 403 }

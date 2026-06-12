@@ -9,6 +9,7 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
+import { canManageFiles } from "@/lib/roles";
 import { recordActivityBatch } from "@/lib/db/activity";
 import prisma from "@/lib/db/prisma";
 import { indexDelete, indexUpsert } from "@/lib/search/index-ops";
@@ -73,7 +74,7 @@ export const POST = withAuth(async (req, { user }) => {
       );
     }
 
-    if (sourceAccess.role !== "ADMIN" || targetAccess.role !== "ADMIN") {
+    if (!canManageFiles(sourceAccess.role) || !canManageFiles(targetAccess.role)) {
       return NextResponse.json(
         { error: "You do not have permission to move objects between these connections" },
         { status: 403 }
