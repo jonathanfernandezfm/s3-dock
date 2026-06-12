@@ -1,4 +1,14 @@
 export const MAX_TAGS_PER_OBJECT = 10;
+
+export interface TagRow {
+  id: string;
+  key: string;
+  value: string;
+}
+
+export function rowId(): string {
+  return `tag-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
 export const MAX_TAG_KEY_LENGTH = 128;
 export const MAX_TAG_VALUE_LENGTH = 256;
 

@@ -10,21 +10,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useObjectTags, useInvalidateTags } from "@/lib/queries/tags";
 import { setObjectTags } from "@/lib/queries/objects-bulk";
-import { validateTagSet, MAX_TAGS_PER_OBJECT, type TagPair } from "@/lib/tags";
-
-interface TagRow {
-  id: string;
-  key: string;
-  value: string;
-}
-
-function rowId(): string {
-  return `tag-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
+import { validateTagSet, rowId, MAX_TAGS_PER_OBJECT, type TagPair, type TagRow } from "@/lib/tags";
+import { TagRowList } from "./tag-row-list";
 
 interface TagEditorDialogProps {
   open: boolean;
@@ -49,7 +39,6 @@ export function TagEditorDialog({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Seed editable rows once the authoritative tags load; reset state on close.
   useEffect(() => {
     if (!open) {
       setRows(null);
@@ -82,7 +71,7 @@ export function TagEditorDialog({
   const removeRow = (id: string) =>
     setRows((rs) => {
       const next = (rs ?? []).filter((r) => r.id !== id);
-      return next.length === 0 ? [{ id: rowId(), key: "", value: "" }] : next;
+      return next.length === 0 ? rs : next;
     });
 
   const handleSave = async () => {
@@ -126,45 +115,17 @@ export function TagEditorDialog({
         )}
 
         {rows !== null && (
-          <div className="space-y-2 py-2">
-            {rows.map((row) => (
-              <div key={row.id} className="flex items-center gap-2">
-                <Input
-                  placeholder="Key"
-                  value={row.key}
-                  disabled={!canWrite}
-                  onChange={(e) => updateRow(row.id, { key: e.target.value })}
-                />
-                <Input
-                  placeholder="Value"
-                  value={row.value}
-                  disabled={!canWrite}
-                  onChange={(e) => updateRow(row.id, { value: e.target.value })}
-                />
-                {canWrite && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeRow(row.id)}
-                    aria-label="Remove tag"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-            {canWrite && (
-              <Button type="button" variant="outline" size="sm" onClick={addRow}>
-                <Plus className="h-4 w-4" />
-                Add tag
-              </Button>
-            )}
-            {validationError && (
-              <p className="text-sm text-destructive">{validationError}</p>
-            )}
+          <>
+            <TagRowList
+              rows={rows}
+              onUpdate={updateRow}
+              onAdd={addRow}
+              onRemove={removeRow}
+              disabled={!canWrite}
+              validationError={validationError}
+            />
             {saveError && <p className="text-sm text-destructive">{saveError}</p>}
-          </div>
+          </>
         )}
 
         <DialogFooter>
