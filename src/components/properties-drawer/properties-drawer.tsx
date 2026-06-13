@@ -59,7 +59,11 @@ export function PropertiesDrawer() {
   const objectKey = scope?.objectKey ?? "";
   const fileName = objectKey.split("/").filter(Boolean).pop() ?? objectKey;
 
-  const head = useObjectHead(connectionId, bucket, objectKey);
+  const head = useObjectHead(
+    isOpen ? connectionId : "",
+    isOpen ? bucket : "",
+    isOpen ? objectKey : ""
+  );
   const { data: connections = [] } = useConnections();
   const connection = connections.find((c) => c.id === connectionId);
   const canWrite = canManageFiles(connection?.role ?? null);
