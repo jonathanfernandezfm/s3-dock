@@ -6,7 +6,7 @@ import {
   Activity,
   MessageSquare,
   History,
-  SlidersHorizontal,
+  File,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,24 +17,17 @@ import {
 import { ActivityTab } from "./activity-tab";
 import { NotesTab } from "./notes-tab";
 import { VersionsTab } from "./versions-tab";
-import { PropertiesTab } from "./properties-tab";
 
 const TAB_META: Record<InfoDrawerTab, { label: string; icon: LucideIcon }> = {
   activity: { label: "Activity", icon: Activity },
   notes: { label: "Notes", icon: MessageSquare },
   versions: { label: "Versions", icon: History },
-  properties: { label: "Properties", icon: SlidersHorizontal },
 };
 
-const TAB_ORDER: InfoDrawerTab[] = [
-  "activity",
-  "notes",
-  "versions",
-  "properties",
-];
+const TAB_ORDER: InfoDrawerTab[] = ["activity", "notes", "versions"];
 
 export function InfoDrawer() {
-  const { isOpen, scope, activeTab, setActiveTab, close } = useInfoDrawerStore();
+  const { isOpen, scope, activeTab, setActiveTab, setScope, close } = useInfoDrawerStore();
 
   const hasScope = !!scope?.connectionId && !!scope?.bucket;
   const scopeLabel = scope?.bucket
@@ -44,6 +37,9 @@ export function InfoDrawer() {
       ? `${scope.bucket} / ${scope.prefix}`
       : scope.bucket
     : undefined;
+  const fileSubject = scope?.objectKey
+    ? scope.objectKey.split("/").filter(Boolean).pop() ?? scope.objectKey
+    : null;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -96,6 +92,20 @@ export function InfoDrawer() {
                 {scopeLabel}
               </p>
             )}
+            {fileSubject && (
+              <button
+                type="button"
+                onClick={() =>
+                  scope && setScope({ ...scope, objectKey: undefined })
+                }
+                className="mt-1 inline-flex items-center gap-1 max-w-[260px] rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] text-foreground hover:bg-muted/70"
+                title="Show folder activity instead"
+              >
+                <File className="h-3 w-3 shrink-0" />
+                <span className="truncate">{fileSubject}</span>
+                <X className="h-3 w-3 shrink-0" />
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <Button
@@ -139,10 +149,8 @@ export function InfoDrawer() {
           <ActivityTab />
         ) : activeTab === "notes" ? (
           <NotesTab />
-        ) : activeTab === "versions" ? (
-          <VersionsTab />
         ) : (
-          <PropertiesTab />
+          <VersionsTab />
         )}
       </div>
     </>
