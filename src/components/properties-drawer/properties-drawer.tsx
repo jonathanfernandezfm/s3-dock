@@ -283,14 +283,14 @@ function PropertiesForm({
         <label className="flex flex-col gap-1">
           <span className="text-muted-foreground">Content-Type</span>
           <Input
-            list="content-type-suggestions"
+            list="pd-content-type-suggestions"
             value={contentType}
             onChange={(e) => setContentType(e.target.value)}
             disabled={!editable}
             className="h-8 text-xs"
             placeholder="application/octet-stream"
           />
-          <datalist id="content-type-suggestions">
+          <datalist id="pd-content-type-suggestions">
             {CONTENT_TYPE_SUGGESTIONS.map((t) => (
               <option key={t} value={t} />
             ))}
