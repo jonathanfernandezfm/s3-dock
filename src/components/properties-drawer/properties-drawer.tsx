@@ -1,11 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Loader2, Plus, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Loader2, Plus, X, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useInfoDrawerStore } from "@/lib/stores/info-drawer-store";
+import { usePropertiesDrawerStore } from "@/lib/stores/properties-drawer-store";
 import { useObjectHead, useUpdateObjectMetadata } from "@/lib/queries/objects";
 import { useConnections } from "@/lib/queries/connections";
 import { useBucketVersioning } from "@/lib/queries/buckets";
@@ -51,52 +51,107 @@ function sseLabel(p: ObjectProperties): string {
   return p.serverSideEncryption;
 }
 
-export function PropertiesTab() {
-  const { scope } = useInfoDrawerStore();
+export function PropertiesDrawer() {
+  const { isOpen, scope, close } = usePropertiesDrawerStore();
+
   const connectionId = scope?.connectionId ?? "";
   const bucket = scope?.bucket ?? "";
   const objectKey = scope?.objectKey ?? "";
+  const fileName = objectKey.split("/").filter(Boolean).pop() ?? objectKey;
 
-  const head = useObjectHead(connectionId, bucket, objectKey);
+  const head = useObjectHead(
+    isOpen ? connectionId : "",
+    isOpen ? bucket : "",
+    isOpen ? objectKey : ""
+  );
   const { data: connections = [] } = useConnections();
   const connection = connections.find((c) => c.id === connectionId);
   const canWrite = canManageFiles(connection?.role ?? null);
 
-  if (!objectKey) {
-    return (
-      <div className="p-4 text-xs text-muted-foreground">
-        Select a file and choose Properties to view its metadata.
-      </div>
-    );
-  }
-
-  if (head.isLoading) {
-    return (
-      <div className="p-4 text-xs text-muted-foreground">
-        Loading properties…
-      </div>
-    );
-  }
-
-  if (head.isError || !head.data) {
-    return (
-      <div className="p-4 text-xs text-destructive">
-        {head.error instanceof Error
-          ? head.error.message
-          : "Failed to load properties"}
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [isOpen, close]);
 
   return (
-    <PropertiesForm
-      key={`${objectKey}:${head.data.etag ?? ""}`}
-      connectionId={connectionId}
-      bucket={bucket}
-      objectKey={objectKey}
-      properties={head.data}
-      canWrite={canWrite}
-    />
+    <>
+      {isOpen && (
+        <div
+          aria-hidden
+          style={{ position: "fixed", inset: 0, zIndex: 39 }}
+          onClick={close}
+        />
+      )}
+      <div
+        aria-label="Properties drawer"
+        aria-hidden={!isOpen}
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          height: "100vh",
+          width: 380,
+          zIndex: 40,
+          transform: isOpen ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 220ms cubic-bezier(0.4, 0, 0.2, 1)",
+          pointerEvents: isOpen ? "auto" : "none",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+        }}
+        className="bg-background border-l border-border shadow-xl"
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between px-4 py-3 border-b border-border shrink-0">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold">Properties</h2>
+            </div>
+            {fileName && (
+              <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-[260px]">
+                {fileName}
+              </p>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0"
+            onClick={close}
+            title="Close"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+
+        {/* Body */}
+        {!objectKey ? null : head.isLoading ? (
+          <div className="p-4 text-xs text-muted-foreground">
+            Loading properties…
+          </div>
+        ) : head.isError || !head.data ? (
+          <div className="p-4 text-xs text-destructive">
+            {head.error instanceof Error
+              ? head.error.message
+              : "Failed to load properties"}
+          </div>
+        ) : (
+          <PropertiesForm
+            key={`${objectKey}:${head.data.etag ?? ""}`}
+            connectionId={connectionId}
+            bucket={bucket}
+            objectKey={objectKey}
+            properties={head.data}
+            canWrite={canWrite}
+          />
+        )}
+      </div>
+    </>
   );
 }
 
@@ -232,14 +287,14 @@ function PropertiesForm({
         <label className="flex flex-col gap-1">
           <span className="text-muted-foreground">Content-Type</span>
           <Input
-            list="content-type-suggestions"
+            list="pd-content-type-suggestions"
             value={contentType}
             onChange={(e) => setContentType(e.target.value)}
             disabled={!editable}
             className="h-8 text-xs"
             placeholder="application/octet-stream"
           />
-          <datalist id="content-type-suggestions">
+          <datalist id="pd-content-type-suggestions">
             {CONTENT_TYPE_SUGGESTIONS.map((t) => (
               <option key={t} value={t} />
             ))}

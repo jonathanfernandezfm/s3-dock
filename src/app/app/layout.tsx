@@ -5,6 +5,7 @@ import { Notifications } from "@/components/shared/notifications";
 import { UploadManager } from "@/components/browser/upload-manager";
 import { CommandPaletteMount } from "@/components/command-palette/command-palette-mount";
 import { InfoDrawer } from "@/components/info-drawer/info-drawer";
+import { PropertiesDrawer } from "@/components/properties-drawer/properties-drawer";
 import { VersionHistoryDialog } from "@/components/versions/version-history-dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PlansModal } from "@/components/billing/plans-modal";
@@ -25,6 +26,7 @@ export default function DashboardLayout({
         </div>
       </div>
       <InfoDrawer />
+      <PropertiesDrawer />
       <VersionHistoryDialog />
       <Notifications />
       <UploadManager />

@@ -24,6 +24,7 @@ import {
   Star,
   MessageSquare,
   Link2,
+  Activity,
   History,
   SlidersHorizontal,
   Tag,
@@ -33,6 +34,7 @@ import { TagEditorDialog } from "./tag-editor-dialog";
 import { useBucketVersioning } from "@/lib/queries/buckets";
 import { useVersionHistoryDialogStore } from "@/lib/stores/version-history-dialog-store";
 import { useInfoDrawerStore } from "@/lib/stores/info-drawer-store";
+import { usePropertiesDrawerStore } from "@/lib/stores/properties-drawer-store";
 import { ShareDialog } from "@/components/shares/share-dialog";
 import { formatBytes, formatDate, getFileExtension, isImageFile, cn } from "@/lib/utils";
 import { useFileItemBehavior } from "./use-file-item-behavior";
@@ -130,15 +132,30 @@ export function FileRow({
   const openVersionDialog = useVersionHistoryDialogStore((s) => s.open);
   const setInfoScope = useInfoDrawerStore((s) => s.setScope);
   const openInfoDrawer = useInfoDrawerStore((s) => s.open);
+  const openPropertiesDrawer = usePropertiesDrawerStore((s) => s.open);
 
   const handleOpenProperties = () => {
+    openPropertiesDrawer({ connectionId, bucket, objectKey: object.key });
+  };
+
+  const handleOpenActivity = () => {
     setInfoScope({
       connectionId,
       bucket,
       prefix: currentPath || undefined,
       objectKey: object.key,
     });
-    openInfoDrawer("properties");
+    openInfoDrawer("activity");
+  };
+
+  const handleOpenVersions = () => {
+    setInfoScope({
+      connectionId,
+      bucket,
+      prefix: currentPath || undefined,
+      objectKey: object.key,
+    });
+    openInfoDrawer("versions");
   };
 
   const href = object.isFolder
@@ -305,6 +322,18 @@ export function FileRow({
                 <DropdownMenuItem onClick={handleOpenProperties}>
                   <SlidersHorizontal className="h-4 w-4" />
                   Properties
+                </DropdownMenuItem>
+              )}
+              {!object.isFolder && (
+                <DropdownMenuItem onClick={handleOpenActivity}>
+                  <Activity className="h-4 w-4" />
+                  Activity
+                </DropdownMenuItem>
+              )}
+              {hasVersioning && !object.isFolder && (
+                <DropdownMenuItem onClick={handleOpenVersions}>
+                  <History className="h-4 w-4" />
+                  Versions
                 </DropdownMenuItem>
               )}
               {object.isFolder && (() => {
