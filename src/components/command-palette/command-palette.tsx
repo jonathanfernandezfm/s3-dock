@@ -259,7 +259,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       />
       <OperatorChips parsed={mapParsedToEcho(parsedQuery)} query={searchValue} onQueryChange={setSearchValue} />
       <CommandList>
-        <CommandEmpty>No results.</CommandEmpty>
+        {!isFileSearch && <CommandEmpty>No results.</CommandEmpty>}
 
         <SearchResultsGroup
           query={searchValue}
