@@ -34,12 +34,14 @@ and update your row when done.
 | 008  | Virtualize file-list view and memoize `FileRow` | P2 | M | 003 | TODO |
 | 009  | Scope object/activity/notes invalidations to the affected `(connectionId, bucket)` | P2 | S | 003 | TODO |
 | 010  | Webhook idempotency (Stripe + Clerk) and activity-record observability | P2 | M | 003 | TODO |
-| 011  | Top-level README and archive stale APPLICATION_PLAN.md | P3 | S | — | TODO |
-| 012  | Standardize date/number formatting on a fixed locale (locale hydration, mixed formats, missing year) | P1 | M | — | IN PROGRESS (PR #9) |
-| 013  | Add single-file "Rename" to the file browser context menus | P1 | M | — | IN PROGRESS (PR #10) |
-| 014  | Gate Shares "Copy" by status; add per-row Extend action | P2 | M | — | IN PROGRESS (PR #11) |
-| 015  | UX polish bundle (refresh tooltip, billing meter, lifecycle badge, clickable connection card, incomplete-uploads deep link) | P3 | S | — | IN PROGRESS (PR #12) |
-| 016  | Demote UUID/metadata files into a separate "Metadata" search group | P2 | M | — | IN PROGRESS (PR #13) |
+| 011  | Top-level README and archive stale APPLICATION_PLAN.md | P3 | S | — | DONE |
+| 012  | Standardize date/number formatting on a fixed locale (locale hydration, mixed formats, missing year) | P1 | M | — | DONE |
+| 013  | Add single-file "Rename" to the file browser context menus | P1 | M | — | DONE |
+| 014  | Gate Shares "Copy" by status; add per-row Extend action | P2 | M | — | DONE |
+| 015  | UX polish bundle (refresh tooltip, billing meter, lifecycle badge, clickable connection card, incomplete-uploads deep link) | P3 | S | — | DONE |
+| 016  | Demote UUID/metadata files into a separate "Metadata" search group | P2 | M | — | DONE |
+| 017  | Landing-page crawl/index/social metadata foundation (metadataBase, robots, sitemap, OG image, JSON-LD) | P2 | S | — | DONE |
+| 018  | Standardize S3 `CopySource` construction on one shared, AWS-correct helper | P2 | S | — | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned)
 
@@ -63,13 +65,19 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
   has landed, the executor must re-baseline (the dirty-baseline notes in
   those plans become "no longer applicable; baseline is clean").
 - 011 is dependency-free — it's purely doc work and can ship at any time.
+- 017 is dependency-free (landing-page metadata/SEO foundation, authored
+  2026-06-21 at `8d46baa` from a `/seo-audit landing page` session). It's
+  invisible-only (no copy/design changes) and independent of 012–016.
+- 018 is dependency-free (authored 2026-06-22 at `8d46baa` from a focused
+  `/improve` audit of the post-`6dbaee9` split-properties-drawer feature
+  surface). Pure refactor + tests, independent of all other plans.
 
 ## Verification baseline (HEAD `6dbaee9`, pre-003)
 
 | Gate | Status | Plan that clears it |
 |---|---|---|
 | `pnpm test` | clean — 462 / 462 pass | already clean |
-| `pnpm exec tsc --noEmit` | **11 errors** | 003 |
+| `pnpm exec tsc --noEmit` | **2 errors** (in `landing-page.test.tsx`; was 11 — fixed as side-effects of other PRs) | 003 |
 | `pnpm lint` | **27 problems (12 errors, 15 warnings)** | 003 |
 | `pnpm audit --prod --audit-level=critical` | **3 critical, 24 high** | 004 |
 
@@ -125,6 +133,35 @@ From the `/improve deep` session at `6dbaee9` (this round):
   multi-replica? if so, Redis or DB-backed limit). Defer until the
   deployment topology calls for it.
 
+From the focused `/improve` audit of the split-properties-drawer feature
+surface (2026-06-22, `8d46baa`) — vetted and dropped:
+
+- **"`CopySource: encodeURIComponent(\`${bucket}/${key}\`)` silently breaks
+  every nested key"** (rated HIGH by two audit subagents) — **overstated;
+  downgraded to MED and reframed as plan 018.** The argument doesn't hold at
+  HIGH: `encodeURIComponent` encodes the bucket/key separator even for
+  *top-level* keys, so if the form were truly broken it would break *all*
+  copy/move/rename, not just nested ones — which would never ship and survive.
+  Verified the AWS SDK passes `CopySource` through verbatim (serialization
+  marker `0`, no double-encode), so whether it fails depends on S3's own
+  header parsing, unconfirmable without a live endpoint. Plan 018 standardizes
+  onto the form the repo's *versioned* routes already use (proven working) —
+  framed as consistency hardening, not a confirmed bug fix.
+- **"Metadata dirty-detection casing bug" in `properties-drawer.tsx`** — not a
+  bug. `currentMetadata` lowercases keys via `.toLowerCase()`; applied to S3's
+  already-lowercased keys it's idempotent. No false-dirty/false-clean.
+- **"Missing React Query invalidation after metadata save"** — false.
+  `useUpdateObjectMetadata` invalidates `queryKeys.objects.all`, covering both
+  list and head caches.
+- **"No self-copy guard in copy/move"** — cosmetic micro-opt (S3 self-copy is a
+  no-op); not worth a plan.
+- **"`objects/versions/purge` uses a different role gate (`!== "ADMIN"`)"** — by
+  design; purge is destructive and intentionally ADMIN-only.
+- **Partial-failure in rename/move + unchecked `DeleteObjectsCommand` result**
+  — real but low-severity robustness nits; recorded as deferred follow-ups in
+  plan 018's maintenance notes, not promoted to plans unless orphaned-object
+  reports appear.
+
 ## UX report — considered and rejected / deferred (2026-06-21, `8d46baa`)
 
 Vetted against live code; not turned into plans this round:
@@ -170,6 +207,25 @@ user selected on 2026-06-21):
 - **#3 sidebar/tab paradigm & #13 read-only settings** — direction, not
   bugs: a tab-model onboarding/redesign and an editable settings/locale
   feature respectively. See the direction list below.
+
+## SEO audit — deferred, not planned (2026-06-21, `8d46baa`)
+
+From the `/seo-audit landing page` session. Plan 017 captures the
+low-risk, invisible technical foundation. These were deliberately left out
+(content/design/measurement calls, not metadata):
+
+- **Indexable content** (docs, blog, comparison/"alternatives" pages) —
+  biggest long-term organic lever, but a content/product effort.
+- **Real Privacy/Terms/About pages + fix `#` placeholder footer links**
+  (`src/components/landing/footer.tsx`) — trust/E-E-A-T; content decision.
+- **On-page copy**: add an `<h2>` to the metaphor-reveal block (currently
+  H1→H3) and fold more head keywords into the landing `<title>` — visible
+  brand copy, owner's call.
+- **Core Web Vitals**: landing ships heavy `motion/react` client JS; needs
+  PageSpeed Insights measurement against the deployed URL before planning.
+- **App/auth route `noindex`**: plan 017's robots `Disallow` covers
+  `/app/`, `/sign-in`, `/sign-up`, `/s/`; per-page `noindex` meta on those
+  routes is belt-and-suspenders, not worth a plan (Clerk already gates them).
 
 ## Direction findings considered but not planned this round
 
