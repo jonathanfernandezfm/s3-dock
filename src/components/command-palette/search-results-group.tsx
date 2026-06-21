@@ -76,7 +76,7 @@ export function SearchResultsGroup({
 
   const heading = data?.partial ? "Files · partial index" : "Files";
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <CommandGroup heading={heading}>
         {[0, 1].map((i) => (
