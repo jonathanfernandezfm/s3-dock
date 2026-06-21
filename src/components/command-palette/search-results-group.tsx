@@ -3,6 +3,7 @@ import { CommandGroup, CommandItem } from "@/components/ui/command";
 import { HighlightMatches } from "./highlight-matches";
 import { FileIcon } from "./file-icon";
 import type { SearchResponse, SearchResult } from "@/lib/queries/search";
+import { isLikelyMetadata } from "@/lib/search/metadata-filter";
 
 function basename(key: string): string {
   const stripped = key.endsWith("/") ? key.slice(0, -1) : key;
@@ -75,7 +76,7 @@ export function SearchResultsGroup({
 
   const heading = data?.partial ? "Files · partial index" : "Files";
 
-  if (isLoading && !data) {
+  if (isLoading) {
     return (
       <CommandGroup heading={heading}>
         {[0, 1].map((i) => (
@@ -104,47 +105,57 @@ export function SearchResultsGroup({
     );
   }
 
-  return (
-    <CommandGroup heading={heading}>
-      {results.map((r) => {
-        const isFolder = r.key.endsWith("/");
-        const label = basename(r.key) || r.bucket;
-        const subtitle = `${r.connectionName ?? "connection"} · ${r.bucket}${dirname(r.key) ? "/" + dirname(r.key) : ""}`;
-        const tagValues = Array.isArray(r.tags)
-          ? (r.tags as unknown[]).filter((t): t is string => typeof t === "string")
-          : [];
-        return (
-          <CommandItem
-            key={r.id}
-            value={`${query} ${r.bucket} ${r.key} ${r.connectionName ?? ""}`}
-            forceMount
-            onSelect={() => (isFolder ? onSelectFolder(r) : onSelectFile(r))}
-          >
-            <span className="flex h-5 w-5 items-center justify-center text-muted-foreground">
-              <FileIcon mime={r.mime} extension={r.extension} isFolder={isFolder} />
+  const primary = results.filter((r) => !isLikelyMetadata(r.key));
+  const metadata = results.filter((r) => isLikelyMetadata(r.key));
+
+  const renderItem = (r: SearchResult) => {
+    const isFolder = r.key.endsWith("/");
+    const label = basename(r.key) || r.bucket;
+    const subtitle = `${r.connectionName ?? "connection"} · ${r.bucket}${dirname(r.key) ? "/" + dirname(r.key) : ""}`;
+    const tagValues = Array.isArray(r.tags)
+      ? (r.tags as unknown[]).filter((t): t is string => typeof t === "string")
+      : [];
+    return (
+      <CommandItem
+        key={r.id}
+        value={`${query} ${r.bucket} ${r.key} ${r.connectionName ?? ""}`}
+        forceMount
+        onSelect={() => (isFolder ? onSelectFolder(r) : onSelectFile(r))}
+      >
+        <span className="flex h-5 w-5 items-center justify-center text-muted-foreground">
+          <FileIcon mime={r.mime} extension={r.extension} isFolder={isFolder} />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate">
+              <HighlightMatches text={label} query={data?.parsedQuery.freeText ?? ""} />
             </span>
-            <div className="flex min-w-0 flex-1 flex-col">
-              <span className="flex min-w-0 items-center gap-1.5">
-                <span className="truncate">
-                  <HighlightMatches text={label} query={data?.parsedQuery.freeText ?? ""} />
-                </span>
-                {tagValues.slice(0, 2).map((t) => (
-                  <span
-                    key={t}
-                    className="shrink-0 rounded-full border border-border bg-muted px-1.5 text-[10px] leading-4 text-muted-foreground"
-                  >
-                    {t}
-                  </span>
-                ))}
+            {tagValues.slice(0, 2).map((t) => (
+              <span
+                key={t}
+                className="shrink-0 rounded-full border border-border bg-muted px-1.5 text-[10px] leading-4 text-muted-foreground"
+              >
+                {t}
               </span>
-              <span className="truncate text-xs text-muted-foreground">{subtitle}</span>
-            </div>
-            <span className="ml-auto whitespace-nowrap text-xs text-muted-foreground">
-              {formatBytes(r.size)} · {formatTime(r.lastModified)}
-            </span>
-          </CommandItem>
-        );
-      })}
-    </CommandGroup>
+            ))}
+          </span>
+          <span className="truncate text-xs text-muted-foreground">{subtitle}</span>
+        </div>
+        <span className="ml-auto whitespace-nowrap text-xs text-muted-foreground">
+          {formatBytes(r.size)} · {formatTime(r.lastModified)}
+        </span>
+      </CommandItem>
+    );
+  };
+
+  return (
+    <>
+      {primary.length > 0 && <CommandGroup heading={heading}>{primary.map(renderItem)}</CommandGroup>}
+      {metadata.length > 0 && (
+        <CommandGroup heading="Metadata">
+          {metadata.map(renderItem)}
+        </CommandGroup>
+      )}
+    </>
   );
 }
