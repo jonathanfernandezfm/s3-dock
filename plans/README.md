@@ -9,6 +9,13 @@ labelled `004` through `011` below despite the previous index numbering
 shift — the prior `003-posthog-analytics` slot is retired (its plan file
 was deleted after landing).
 
+Plans 012–016 were authored on 2026-06-21 at commit `8d46baa` from an
+external "S3 Dock — UX & Bug Testing Report" (20 findings). The reporter's
+findings were vetted against the live code before planning; several were
+mis-described or already fixed (see "UX report — considered and rejected"
+below). Plans 012–016 are independent of 001–011 and of each other (no
+cross-dependencies).
+
 Execute in the order below unless dependencies say otherwise. Each
 executor: read the plan fully before starting, honor its STOP conditions,
 and update your row when done.
@@ -28,6 +35,11 @@ and update your row when done.
 | 009  | Scope object/activity/notes invalidations to the affected `(connectionId, bucket)` | P2 | S | 003 | TODO |
 | 010  | Webhook idempotency (Stripe + Clerk) and activity-record observability | P2 | M | 003 | TODO |
 | 011  | Top-level README and archive stale APPLICATION_PLAN.md | P3 | S | — | TODO |
+| 012  | Standardize date/number formatting on a fixed locale (locale hydration, mixed formats, missing year) | P1 | M | — | IN PROGRESS (PR #9) |
+| 013  | Add single-file "Rename" to the file browser context menus | P1 | M | — | IN PROGRESS (PR #10) |
+| 014  | Gate Shares "Copy" by status; add per-row Extend action | P2 | M | — | IN PROGRESS (PR #11) |
+| 015  | UX polish bundle (refresh tooltip, billing meter, lifecycle badge, clickable connection card, incomplete-uploads deep link) | P3 | S | — | IN PROGRESS (PR #12) |
+| 016  | Demote UUID/metadata files into a separate "Metadata" search group | P2 | M | — | IN PROGRESS (PR #13) |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned)
 
@@ -112,6 +124,52 @@ From the `/improve deep` session at `6dbaee9` (this round):
   deploys"** — real, but requires a product call (do we deploy
   multi-replica? if so, Redis or DB-backed limit). Defer until the
   deployment topology calls for it.
+
+## UX report — considered and rejected / deferred (2026-06-21, `8d46baa`)
+
+Vetted against live code; not turned into plans this round:
+
+- **#1 hydration error (exact node) — partially addressed by plan 012.**
+  `ConnectionList` has no date code; the confirmed locale-dependent calls
+  are number `toLocaleString()` in `search-index-status.tsx:13-18`. Plan 012
+  pins them to a fixed locale, the most likely cause. The exact mismatched
+  DOM node was **not** confirmed by static analysis — plan 012 carries a
+  STOP/verify note if the overlay persists after the locale fix.
+- **#2 "Incomplete Uploads broken on first click" — mis-described.**
+  `bucket-detail-tabs.tsx:36,42` is fully URL-driven (`router.push` +
+  `useSearchParams`); first-click works. The real defect is the
+  `?tab=incomplete-uploads` deep link being ignored (internal key is
+  `multipart`). Fixed by plan 015 sub-task E (alias map).
+- **#6 grid view shows no thumbnails — mis-described, NOT planned.**
+  Thumbnails ARE wired (`file-gallery.tsx:222` passes `thumbnailUrl` to
+  image tiles; `file-tile.tsx:287-304` renders the `<img>`). If they show
+  generic icons it's a presign/render bug, most likely the presign-batch
+  truncation already covered by **plan 006**. Re-investigate under plan 006
+  (debug-first) before writing a new plan.
+- **#14 breadcrumb truncated, no tooltip — already implemented.**
+  `breadcrumb.tsx:106` already has `title={bucket}`. No work needed (noted
+  in plan 015 out-of-scope).
+- **#18 "Development mode" Clerk badge — not a code fix.** Driven by using a
+  `pk_test_…` publishable key; resolution is a production Clerk instance.
+  Ops/deployment task, no code change (noted in plan 015).
+
+Deferred (real, but larger/needs a product call — not in the core set the
+user selected on 2026-06-21):
+
+- **#7 versions panel truncation** — widen/tooltip the versions list
+  (`versions-tab.tsx`). Small, plannable later.
+- **#8 folder Size/Modified always "–"** (`file-row.tsx:262-267`) — Size is
+  genuinely unavailable from an S3 list; Modified could be derived from the
+  newest child object but needs server-side aggregation. Medium.
+- **#19 search ranking** — plan 016 separates metadata visually but they
+  still count toward the search `LIMIT 20`; a server-side deprioritization
+  is the durable follow-up (noted in plan 016 maintenance).
+- **#20 "Create buckets" untested permission** (`capability-gate.tsx:37-39`
+  lets `untested` through) — warn proactively or auto-run the capability
+  probe before a create action. Plannable later.
+- **#3 sidebar/tab paradigm & #13 read-only settings** — direction, not
+  bugs: a tab-model onboarding/redesign and an editable settings/locale
+  feature respectively. See the direction list below.
 
 ## Direction findings considered but not planned this round
 
