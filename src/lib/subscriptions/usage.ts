@@ -8,9 +8,9 @@ function getMonthStart(): Date {
 }
 
 /**
- * Record upload usage
+ * Record upload bytes only (operation count is tracked separately via recordOperation).
  */
-export async function recordUpload(
+export async function recordUploadBytes(
   userId: string,
   bytes: number
 ): Promise<void> {
@@ -24,37 +24,9 @@ export async function recordUpload(
       userId,
       month,
       uploadBytes: BigInt(bytes),
-      operationCount: 1,
     },
     update: {
       uploadBytes: { increment: BigInt(bytes) },
-      operationCount: { increment: 1 },
-    },
-  });
-}
-
-/**
- * Record download usage
- */
-export async function recordDownload(
-  userId: string,
-  bytes: number
-): Promise<void> {
-  const month = getMonthStart();
-
-  await prisma.usageRecord.upsert({
-    where: {
-      userId_month: { userId, month },
-    },
-    create: {
-      userId,
-      month,
-      downloadBytes: BigInt(bytes),
-      operationCount: 1,
-    },
-    update: {
-      downloadBytes: { increment: BigInt(bytes) },
-      operationCount: { increment: 1 },
     },
   });
 }

@@ -89,6 +89,89 @@ export async function canPerformOperation(
   return { allowed: true, current: currentCount, limit };
 }
 
+export async function canCreateTeam(
+  userId: string,
+  tier: SubscriptionTier
+): Promise<LimitCheckResult> {
+  const limit = TIER_LIMITS[tier].teams.maxTeams;
+
+  if (isUnlimited(limit)) {
+    return { allowed: true };
+  }
+
+  if (limit === 0) {
+    return {
+      allowed: false,
+      reason: `Teams are not available on your ${tier} plan. Upgrade to PRO to create teams.`,
+      current: 0,
+      limit: 0,
+    };
+  }
+
+  const count = await prisma.team.count({
+    where: { createdById: userId },
+  });
+
+  if (count >= limit) {
+    return {
+      allowed: false,
+      reason: `You have reached the maximum of ${limit} team${limit === 1 ? "" : "s"} for your ${tier} plan. Upgrade to add more teams.`,
+      current: count,
+      limit,
+    };
+  }
+
+  return { allowed: true, current: count, limit };
+}
+
+export async function canAddTeamMember(
+  teamId: string
+): Promise<LimitCheckResult> {
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: {
+      createdBy: { include: { subscription: true } },
+      _count: { select: { members: true } },
+    },
+  });
+
+  if (!team) {
+    return {
+      allowed: false,
+      reason: "Team not found.",
+    };
+  }
+
+  const tier: SubscriptionTier = team.createdBy.subscription?.tier ?? "FREE";
+  const limit = TIER_LIMITS[tier].teams.maxMembersPerTeam;
+
+  if (isUnlimited(limit)) {
+    return { allowed: true };
+  }
+
+  if (limit === 0) {
+    return {
+      allowed: false,
+      reason: `Teams are not available on the team creator's ${tier} plan.`,
+      current: team._count.members,
+      limit: 0,
+    };
+  }
+
+  const currentCount = team._count.members;
+
+  if (currentCount >= limit) {
+    return {
+      allowed: false,
+      reason: `This team has reached the maximum of ${limit} member${limit === 1 ? "" : "s"} for a ${tier} plan. Upgrade to add more members.`,
+      current: currentCount,
+      limit,
+    };
+  }
+
+  return { allowed: true, current: currentCount, limit };
+}
+
 function getMonthStart(): Date {
   const date = new Date();
   date.setDate(1);

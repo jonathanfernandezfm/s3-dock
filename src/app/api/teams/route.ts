@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth";
 import prisma from "@/lib/db/prisma";
 import { canAccessFeature } from "@/lib/subscriptions/gates";
+import { canCreateTeam } from "@/lib/subscriptions";
 
 function slugify(input: string) {
   return input
@@ -69,6 +70,11 @@ export const POST = withAuth(async (req, { user }) => {
       { error: "Teams require a PRO subscription." },
       { status: 403 }
     );
+  }
+
+  const teamCheck = await canCreateTeam(user.id, tier);
+  if (!teamCheck.allowed) {
+    return NextResponse.json({ error: teamCheck.reason }, { status: 403 });
   }
 
   const body: { name?: string; slug?: string } = await req.json();

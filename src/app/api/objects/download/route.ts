@@ -4,6 +4,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
+import { meterOperation } from "@/lib/subscriptions";
 
 export const POST = withAuth(async (req, { user }) => {
   try {
@@ -26,6 +27,12 @@ export const POST = withAuth(async (req, { user }) => {
         { error: "Connection not found" },
         { status: 404 }
       );
+    }
+
+    const tier = user.subscription?.tier ?? "FREE";
+    const meter = await meterOperation(user.id, tier);
+    if (!meter.allowed) {
+      return NextResponse.json({ error: meter.reason }, { status: 403 });
     }
 
     const client = createS3Client(access.connection);

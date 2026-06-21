@@ -5,6 +5,7 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
+import { meterOperation } from "@/lib/subscriptions";
 import {
   collectZipEntries,
   ZipTooLargeError,
@@ -56,6 +57,12 @@ export const POST = withAuth(async (req, { user }) => {
   const access = await getConnectionAccessById(connectionId, user.id);
   if (!access) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 });
+  }
+
+  const tier = user.subscription?.tier ?? "FREE";
+  const meter = await meterOperation(user.id, tier);
+  if (!meter.allowed) {
+    return NextResponse.json({ error: meter.reason }, { status: 403 });
   }
 
   const client = createS3Client(access.connection);
