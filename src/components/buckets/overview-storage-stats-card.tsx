@@ -113,6 +113,71 @@ export function OverviewStorageStatsCard({
               </div>
             )}
 
+            {stats.data.extensions.length > 0 && (
+              <div className="border rounded-md overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/30 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                    <tr>
+                      <th className="p-2">Type</th>
+                      <th className="p-2 text-right">Count</th>
+                      <th className="p-2 text-right">Size</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.data.extensions.slice(0, 8).map((row) => (
+                      <tr key={row.ext} className="border-t">
+                        <td className="p-2 font-mono text-xs">{row.ext}</td>
+                        <td className="p-2 text-right">
+                          {formatNumber(row.count)}
+                        </td>
+                        <td className="p-2 text-right">
+                          {formatBytes(row.size)}
+                        </td>
+                      </tr>
+                    ))}
+                    {stats.data.extensions.length > 8 && (
+                      <tr className="border-t">
+                        <td
+                          colSpan={3}
+                          className="p-2 text-xs text-muted-foreground"
+                        >
+                          +{stats.data.extensions.length - 8} more types
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {stats.data.largestObjects.length > 0 && (
+              <div className="border rounded-md overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/30 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                    <tr>
+                      <th className="p-2">Largest objects</th>
+                      <th className="p-2 text-right">Size</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.data.largestObjects.map((obj) => (
+                      <tr key={obj.key} className="border-t">
+                        <td
+                          className="p-2 font-mono text-xs truncate max-w-0 w-full"
+                          title={obj.key}
+                        >
+                          {obj.key}
+                        </td>
+                        <td className="p-2 text-right whitespace-nowrap">
+                          {formatBytes(obj.size)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             <Button
               size="sm"
               variant="outline"
