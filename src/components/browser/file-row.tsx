@@ -206,7 +206,7 @@ function FileRowImpl({
         }
       }}
     >
-      <TableCell className="w-8">
+      <TableCell className="w-10">
         <input
           type="checkbox"
           checked={isSelected}
@@ -276,13 +276,13 @@ function FileRowImpl({
           )}
         </div>
       </TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="w-32 text-muted-foreground">
         {object.isFolder ? "-" : formatBytes(object.size || 0)}
       </TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="w-40 text-muted-foreground">
         {object.lastModified ? formatDate(object.lastModified) : "-"}
       </TableCell>
-      <TableCell className="w-8">
+      <TableCell className="w-20">
         <div className="flex items-center gap-1">
           {!object.isFolder && (
             <Button
