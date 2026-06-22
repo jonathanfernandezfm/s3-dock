@@ -194,6 +194,8 @@ export interface BucketStats {
   objectCount: number;
   totalSize: number;
   storageClasses: Array<{ class: string; count: number; size: number }>;
+  extensions: Array<{ ext: string; count: number; size: number }>;
+  largestObjects: Array<{ key: string; size: number }>;
 }
 
 async function fetchBucketStats(

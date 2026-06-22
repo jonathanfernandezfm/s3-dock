@@ -10,6 +10,7 @@ import {
   emptyAccumulator,
   accumulateObjectStats,
   summarizeStorageClasses,
+  summarizeExtensions,
 } from "@/lib/buckets/stats-helpers";
 
 type RouteContext = { params: Promise<{ bucket: string }> };
@@ -53,6 +54,8 @@ export const POST = withAuth<RouteContext>(async (req, { user, params }) => {
       objectCount: acc.count,
       totalSize: acc.size,
       storageClasses: summarizeStorageClasses(acc.byClass),
+      extensions: summarizeExtensions(acc.byExtension),
+      largestObjects: acc.largest, // already sorted desc, capped at 10
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
