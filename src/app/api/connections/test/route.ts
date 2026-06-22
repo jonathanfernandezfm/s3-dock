@@ -68,9 +68,6 @@ export const POST = withAuth(async (req, { user }) => {
       };
     }
 
-        console.log(connectionConfig)
-
-
     const client = createS3Client(connectionConfig);
     const command = new ListBucketsCommand({});
     
@@ -78,7 +75,7 @@ export const POST = withAuth(async (req, { user }) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.log(error)
+    console.error("[connections/test] connection test failed:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       { success: false, error: message },
