@@ -1,0 +1,70 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Composite gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Required to satisfy code paths that import prisma client during
+      # type-check / next build. No real DB is needed: tests mock prisma
+      # and `next build` does not open connections at build time.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?schema=public
+      # Plausible defaults for env vars the codebase reads with `!`-asserts
+      # at module-evaluation time. None are real secrets; all are placeholders
+      # to let module imports succeed during build.
+      CLERK_SECRET_KEY: sk_test_dummy
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
+      CLERK_WEBHOOK_SECRET: whsec_dummy
+      ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+      SHARE_LINK_COOKIE_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
+      STRIPE_SECRET_KEY: sk_test_dummy
+      STRIPE_WEBHOOK_SECRET: whsec_dummy
+      STRIPE_PRO_PRICE_ID: price_dummy
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read Node version
+        id: node
+        run: echo "version=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.node.outputs.version }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
