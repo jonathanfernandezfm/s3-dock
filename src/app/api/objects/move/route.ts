@@ -14,7 +14,7 @@ import { canManageFiles } from "@/lib/roles";
 import { meterOperation } from "@/lib/subscriptions";
 import { recordActivityBatch } from "@/lib/db/activity";
 import prisma from "@/lib/db/prisma";
-import { indexDelete, indexUpsert } from "@/lib/search/index-ops";
+import { indexBulkDelete, indexBulkUpsert } from "@/lib/search/index-ops";
 
 interface MoveRequest {
   sourceConnectionId: string;
@@ -178,10 +178,14 @@ export const POST = withAuth(async (req, { user }) => {
       }
     }
 
-    await Promise.all(
-      successfulResults.flatMap((r) => [
-        indexDelete({ connectionId: sourceConnectionId, bucket: sourceBucket, key: r.sourceKey }),
-        indexUpsert({
+    await Promise.all([
+      indexBulkDelete({
+        connectionId: sourceConnectionId,
+        bucket: sourceBucket,
+        keys: successfulResults.map((r) => r.sourceKey),
+      }),
+      indexBulkUpsert(
+        successfulResults.map((r) => ({
           workspaceId: targetAccess.workspaceId,
           connectionId: targetConnectionId,
           bucket: targetBucket,
@@ -189,9 +193,9 @@ export const POST = withAuth(async (req, { user }) => {
           size: 0n,
           lastModified: new Date(),
           etag: null,
-        }),
-      ])
-    );
+        }))
+      ),
+    ]);
 
     try {
       const successfulResults = results.filter((r) => r.success);
