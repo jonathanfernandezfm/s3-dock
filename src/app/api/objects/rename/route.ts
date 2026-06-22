@@ -5,6 +5,7 @@ import { buildCopySource } from "@/lib/s3/copy-source";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { canManageFiles } from "@/lib/roles";
+import { meterOperation } from "@/lib/subscriptions";
 import { recordActivity } from "@/lib/db/activity";
 import prisma from "@/lib/db/prisma";
 import { indexRename } from "@/lib/search/index-ops";
@@ -48,6 +49,12 @@ export const POST = withAuth(async (req, { user }) => {
         { error: "You do not have permission to modify objects for this connection" },
         { status: 403 }
       );
+    }
+
+    const tier = user.subscription?.tier ?? "FREE";
+    const meter = await meterOperation(user.id, tier);
+    if (!meter.allowed) {
+      return NextResponse.json({ error: meter.reason }, { status: 403 });
     }
 
     const client = createS3Client(access.connection);

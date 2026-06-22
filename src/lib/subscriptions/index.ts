@@ -13,14 +13,17 @@ export {
   canCreateConnection,
   canUploadFileSize,
   canPerformOperation,
+  canCreateTeam,
+  canAddTeamMember,
   type LimitCheckResult,
 } from "./check-limits";
 
 export {
-  recordUpload,
-  recordDownload,
+  recordUploadBytes,
   recordOperation,
   getMonthlyUsage,
 } from "./usage";
 
 export { canAccessFeature, type GatedFeature } from "./gates";
+
+export { meterOperation } from "./metering";

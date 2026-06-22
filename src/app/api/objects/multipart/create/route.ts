@@ -8,7 +8,7 @@ import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { canManageFiles } from "@/lib/roles";
-import { canUploadFileSize } from "@/lib/subscriptions";
+import { canUploadFileSize, meterOperation, recordUploadBytes } from "@/lib/subscriptions";
 import { computePartSize, isSinglePutEligible } from "@/lib/uploads/part-math";
 
 const PRESIGN_EXPIRES_SECONDS = 3600;
@@ -59,6 +59,12 @@ export const POST = withAuth(async (req, { user }) => {
     if (!sizeCheck.allowed) {
       return NextResponse.json({ error: sizeCheck.reason }, { status: 403 });
     }
+
+    const meter = await meterOperation(user.id, tier);
+    if (!meter.allowed) {
+      return NextResponse.json({ error: meter.reason }, { status: 403 });
+    }
+    await recordUploadBytes(user.id, fileSize);
 
     const client = createS3Client(access.connection);
     const resolvedContentType = contentType || "application/octet-stream";

@@ -7,7 +7,6 @@ import { createS3Client } from "@/lib/s3/client";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { withAuth } from "@/lib/auth";
 import { canManageFiles } from "@/lib/roles";
-import { recordUpload } from "@/lib/subscriptions";
 import { recordActivity } from "@/lib/db/activity";
 import { indexUpsert } from "@/lib/search/index-ops";
 
@@ -111,8 +110,6 @@ export const POST = withAuth(async (req, { user }) => {
       lastModified: head.LastModified ?? new Date(),
       etag: head.ETag ? head.ETag.replace(/"/g, "") : null,
     });
-
-    await recordUpload(user.id, Number(size));
 
     return NextResponse.json({ success: true });
   } catch (error) {

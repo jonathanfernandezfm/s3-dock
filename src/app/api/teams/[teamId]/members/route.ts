@@ -4,6 +4,7 @@ import prisma from "@/lib/db/prisma";
 import { isTeamAdmin } from "@/lib/db/teams";
 import type { TeamRole } from "@/generated/prisma/client";
 import { isTeamRole } from "@/lib/roles";
+import { canAddTeamMember } from "@/lib/subscriptions";
 
 type RouteContext = { params: Promise<{ teamId: string }> };
 
@@ -13,6 +14,11 @@ export const POST = withAuth<RouteContext>(async (req, { user, params }) => {
 
   if (!canManage) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const memberCheck = await canAddTeamMember(teamId);
+  if (!memberCheck.allowed) {
+    return NextResponse.json({ error: memberCheck.reason }, { status: 403 });
   }
 
   const body: { email?: string; role?: TeamRole } = await req.json();
