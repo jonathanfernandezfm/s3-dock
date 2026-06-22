@@ -26,10 +26,12 @@ vi.mock("@/lib/subscriptions", () => ({
 }));
 
 import { POST } from "./route";
-import { buildPostRequest, buildAuthUser } from "@/lib/test-utils/api-route";
+import { buildPostRequest, buildAuthUser, type MockedRouteHandler } from "@/lib/test-utils/api-route";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { meterOperation } from "@/lib/subscriptions";
 import { createS3Client } from "@/lib/s3/client";
+
+const callPOST = POST as unknown as MockedRouteHandler;
 
 const UUID = "00000000-0000-0000-0000-000000000000";
 const UUID2 = "ffffffff-ffff-ffff-ffff-ffffffffffff";
@@ -64,14 +66,14 @@ beforeEach(() => {
 describe("POST /api/objects/copy", () => {
   test("400 on missing sourceConnectionId (non-uuid body)", async () => {
     const req = buildPostRequest({ body: { sourceBucket: "b", sourceKeys: ["k"], targetConnectionId: UUID2, targetBucket: "d", targetPath: "" } });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(400);
   });
 
   test("404 when source access lookup returns null", async () => {
     (getConnectionAccessById as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
     const req = buildPostRequest({ body: validBody });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(404);
     const body = await (res as Response).json();
     expect(body.error).toBe("Source connection not found");
@@ -82,7 +84,7 @@ describe("POST /api/objects/copy", () => {
       .mockResolvedValueOnce(sourceAccess) // source found
       .mockResolvedValueOnce(null); // target not found
     const req = buildPostRequest({ body: validBody });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(404);
     const body = await (res as Response).json();
     expect(body.error).toBe("Target connection not found");
@@ -93,7 +95,7 @@ describe("POST /api/objects/copy", () => {
       .mockResolvedValueOnce(sourceAccess) // source has read access
       .mockResolvedValueOnce({ ...targetAccess, role: "VIEWER" }); // target VIEWER
     const req = buildPostRequest({ body: validBody });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(403);
     const body = await (res as Response).json();
     expect(body.error).toBe("You do not have permission to write to the target connection");
@@ -106,7 +108,7 @@ describe("POST /api/objects/copy", () => {
       .mockResolvedValueOnce({ ...sourceAccess, role: "VIEWER" }) // VIEWER OK for source read
       .mockResolvedValueOnce(targetAccess); // EDITOR OK for target write
     const req = buildPostRequest({ body: validBody });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(200);
     const body = await (res as Response).json();
     expect(body.summary).toBeDefined();
@@ -121,13 +123,13 @@ describe("POST /api/objects/copy", () => {
       .mockResolvedValueOnce(sameEndpointSource)
       .mockResolvedValueOnce(sameEndpointTarget);
     const req = buildPostRequest({ body: validBody });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(200);
   });
 
   test("400 on missing sourceKeys", async () => {
     const req = buildPostRequest({ body: { ...validBody, sourceKeys: [] } });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(400);
   });
 });

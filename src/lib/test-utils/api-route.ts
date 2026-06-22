@@ -1,6 +1,12 @@
 import type { NextRequest } from "next/server";
 import type { AuthUser } from "@/lib/auth/clerk";
 
+/** Type for a mocked route handler after `vi.mock("@/lib/auth")` unwraps withAuth. */
+export type MockedRouteHandler = (
+  req: NextRequest,
+  ctx: { user: AuthUser }
+) => Promise<Response>;
+
 /**
  * Build a minimal NextRequest-like stand-in for a POST handler.
  * Mock `@/lib/auth/protect.withAuth` and `@/lib/db/prisma` separately

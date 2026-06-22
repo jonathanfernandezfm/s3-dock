@@ -30,10 +30,13 @@ vi.mock("@/lib/subscriptions", () => ({
 }));
 
 import { POST } from "./route";
-import { buildPostRequest, buildAuthUser } from "@/lib/test-utils/api-route";
+import { buildPostRequest, buildAuthUser, type MockedRouteHandler } from "@/lib/test-utils/api-route";
 import { getConnectionAccessById } from "@/lib/db/connections";
 import { meterOperation } from "@/lib/subscriptions";
+
 import { createS3Client } from "@/lib/s3/client";
+
+const callPOST = POST as unknown as MockedRouteHandler;
 
 const UUID = "00000000-0000-0000-0000-000000000000";
 const UUID2 = "ffffffff-ffff-ffff-ffff-ffffffffffff";
@@ -68,14 +71,14 @@ beforeEach(() => {
 describe("POST /api/objects/move", () => {
   test("400 on invalid body (non-uuid sourceConnectionId)", async () => {
     const req = buildPostRequest({ body: { sourceBucket: "b", sourceKeys: ["k"], targetConnectionId: UUID2, targetBucket: "d", targetPath: "" } });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(400);
   });
 
   test("404 when source access lookup returns null", async () => {
     (getConnectionAccessById as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
     const req = buildPostRequest({ body: validBody });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(404);
     const body = await (res as Response).json();
     expect(body.error).toBe("Source connection not found");
@@ -86,7 +89,7 @@ describe("POST /api/objects/move", () => {
       .mockResolvedValueOnce(editorAccess)
       .mockResolvedValueOnce(null);
     const req = buildPostRequest({ body: validBody });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(404);
     const body = await (res as Response).json();
     expect(body.error).toBe("Target connection not found");
@@ -96,7 +99,7 @@ describe("POST /api/objects/move", () => {
     (getConnectionAccessById as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({ ...editorAccess, role: "VIEWER" });
     const req = buildPostRequest({ body: validBody });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(403);
     const body = await (res as Response).json();
     expect(body.error).toBe("You do not have permission to move objects between these connections");
@@ -107,7 +110,7 @@ describe("POST /api/objects/move", () => {
       .mockResolvedValueOnce(editorAccess)
       .mockResolvedValueOnce({ ...editorAccess2, role: "VIEWER" });
     const req = buildPostRequest({ body: validBody });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(403);
     const body = await (res as Response).json();
     expect(body.error).toBe("You do not have permission to move objects between these connections");
@@ -120,7 +123,7 @@ describe("POST /api/objects/move", () => {
       .mockResolvedValueOnce(editorAccess)
       .mockResolvedValueOnce(editorAccess2);
     const req = buildPostRequest({ body: validBody });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(200);
     const body = await (res as Response).json();
     expect(body.summary).toBeDefined();
@@ -128,7 +131,7 @@ describe("POST /api/objects/move", () => {
 
   test("400 on empty sourceKeys", async () => {
     const req = buildPostRequest({ body: { ...validBody, sourceKeys: [] } });
-    const res = await (POST as never)(req, { user: buildAuthUser() });
+    const res = await callPOST(req, { user: buildAuthUser() });
     expect((res as Response).status).toBe(400);
   });
 });
