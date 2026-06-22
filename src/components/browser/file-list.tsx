@@ -213,25 +213,25 @@ export function FileList({
             currentPath={currentPath}
             canWrite={canWrite}
             isSelected={selectedItems.has(object.key)}
-              onSelect={(mods) => handleSelect(object.key, mods)}
-              onDelete={() => onDelete(object.key)}
-              onPreview={() => onPreview(object)}
-              onDownload={() => onDownload(object.key)}
-              onNavigate={onNavigate}
-              paneId={paneId}
-              allObjects={objects}
-              selectedItems={selectedItems}
-              onDragStart={onDragStart}
-              onDragEnd={onDragEnd}
-              onFolderDrop={handleFolderDrop}
-              isDragging={isDragging}
-              canDropOnFolder={isValidDropTarget && canWrite}
-              noteCount={object.isFolder ? (folderNoteCounts[object.key] ?? 0) : 0}
-              shareCount={!object.isFolder ? (fileShareCounts[object.key] ?? 0) : 0}
-              tags={!object.isFolder ? (fileTags[object.key] ?? []) : []}
-              activeTag={activeTag}
-              onTagClick={onTagClick}
-            />
+            onSelect={handleSelect}
+            onDelete={onDelete}
+            onPreview={onPreview}
+            onDownload={onDownload}
+            onNavigate={onNavigate}
+            paneId={paneId}
+            allObjects={objects}
+            selectedItems={selectedItems}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onFolderDrop={handleFolderDrop}
+            isDragging={isDragging}
+            canDropOnFolder={isValidDropTarget && canWrite}
+            noteCount={object.isFolder ? (folderNoteCounts[object.key] ?? 0) : 0}
+            shareCount={!object.isFolder ? (fileShareCounts[object.key] ?? 0) : 0}
+            tags={!object.isFolder ? (fileTags[object.key] ?? []) : []}
+            activeTag={activeTag}
+            onTagClick={onTagClick}
+          />
           ))}
         </TableBody>
       </Table>

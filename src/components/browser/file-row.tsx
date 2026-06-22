@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -59,10 +59,10 @@ interface FileRowProps {
   currentPath: string;
   canWrite?: boolean;
   isSelected: boolean;
-  onSelect: (mods: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
-  onDelete: () => void;
-  onPreview: () => void;
-  onDownload: () => void;
+  onSelect: (key: string, mods: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
+  onDelete: (key: string) => void;
+  onPreview: (object: S3Object) => void;
+  onDownload: (key: string) => void;
   onNavigate?: (path: string) => void;
   // Drag and drop props
   paneId: string;
@@ -94,7 +94,7 @@ function getFileIcon(key: string, isFolder: boolean) {
   return File;
 }
 
-export function FileRow({
+function FileRowImpl({
   object,
   connectionId,
   bucket,
@@ -202,7 +202,7 @@ export function FileRow({
         if (e.shiftKey || e.ctrlKey || e.metaKey) {
           e.preventDefault();
           e.stopPropagation();
-          onSelect({ shiftKey: e.shiftKey, ctrlKey: e.ctrlKey, metaKey: e.metaKey });
+          onSelect(object.key, { shiftKey: e.shiftKey, ctrlKey: e.ctrlKey, metaKey: e.metaKey });
         }
       }}
     >
@@ -213,7 +213,7 @@ export function FileRow({
           onChange={() => {}}
           onClick={(e) => {
             e.stopPropagation();
-            onSelect({ shiftKey: e.shiftKey, ctrlKey: e.ctrlKey, metaKey: e.metaKey });
+            onSelect(object.key, { shiftKey: e.shiftKey, ctrlKey: e.ctrlKey, metaKey: e.metaKey });
           }}
         />
       </TableCell>
@@ -231,7 +231,7 @@ export function FileRow({
           ) : (
             <span
               className={canPreview ? "cursor-pointer hover:underline" : ""}
-              onClick={canPreview ? onPreview : undefined}
+              onClick={canPreview ? () => onPreview(object) : undefined}
             >
               {fileName}
             </span>
@@ -303,7 +303,7 @@ export function FileRow({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {canPreview && (
-                <DropdownMenuItem onClick={onPreview}>
+                <DropdownMenuItem onClick={() => onPreview(object)}>
                   <Eye className="h-4 w-4" />
                   Preview
                 </DropdownMenuItem>
@@ -317,7 +317,7 @@ export function FileRow({
                 </CapabilityGate>
               )}
               <CapabilityGate connectionId={connectionId} bucket={bucket} capability="download-objects" disableOnly>
-                <DropdownMenuItem onClick={onDownload}>
+                <DropdownMenuItem onClick={() => onDownload(object.key)}>
                   <Download className="h-4 w-4" />
                   {object.isFolder ? "Download as zip" : "Download"}
                 </DropdownMenuItem>
@@ -406,7 +406,7 @@ export function FileRow({
               )}
               {canWrite && (
                 <CapabilityGate connectionId={connectionId} bucket={bucket} capability="delete-objects" disableOnly>
-                  <DropdownMenuItem className="text-destructive" onClick={onDelete}>
+                  <DropdownMenuItem className="text-destructive" onClick={() => onDelete(object.key)}>
                     <Trash2 className="h-4 w-4" />
                     Delete
                   </DropdownMenuItem>
@@ -447,3 +447,8 @@ export function FileRow({
     </TableRow>
   );
 }
+
+// Memoize: re-render only when props change by identity / value.
+// String/number/boolean/null props compare cheaply; the parent now passes
+// stable callback identities (see file-list.tsx Step 3).
+export const FileRow = React.memo(FileRowImpl);

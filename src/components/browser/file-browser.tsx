@@ -406,10 +406,13 @@ export function FileBrowser({
     await executeDrop(data, operation, targetFolder);
   }, [crossWorkspacePending, executeDrop]);
 
-  const handleDelete = async (key: string) => {
-    if (!canWrite) return;
-    setDeletingKey(key);
-  };
+  const handleDelete = useCallback(
+    async (key: string) => {
+      if (!canWrite) return;
+      setDeletingKey(key);
+    },
+    [canWrite]
+  );
 
   const confirmDelete = async () => {
     if (!canWrite) return;
@@ -442,50 +445,53 @@ export function FileBrowser({
     }
   };
 
-  const handleDownload = async (key: string) => {
-    if (key.endsWith("/")) {
-      triggerZipDownload({
-        connectionId,
-        bucket,
-        keys: [key],
-        rootPrefix: currentPath,
-        filename: zipDownloadName([key], bucket, currentPath),
-      });
-      addNotification({
-        type: "download",
-        title: "Zip download started",
-        description: "Check your browser downloads for progress",
-        status: "completed",
-      });
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/objects/download", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+  const handleDownload = useCallback(
+    async (key: string) => {
+      if (key.endsWith("/")) {
+        triggerZipDownload({
           connectionId,
           bucket,
-          key,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get download URL");
+          keys: [key],
+          rootPrefix: currentPath,
+          filename: zipDownloadName([key], bucket, currentPath),
+        });
+        addNotification({
+          type: "download",
+          title: "Zip download started",
+          description: "Check your browser downloads for progress",
+          status: "completed",
+        });
+        return;
       }
 
-      const { url } = await response.json();
-      window.open(url, "_blank");
-    } catch (error) {
-      addNotification({
-        type: "download",
-        title: "Download failed",
-        error: error instanceof Error ? error.message : "Unknown error",
-        status: "error",
-      });
-    }
-  };
+      try {
+        const response = await fetch("/api/objects/download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            connectionId,
+            bucket,
+            key,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to get download URL");
+        }
+
+        const { url } = await response.json();
+        window.open(url, "_blank");
+      } catch (error) {
+        addNotification({
+          type: "download",
+          title: "Download failed",
+          error: error instanceof Error ? error.message : "Unknown error",
+          status: "error",
+        });
+      }
+    },
+    [connectionId, bucket, currentPath, addNotification]
+  );
 
   const pendingSourceConn = crossWorkspacePending
     ? connections.find((c) => c.id === crossWorkspacePending.data.connectionId)
