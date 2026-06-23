@@ -100,6 +100,9 @@ export function ShareListTable({ connectionId }: { connectionId: string }) {
                         edit.mutate({
                           id: s.id,
                           patch: { expiresAt: new Date(Date.now() + EXTEND_BY_MS).toISOString() },
+                          connectionId,
+                          bucket: s.bucket,
+                          key: s.key,
                         })
                       }
                     >
@@ -111,7 +114,7 @@ export function ShareListTable({ connectionId }: { connectionId: string }) {
                       variant="ghost"
                       size="sm"
                       className="h-7 text-xs text-destructive hover:text-destructive"
-                      onClick={() => revoke.mutate(s.id)}
+                      onClick={() => revoke.mutate({ id: s.id, connectionId, bucket: s.bucket, key: s.key })}
                     >
                       Revoke
                     </Button>
