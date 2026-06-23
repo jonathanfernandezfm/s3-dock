@@ -22,13 +22,19 @@ export async function listBookmarks(
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
+  const uniqueConnectionIds = [...new Set(bookmarks.map((bm) => bm.connectionId))];
+  const accessById = new Map<string, boolean>();
+  await Promise.all(
+    uniqueConnectionIds.map(async (cid) => {
+      const access = await getConnectionAccessById(cid, userId);
+      accessById.set(cid, access !== null);
+    })
+  );
+
   const results: BookmarkResponse[] = [];
 
   for (const bm of bookmarks) {
-    const access = await getConnectionAccessById(bm.connectionId, userId);
-    if (!access) {
-      continue;
-    }
+    if (!accessById.get(bm.connectionId)) continue;
 
     results.push({
       id: bm.id,
