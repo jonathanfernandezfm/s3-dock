@@ -100,7 +100,7 @@ and update your row when done.
 | 045  | Memoize the gallery `FileTile` + pass stable callbacks, matching the memoized list `FileRow` | P2 | M | — | DONE |
 | 046  | Scope note & share-link mutation invalidations to the affected `(connectionId, bucket)` | P3 | M | — | DONE |
 | 047  | Validate all required environment variables at server startup | P1 | S | — | TODO |
-| 048  | Add branded error boundaries and a 404 page | P1 | S | — | TODO |
+| 048  | Add branded error boundaries and a 404 page | P1 | S | — | DONE (PR #55) |
 | 049  | Team invitation links (MVP) — onboard members who haven't signed up yet | P1 | M | — | TODO |
 | 050  | Teams UX polish — styled role select, rename/delete/leave, declutter, hide "coming soon" | P2 | M | — | TODO |
 
