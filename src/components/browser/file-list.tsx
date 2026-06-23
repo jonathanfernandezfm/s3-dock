@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Table,
-  TableBody,
   TableHead,
   TableHeader,
   TableRow,
@@ -14,6 +14,10 @@ import { usePaneSelection } from "./use-pane-selection";
 import { usePaneKeyboard } from "./use-pane-keyboard";
 import { cn } from "@/lib/utils";
 import type { S3Object } from "@/types";
+
+// Estimated row height in px — matches the actual TableRow height (h-10 = 40px + 2*p-2 padding = ~48px total).
+// Adjust if the design changes row density.
+const ROW_HEIGHT = 48;
 
 interface FileListProps {
   objects: S3Object[];
@@ -80,6 +84,7 @@ export function FileList({
   const [isListDragOver, setIsListDragOver] = useState(false);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   const orderedKeys = useMemo(() => objects.map((o) => o.key), [objects]);
   const { handleSelect, selectAllInPane, clearSelectionInPane } =
     usePaneSelection(paneId, orderedKeys);
@@ -89,6 +94,12 @@ export function FileList({
     onClearSelection: clearSelectionInPane,
   });
 
+  const rowVirtualizer = useVirtualizer({
+    count: objects.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 8,
+  });
 
   const allSelected =
     objects.length > 0 && objects.every((o) => selectedItems.has(o.key));
@@ -187,10 +198,11 @@ export function FileList({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <Table>
+      {/* Header table — fixed column widths that match the virtualized rows below */}
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-8">
+            <TableHead className="w-10">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -198,45 +210,78 @@ export function FileList({
               />
             </TableHead>
             <TableHead>Name</TableHead>
-            <TableHead>Size</TableHead>
-            <TableHead>Modified</TableHead>
-            <TableHead className="w-8"></TableHead>
+            <TableHead className="w-32">Size</TableHead>
+            <TableHead className="w-40">Modified</TableHead>
+            <TableHead className="w-20"></TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {objects.map((object) => (
-          <FileRow
-            key={object.key}
-            object={object}
-            connectionId={connectionId}
-            bucket={bucket}
-            currentPath={currentPath}
-            canWrite={canWrite}
-            isSelected={selectedItems.has(object.key)}
-              onSelect={(mods) => handleSelect(object.key, mods)}
-              onDelete={() => onDelete(object.key)}
-              onPreview={() => onPreview(object)}
-              onDownload={() => onDownload(object.key)}
-              onNavigate={onNavigate}
-              paneId={paneId}
-              allObjects={objects}
-              selectedItems={selectedItems}
-              onDragStart={onDragStart}
-              onDragEnd={onDragEnd}
-              onFolderDrop={handleFolderDrop}
-              isDragging={isDragging}
-              canDropOnFolder={isValidDropTarget && canWrite}
-              noteCount={object.isFolder ? (folderNoteCounts[object.key] ?? 0) : 0}
-              shareCount={!object.isFolder ? (fileShareCounts[object.key] ?? 0) : 0}
-              tags={!object.isFolder ? (fileTags[object.key] ?? []) : []}
-              activeTag={activeTag}
-              onTagClick={onTagClick}
-            />
-          ))}
-        </TableBody>
       </Table>
 
-      {/* Extended drop zone below the table */}
+      {/* Virtualized body */}
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-auto"
+        style={{ position: "relative" }}
+      >
+        <div
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const object = objects[virtualRow.index];
+            return (
+              <div
+                key={object.key}
+                data-index={virtualRow.index}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualRow.start}px)`,
+                  height: `${virtualRow.size}px`,
+                }}
+              >
+                <table className="w-full table-fixed text-sm">
+                  <tbody>
+                    <FileRow
+                      object={object}
+                      connectionId={connectionId}
+                      bucket={bucket}
+                      currentPath={currentPath}
+                      canWrite={canWrite}
+                      isSelected={selectedItems.has(object.key)}
+                      onSelect={handleSelect}
+                      onDelete={onDelete}
+                      onPreview={onPreview}
+                      onDownload={onDownload}
+                      onNavigate={onNavigate}
+                      paneId={paneId}
+                      allObjects={objects}
+                      selectedItems={selectedItems}
+                      onDragStart={onDragStart}
+                      onDragEnd={onDragEnd}
+                      onFolderDrop={handleFolderDrop}
+                      isDragging={isDragging}
+                      canDropOnFolder={isValidDropTarget && canWrite}
+                      noteCount={object.isFolder ? (folderNoteCounts[object.key] ?? 0) : 0}
+                      shareCount={!object.isFolder ? (fileShareCounts[object.key] ?? 0) : 0}
+                      tags={!object.isFolder ? (fileTags[object.key] ?? []) : []}
+                      activeTag={activeTag}
+                      onTagClick={onTagClick}
+                    />
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Extended drop zone below the rows */}
       {isListDragOver && isValidDropTarget && (
         <div className="flex-1 flex items-center justify-center text-sm text-blue-600 dark:text-blue-400">
           Drop here to add to this folder
