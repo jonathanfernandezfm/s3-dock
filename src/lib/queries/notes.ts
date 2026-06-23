@@ -129,8 +129,9 @@ export function useCreateNote() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: postCreate,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.notes.all });
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.notes.forKey(variables.connectionId, variables.bucket, variables.key) });
+      qc.invalidateQueries({ queryKey: queryKeys.notes.countsForBucket(variables.connectionId, variables.bucket) });
     },
   });
 }
@@ -138,9 +139,11 @@ export function useCreateNote() {
 export function useUpdateNote() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: patchUpdate,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.notes.all });
+    mutationFn: (args: { id: string; body: string; connectionId: string; bucket: string; key: string }) =>
+      patchUpdate({ id: args.id, body: args.body }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.notes.forKey(variables.connectionId, variables.bucket, variables.key) });
+      qc.invalidateQueries({ queryKey: queryKeys.notes.countsForBucket(variables.connectionId, variables.bucket) });
     },
   });
 }
@@ -148,9 +151,11 @@ export function useUpdateNote() {
 export function useDeleteNote() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: deleteOne,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.notes.all });
+    mutationFn: (args: { id: string; connectionId: string; bucket: string; key: string }) =>
+      deleteOne(args.id),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.notes.forKey(variables.connectionId, variables.bucket, variables.key) });
+      qc.invalidateQueries({ queryKey: queryKeys.notes.countsForBucket(variables.connectionId, variables.bucket) });
     },
   });
 }

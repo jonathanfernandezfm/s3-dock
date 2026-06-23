@@ -30,7 +30,12 @@ function isEdited(note: FileNoteResponse): boolean {
   return u - c > 60_000;
 }
 
-function NoteRow({ note }: { note: FileNoteResponse }) {
+function NoteRow({ note, connectionId, bucket, noteKey }: {
+  note: FileNoteResponse;
+  connectionId: string;
+  bucket: string;
+  noteKey: string;
+}) {
   const [mode, setMode] = useState<"view" | "edit" | "confirm-delete">("view");
   const [draft, setDraft] = useState(note.body);
   const updateNote = useUpdateNote();
@@ -45,7 +50,7 @@ function NoteRow({ note }: { note: FileNoteResponse }) {
       return;
     }
     try {
-      await updateNote.mutateAsync({ id: note.id, body: trimmed });
+      await updateNote.mutateAsync({ id: note.id, body: trimmed, connectionId, bucket, key: noteKey });
       setMode("view");
     } catch (err) {
       addNotification({
@@ -59,7 +64,7 @@ function NoteRow({ note }: { note: FileNoteResponse }) {
 
   async function handleDelete() {
     try {
-      await deleteNote.mutateAsync(note.id);
+      await deleteNote.mutateAsync({ id: note.id, connectionId, bucket, key: noteKey });
     } catch (err) {
       addNotification({
         type: "error",
@@ -336,7 +341,13 @@ export function NotesTab() {
         ) : (
           <div>
             {notes.map((n) => (
-              <NoteRow key={n.id} note={n} />
+              <NoteRow
+                key={n.id}
+                note={n}
+                connectionId={scope!.connectionId}
+                bucket={scope!.bucket}
+                noteKey={noteKey!}
+              />
             ))}
           </div>
         )}

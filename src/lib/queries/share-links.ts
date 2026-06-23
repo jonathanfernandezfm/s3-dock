@@ -64,8 +64,9 @@ export function useCreateShareLink() {
       if (!r.ok) throw new Error("Failed to create share link");
       return (await r.json()) as { shareLink: ShareLinkResponse; url: string };
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.shareLinks.all });
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.shareLinks.listByConnection(variables.connectionId) });
+      qc.invalidateQueries({ queryKey: queryKeys.shareLinks.countsForBucket(variables.connectionId, variables.bucket) });
       track({ name: "share_link_created" });
     },
   });
@@ -97,13 +98,14 @@ export function useShareLinkCounts(args: {
 export function useRevokeShareLink() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const r = await fetch(`/api/share-links/${id}`, { method: "DELETE" });
+    mutationFn: async (args: { id: string; connectionId: string; bucket: string; key?: string }) => {
+      const r = await fetch(`/api/share-links/${args.id}`, { method: "DELETE" });
       if (!r.ok) throw new Error("Failed to revoke share link");
       return (await r.json()) as { revokedAt: string | null };
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.shareLinks.all });
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.shareLinks.listByConnection(variables.connectionId) });
+      qc.invalidateQueries({ queryKey: queryKeys.shareLinks.countsForBucket(variables.connectionId, variables.bucket) });
     },
   });
 }
@@ -114,6 +116,9 @@ export function useEditShareLink() {
     mutationFn: async (args: {
       id: string;
       patch: { expiresAt?: string | null; maxUses?: number | null; description?: string | null };
+      connectionId: string;
+      bucket: string;
+      key?: string;
     }) => {
       const r = await fetch(`/api/share-links/${args.id}`, {
         method: "PATCH",
@@ -123,8 +128,9 @@ export function useEditShareLink() {
       if (!r.ok) throw new Error("Failed to update share link");
       return (await r.json()) as { shareLink: ShareLinkResponse };
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.shareLinks.all });
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.shareLinks.listByConnection(variables.connectionId) });
+      qc.invalidateQueries({ queryKey: queryKeys.shareLinks.countsForBucket(variables.connectionId, variables.bucket) });
     },
   });
 }

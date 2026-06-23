@@ -131,7 +131,7 @@ export function ShareDialog({ open, onOpenChange, connectionId, bucket, fileKey 
                     variant="ghost"
                     size="sm"
                     className="h-7 text-xs text-destructive hover:text-destructive"
-                    onClick={() => revoke.mutate(s.id)}
+                    onClick={() => revoke.mutate({ id: s.id, connectionId, bucket, key: fileKey })}
                   >
                     Revoke
                   </Button>
