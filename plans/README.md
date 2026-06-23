@@ -69,7 +69,23 @@ and update your row when done.
 | 027  | Warn on upload key conflicts instead of silently overwriting | P1 | M | — | DONE (PR #30) |
 | 028  | Export the activity log to CSV | P2 | M | — | DONE (PR #32) |
 | 029  | Break bucket storage stats down by file type + largest objects | P2 | M | — | DONE (PR #31) |
+| 030  | Repair object-route tests that break on the `{ ok }` activity contract | P0 | S | — | DONE (PR #38) — also fixed a pre-existing locale test bug + CI Clerk-key build failure; restored green CI baseline |
+| 031  | Stop dropping webhook events on handler failure; record `invoice.payment_failed` | P1 | M | — | PR OPEN (#40) — rebased on main, CI green |
+| 032  | Batch reconcile-cron recency check + resolve bookmark access once per connection | P2 | M | — | PR OPEN (#41) — rebased on main, CI green |
+| 033  | Right-click context menu on file rows + clear-filter empty-state affordance | P2 | S | — | PR OPEN (#39) — rebased on main, CI green; manual browser smoke still pending |
+| 034  | Arrow-key / Enter / Delete keyboard navigation in the file list | P3 | M | — | PR OPEN (#42) — rebased on main, CI green; manual browser smoke pending; re-run drift check after 033 lands (shared file-row/file-list edits) |
+| 035  | Design spike: team invitations for not-yet-registered users | P2 | M | — | PR OPEN (#43) — rebased on main, CI green; spec only, awaiting review |
+| 036  | App shell: skip-to-content link, focusable/labeled `<main>`, focus-move-to-main on client navigation | P2 | M | — | TODO |
+| 037  | Sidebar a11y: aria-current, aria-expanded, `<aside>` label, keyboard bookmark reorder, icon-button names | P2 | S | — | TODO |
+| 038  | Breadcrumb a11y: nav label, `<ol>`/`<li>` semantics, aria-current, icon-button names | P2 | S | — | TODO |
+| 039  | WAI-ARIA tabs + arrow-key nav for bucket- and connection-detail tab bars | P2 | M | — | TODO |
+| 040  | Drawer dialog semantics + focus-on-open/restore (properties + info drawers) | P2 | M | — | TODO |
+| 041  | Announce notifications via ARIA live region; name the dismiss button | P2 | S | — | DONE |
 | 042  | Add accessible names to icon-only buttons in bucket grid and pane tab bar | P3 | S | — | DONE |
+| 043  | Resolve connection list access in one query; stop decrypting secrets the list never returns | P1 | M | — | DONE |
+| 044  | Memoize derived object lists (folderKeys/fileKeys/visibleObjects/displayedObjects + bulk-ops selection) in the file browser | P2 | S | — | TODO |
+| 045  | Memoize the gallery `FileTile` + pass stable callbacks, matching the memoized list `FileRow` | P2 | M | — | TODO |
+| 046  | Scope note & share-link mutation invalidations to the affected `(connectionId, bucket)` | P3 | M | — | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned)
 
