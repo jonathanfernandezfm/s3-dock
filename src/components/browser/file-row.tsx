@@ -59,6 +59,7 @@ interface FileRowProps {
   currentPath: string;
   canWrite?: boolean;
   isSelected: boolean;
+  isFocused?: boolean;
   onSelect: (key: string, mods: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
   onDelete: (key: string) => void;
   onPreview: (object: S3Object) => void;
@@ -101,6 +102,7 @@ function FileRowImpl({
   currentPath,
   canWrite = true,
   isSelected,
+  isFocused = false,
   onSelect,
   onDelete,
   onPreview,
@@ -191,6 +193,7 @@ function FileRowImpl({
       className={cn(
         "group",
         isSelected && "bg-muted",
+        isFocused && "ring-2 ring-blue-500 ring-inset",
         isFolderDragOver && object.isFolder && "bg-blue-50 dark:bg-blue-950 ring-2 ring-blue-500 ring-inset"
       )}
       data-state={isSelected ? "selected" : undefined}

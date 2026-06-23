@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Table,
@@ -12,6 +12,7 @@ import { FileRow } from "./file-row";
 import { useBrowserStore } from "@/lib/stores/browser-store";
 import { usePaneSelection } from "./use-pane-selection";
 import { usePaneKeyboard } from "./use-pane-keyboard";
+import { useListKeyboardNav } from "./use-list-keyboard-nav";
 import { cn } from "@/lib/utils";
 import type { S3Object } from "@/types";
 
@@ -100,6 +101,23 @@ export function FileList({
     estimateSize: () => ROW_HEIGHT,
     overscan: 8,
   });
+
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  useEffect(() => { setFocusedIndex(-1); }, [orderedKeys]);
+  const activateObject = useCallback((object: S3Object) => {
+    if (object.isFolder) {
+      onNavigate?.(object.key);
+    } else {
+      onPreview(object);
+    }
+  }, [onNavigate, onPreview]);
+  const deleteFocused = useCallback((object: S3Object) => {
+    onDelete(object.key);
+  }, [onDelete]);
+  useListKeyboardNav({ containerRef, objects, focusedIndex, setFocusedIndex, onActivate: activateObject, onDeleteFocused: deleteFocused, canWrite });
+  useEffect(() => {
+    if (focusedIndex >= 0) rowVirtualizer.scrollToIndex(focusedIndex, { align: "auto" });
+  }, [focusedIndex, rowVirtualizer]);
 
   const allSelected =
     objects.length > 0 && objects.every((o) => selectedItems.has(o.key));
@@ -254,6 +272,7 @@ export function FileList({
                       currentPath={currentPath}
                       canWrite={canWrite}
                       isSelected={selectedItems.has(object.key)}
+                      isFocused={virtualRow.index === focusedIndex}
                       onSelect={handleSelect}
                       onDelete={onDelete}
                       onPreview={onPreview}
