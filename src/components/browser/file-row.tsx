@@ -130,6 +130,7 @@ function FileRowImpl({
   const [shareOpen, setShareOpen] = useState(false);
   const [tagsOpen, setTagsOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { can } = useTier();
   const openUpgradeModal = useUpgradeModalStore((s) => s.open);
   const prefixBookmarks = useBookmarksForBucket(connectionId, bucket);
@@ -198,6 +199,7 @@ function FileRowImpl({
       {...dragHandlers}
       {...(folderDropHandlers ?? {})}
       style={{ cursor: "grab" }}
+      onContextMenu={(e) => { e.preventDefault(); setMenuOpen(true); }}
       onClickCapture={(e) => {
         if (e.shiftKey || e.ctrlKey || e.metaKey) {
           e.preventDefault();
@@ -296,7 +298,7 @@ function FileRowImpl({
               <SlidersHorizontal className="h-4 w-4" />
             </Button>
           )}
-          <DropdownMenu>
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <MoreVertical className="h-4 w-4" />

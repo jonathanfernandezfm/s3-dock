@@ -183,6 +183,9 @@ export function FileBrowser({
     : objects;
   const displayedObjects = filterObjectsByName(visibleObjects, nameFilter);
 
+  const filtersActive = nameFilter.trim() !== "" || activeTag !== null;
+  const clearFilters = () => { setNameFilter(""); setActiveTag(null); };
+
   const prefixBookmarks = useBookmarksForBucket(connectionId, bucket);
 
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
@@ -658,7 +661,12 @@ export function FileBrowser({
         <div
           className={`flex-1 flex flex-col ${showLoadingOverlay ? "opacity-50 pointer-events-none" : ""}`}
         >
-          {paneState.viewMode === "grid" ? (
+          {filtersActive && displayedObjects.length === 0 && !showLoadingOverlay ? (
+            <div className="flex flex-col items-center justify-center flex-1 min-h-[200px] py-12 text-center gap-3">
+              <p className="text-sm text-muted-foreground">No files match your filter{nameFilter ? ` "${nameFilter}"` : ""}.</p>
+              <Button variant="outline" size="sm" className="text-xs" onClick={clearFilters}><X className="size-3" />Clear filters</Button>
+            </div>
+          ) : paneState.viewMode === "grid" ? (
             <FileGallery
               objects={displayedObjects}
               connectionId={connectionId}
