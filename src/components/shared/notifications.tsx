@@ -82,6 +82,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
   return (
     <div
       className="relative flex items-start gap-3 p-3 bg-card border rounded-lg shadow-sm overflow-hidden"
+      aria-atomic="true"
       onMouseEnter={() => { pausedRef.current = true; }}
       onMouseLeave={() => { pausedRef.current = false; }}
     >
@@ -122,6 +123,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
           variant="ghost"
           size="icon"
           className="h-6 w-6 shrink-0"
+          aria-label="Dismiss notification"
           onClick={() => removeNotification(notification.id)}
         >
           <X className="h-3.5 w-3.5" />
@@ -161,7 +163,12 @@ export function Notifications() {
         </div>
       )}
 
-      <div className="space-y-2 max-h-80 overflow-y-auto">
+      <div
+        className="space-y-2 max-h-80 overflow-y-auto"
+        role="status"
+        aria-live="polite"
+        aria-relevant="additions text"
+      >
         {notifications.map((notification) => (
           <NotificationItem key={notification.id} notification={notification} />
         ))}
