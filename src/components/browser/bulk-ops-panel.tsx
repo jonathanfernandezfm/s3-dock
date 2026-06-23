@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useBulkOpsStore } from "@/lib/stores/bulk-ops-store";
@@ -74,6 +74,11 @@ export function BulkOpsPanel({
   const moveObjects = useMoveObjects();
   const [transferMode, setTransferMode] = useState<"copy" | "move" | null>(null);
 
+  const selection: S3Object[] = useMemo(
+    () => objects.filter((o) => selectedItems.has(o.key)),
+    [objects, selectedItems]
+  );
+
   async function shareAll() {
     const files = selection.filter((o) => !o.isFolder);
     if (!files.length) return;
@@ -118,8 +123,6 @@ export function BulkOpsPanel({
     });
     clearSelection(paneId);
   }
-
-  const selection: S3Object[] = objects.filter((o) => selectedItems.has(o.key));
   const dialogOpen = dialog !== null && dialogPaneId === paneId;
   const showProgress = progress !== null && progress.paneId === paneId;
   const showIdle = !showProgress && !dialogOpen && selectedItems.size >= 2;

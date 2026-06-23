@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   useObjects,
   useDeleteObjects,
@@ -136,9 +136,10 @@ export function FileBrowser({
   });
   const noteButtonCount = folderNotesQuery.data?.length ?? 0;
 
-  const folderKeys = objects
-    .filter((o) => o.isFolder)
-    .map((o) => o.key);
+  const folderKeys = useMemo(
+    () => objects.filter((o) => o.isFolder).map((o) => o.key),
+    [objects]
+  );
   const folderNoteCountsQuery = useNoteCounts({
     connectionId,
     bucket,
@@ -146,9 +147,10 @@ export function FileBrowser({
   });
   const folderNoteCounts = folderNoteCountsQuery.data ?? {};
 
-  const fileKeys = objects
-    .filter((o) => !o.isFolder)
-    .map((o) => o.key);
+  const fileKeys = useMemo(
+    () => objects.filter((o) => !o.isFolder).map((o) => o.key),
+    [objects]
+  );
   const fileShareCountsQuery = useShareLinkCounts({
     connectionId,
     bucket,
@@ -157,8 +159,14 @@ export function FileBrowser({
   const fileShareCounts = fileShareCountsQuery.data ?? {};
 
   const fileTagsQuery = useFileTags({ connectionId, bucket, keys: fileKeys });
-  const fileTags = fileTagsQuery.data ?? {};
-  const folderTagValues = distinctTagValues(fileTags);
+  const fileTags = useMemo(
+    () => fileTagsQuery.data ?? {},
+    [fileTagsQuery.data]
+  );
+  const folderTagValues = useMemo(
+    () => distinctTagValues(fileTags),
+    [fileTags]
+  );
 
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [nameFilter, setNameFilter] = useState("");
@@ -176,12 +184,20 @@ export function FileBrowser({
     [clearSelection, paneId]
   );
 
-  const visibleObjects = activeTag
-    ? objects.filter(
-        (o) => o.isFolder || (fileTags[o.key] ?? []).includes(activeTag)
-      )
-    : objects;
-  const displayedObjects = filterObjectsByName(visibleObjects, nameFilter);
+  const visibleObjects = useMemo(
+    () =>
+      activeTag
+        ? objects.filter(
+            (o) => o.isFolder || (fileTags[o.key] ?? []).includes(activeTag)
+          )
+        : objects,
+    [objects, activeTag, fileTags]
+  );
+
+  const displayedObjects = useMemo(
+    () => filterObjectsByName(visibleObjects, nameFilter),
+    [visibleObjects, nameFilter]
+  );
 
   const filtersActive = nameFilter.trim() !== "" || activeTag !== null;
   const clearFilters = () => { setNameFilter(""); setActiveTag(null); };
