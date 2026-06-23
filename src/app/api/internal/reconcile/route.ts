@@ -41,12 +41,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     where: { status: "RUNNING", lastTickAt: { lt: stuckThreshold } },
     select: { id: true },
   });
-  for (const j of stuck) {
-    await prisma.crawlJob.update({
-      where: { id: j.id },
+  if (stuck.length > 0) {
+    await prisma.crawlJob.updateMany({
+      where: { id: { in: stuck.map((j) => j.id) } },
       data: { status: "PENDING" },
     });
-    await fireCrawl(j.id, req.nextUrl.origin);
+    for (const j of stuck) fireCrawl(j.id, req.nextUrl.origin);
   }
 
   // Stale-pending rescue: fire any PENDING job that was never started.
@@ -54,9 +54,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     where: { status: "PENDING", createdAt: { lt: stalePendingThreshold } },
     select: { id: true },
   });
-  for (const j of stalePending) {
-    await fireCrawl(j.id, req.nextUrl.origin);
-  }
+  for (const j of stalePending) fireCrawl(j.id, req.nextUrl.origin);
 
   // Find connections needing a new RECONCILE.
   // Only index connections belonging to PRO/ENTERPRISE workspaces; FREE users are excluded.
@@ -85,19 +83,28 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     },
     select: { id: true },
   });
+  const connectionIds = connections.map((c) => c.id);
+  const recentJobs =
+    connectionIds.length === 0
+      ? []
+      : await prisma.crawlJob.findMany({
+          where: {
+            connectionId: { in: connectionIds },
+            kind: "RECONCILE",
+            OR: [
+              { status: "RUNNING" },
+              {
+                status: { in: ["COMPLETED", "PARTIAL_LIMIT_HIT", "FAILED"] },
+                completedAt: { gte: reconcileThreshold },
+              },
+            ],
+          },
+          select: { connectionId: true },
+        });
+  const haveRecent = new Set(recentJobs.map((j) => j.connectionId));
+  const toQueue = connections.filter((c) => !haveRecent.has(c.id));
   const fired: string[] = [];
-  for (const conn of connections) {
-    const recent = await prisma.crawlJob.findFirst({
-      where: {
-        connectionId: conn.id,
-        kind: "RECONCILE",
-        OR: [
-          { status: "RUNNING" },
-          { status: { in: ["COMPLETED", "PARTIAL_LIMIT_HIT", "FAILED"] }, completedAt: { gte: reconcileThreshold } },
-        ],
-      },
-    });
-    if (recent) continue;
+  for (const conn of toQueue) {
     const job = await prisma.crawlJob.create({
       data: {
         connectionId: conn.id,
@@ -106,7 +113,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         bucketsRemaining: [],
       },
     });
-    await fireCrawl(job.id, req.nextUrl.origin);
+    fireCrawl(job.id, req.nextUrl.origin);
     fired.push(job.id);
   }
 
