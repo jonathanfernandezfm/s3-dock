@@ -26,39 +26,11 @@ presign, share links); 019–022 close the highest-leverage remaining gaps.
 Independent of all prior plans and of each other (019/022 are client-only;
 020/021 touch object routes but different files).
 
-## In-flight uncommitted work (HEAD `5eeda76`, 2026-06-22)
-
-The working tree has staged but uncommitted changes across 19 files. No
-existing plan covers this work — it predates any planning session and has no
-plan file. Summary for awareness:
-
-1. **Toast-to-NotificationStore migration** — removes the shadcn toast
-   stack (`src/components/ui/toast.tsx`, `src/components/ui/toaster.tsx`,
-   `src/hooks/use-toast.ts`) and migrates 8 call sites
-   (`notes-tab.tsx`, `properties-drawer.tsx`, `version-history-dialog.tsx`,
-   `breadcrumb.tsx`, `file-row.tsx`, `command-palette.tsx`,
-   `overview-identity-card.tsx`, `file-preview-modal.tsx`) to
-   `useNotificationStore` from `src/lib/stores/notification-store`. The new
-   store is richer (typed `NotificationType`, `NotificationStatus`, progress
-   tracking) and was already the source of truth for upload/copy/move
-   notifications; this migration unifies all in-app feedback through it.
-
-2. **`browser-url.ts` extraction** — new shared utility
-   `src/lib/browser/browser-url.ts` exposes `browserRouteHref()` (builds
-   `/app/browser/<connectionId>/<bucket>/[...path]` with proper encoding) and
-   `parentPrefix()` (extracts the folder prefix from an object key). Replaces
-   an inline `dirOf()` in `src/app/api/search/route.ts` and an ad-hoc
-   `lastIndexOf("/")` in `command-palette.tsx`. The command palette now
-   navigates via `router.push(r.href)` (URL-first) rather than manually
-   wiring pane/tab Zustand state. Tests added in
-   `src/lib/browser/browser-url.test.ts`.
-
-3. **Minor UX improvements** — filter-bar polish in `file-browser.tsx`
-   (search icon inside input, absolute-positioned clear button), breadcrumb
-   copy-URI button gains a 2s checkmark-to-copy icon transition, theme toggle
-   refactored to `useSyncExternalStore` (eliminates hydration-side-effect
-   `useEffect`) with a new test in
-   `src/components/shared/theme-toggle.test.tsx`.
+The browser-url refactor (`browserRouteHref` / `parentPrefix`), toast-to-NotificationStore
+migration (removes shadcn toast stack; unifies all in-app feedback through
+`useNotificationStore`), and minor UX improvements (filter-bar polish, breadcrumb
+copy-URI icon transition, `useSyncExternalStore` theme toggle) landed in commit
+`49a31e0` on 2026-06-22. No plan covers this work — it predates any planning session.
 
 Execute in the order below unless dependencies say otherwise. Each
 executor: read the plan fully before starting, honor its STOP conditions,
@@ -72,12 +44,12 @@ and update your row when done.
 | 002  | Design spike: Lifecycle rules spec | P2 | M | — | DONE (PR #17) |
 | 003  | Restore a clean `test + typecheck + lint` baseline | P0 | S | — | DONE (PR #16) |
 | 004  | Upgrade dependencies with CRITICAL / HIGH CVEs | P1 | S | 003 | DONE (PR #19) |
-| 005  | Add GitHub Actions CI workflow running the composite gate | P1 | S | 003, 004 | TODO |
+| 005  | Add GitHub Actions CI workflow running the composite gate | P1 | S | 003, 004 | DONE (PR #36) — green requires the baseline-fix (PR #37: lockfile sync + 9 lint errors) to merge first |
 | 006  | Batch search-index mutations and stop silently truncating presign-batch | P2 | S | 003 | DONE (PR #20) |
-| 007  | Add `requireConnectionAccess` + zod schemas + route test harness | P1 | M | 003 | TODO |
-| 008  | Virtualize file-list view and memoize `FileRow` | P2 | M | 003 | TODO |
+| 007  | Add `requireConnectionAccess` + zod schemas + route test harness | P1 | M | 003 | DONE (PR #33) |
+| 008  | Virtualize file-list view and memoize `FileRow` | P2 | M | 003 | DONE (PR #34) — manual perf/selection/DnD smoke still pending |
 | 009  | Scope object/activity/notes invalidations to the affected `(connectionId, bucket)` | P2 | S | 003 | DONE (PR #21) |
-| 010  | Webhook idempotency (Stripe + Clerk) and activity-record observability | P2 | M | 003 | TODO |
+| 010  | Webhook idempotency (Stripe + Clerk) and activity-record observability | P2 | M | 003 | DONE (PR #35) |
 | 011  | Top-level README and archive stale APPLICATION_PLAN.md | P3 | S | — | DONE |
 | 012  | Standardize date/number formatting on a fixed locale (locale hydration, mixed formats, missing year) | P1 | M | — | DONE |
 | 013  | Add single-file "Rename" to the file browser context menus | P1 | M | — | DONE |
@@ -179,7 +151,7 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
   "In-pane name filter" → 026, "Upload conflict handling = silent overwrite" →
   027, and the `/improve next` "Storage analytics" gap → 029.
 
-## Verification baseline (HEAD `5eeda76`, post-003/004)
+## Verification baseline (HEAD `49a31e0`, post-003/004)
 
 Plans 003 (PR #16) and 004 (PR #19) have landed. The active gate is:
 
