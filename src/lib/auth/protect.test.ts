@@ -43,8 +43,8 @@ function makeReq(headers: Record<string, string> = {}): NextRequest {
 
 describe("withAuth", () => {
   test("no auth header, valid Clerk session — handler called with user, returns 200", async () => {
-    (auth as ReturnType<typeof vi.fn>).mockResolvedValue({ userId: "clerk_u1" });
-    (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
+    vi.mocked(auth).mockResolvedValue({ userId: "clerk_u1" });
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
 
     const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }, { status: 200 }));
     const wrapped = withAuth(handler);
@@ -56,7 +56,7 @@ describe("withAuth", () => {
   });
 
   test("no auth header, no Clerk session — returns 401", async () => {
-    (auth as ReturnType<typeof vi.fn>).mockResolvedValue({ userId: null });
+    vi.mocked(auth).mockResolvedValue({ userId: null });
 
     const handler = vi.fn();
     const wrapped = withAuth(handler);
@@ -93,8 +93,8 @@ describe("withAuth", () => {
   });
 
   test("Bearer with non-PAT value — falls through to Clerk path (auth() called)", async () => {
-    (auth as ReturnType<typeof vi.fn>).mockResolvedValue({ userId: "clerk_u1" });
-    (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
+    vi.mocked(auth).mockResolvedValue({ userId: "clerk_u1" });
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
 
     const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }, { status: 200 }));
     const wrapped = withAuth(handler);
