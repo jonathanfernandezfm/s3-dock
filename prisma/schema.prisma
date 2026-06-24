@@ -96,6 +96,7 @@ model User {
   activityEvents    ActivityEvent[]
   fileNotes         FileNote[]      @relation("FileNoteAuthor")
   createdShareLinks ShareLink[]     @relation("ShareLinkCreator")
+  mcpTokens         McpToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -227,6 +228,28 @@ model Connection {
 
   @@index([workspaceId])
   @@map("connections")
+}
+
+// Personal access tokens for non-cookie clients (MCP server, CLI).
+// tokenHash is sha256(rawToken) hex — the raw token is shown once at creation
+// and never stored. See src/lib/auth/mcp-token.ts.
+model McpToken {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name       String    // human label, e.g. "Claude Desktop laptop"
+  tokenHash  String    @unique // sha256 hex of the raw token
+  prefix     String    // first 12 chars of the raw token, for display/identification
+
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@map("mcp_tokens")
 }
 
 model ActivityEvent {
