@@ -18,16 +18,25 @@ export function useTheme() {
     readSystemTheme,
     () => "light" as const
   );
-  const [themeOverride, setThemeOverride] = useState<"light" | "dark" | null>(() => {
-    if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem("theme");
-    return stored === "light" || stored === "dark" ? stored : null;
-  });
-  const theme = themeOverride ?? systemTheme;
+  const [mounted, setMounted] = useState(false);
+  const [themeOverride, setThemeOverride] = useState<"light" | "dark" | null>(null);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+    const stored = localStorage.getItem("theme");
+    if (stored === "light" || stored === "dark") {
+      setThemeOverride(stored);
+    }
+    setMounted(true);
+  }, []);
+
+  // Before mount, use "light" to match server-rendered HTML and avoid hydration mismatch
+  const theme = mounted ? (themeOverride ?? systemTheme) : "light";
+
+  useEffect(() => {
+    if (mounted) {
+      document.documentElement.classList.toggle("dark", theme === "dark");
+    }
+  }, [theme, mounted]);
 
   const setTheme = (next: "light" | "dark") => {
     setThemeOverride(next);

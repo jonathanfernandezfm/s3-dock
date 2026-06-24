@@ -120,7 +120,10 @@ and update your row when done.
 | 049  | Team invitation links (MVP) — onboard members who haven't signed up yet | P1 | M | — | DONE (PR #58) |
 | 050  | Teams UX polish — styled role select, rename/delete/leave, declutter, hide "coming soon" | P2 | M | #57 | DONE |
 | 051  | Personal Access Tokens for non-cookie clients (auth foundation for MCP) | P2 | M | — | DONE |
-| 052  | Read-only MCP server exposing S3 operations through S3Dock | P2 | M | 051 | TODO |
+| 052  | Read-only MCP server exposing S3 operations through S3Dock | P2 | M | 051 | DONE |
+| 053  | Feedback button and dialog in sidebar (DB-backed submissions) | P2 | M | — | DONE |
+| 054  | Add changelog button to sidebar and display changelog from markdown files | P2 | S | — | TODO |
+| 055  | Disable PostHog analytics in local/dev environments (gate init on production build) | P2 | S | — | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned)
 
