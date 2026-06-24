@@ -72,7 +72,9 @@ describe("withAuth", () => {
   });
 
   test("Bearer PAT valid token — handler called with patUser, auth() not called, returns 200", async () => {
-    vi.mocked(resolveMcpToken).mockResolvedValue(mockUser);
+    vi.mocked(resolveMcpToken).mockResolvedValue(
+      mockUser as unknown as Awaited<ReturnType<typeof resolveMcpToken>>
+    );
 
     const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }, { status: 200 }));
     const wrapped = withAuth(handler);
