@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 function readSystemTheme(): "light" | "dark" {
   if (typeof window === "undefined") return "light";
@@ -12,35 +12,52 @@ function subscribeSystemTheme(onStoreChange: () => void) {
   return () => media.removeEventListener("change", onStoreChange);
 }
 
+function readStoredTheme(): "light" | "dark" | null {
+  const stored = localStorage.getItem("theme");
+  return stored === "light" || stored === "dark" ? stored : null;
+}
+
+// Same-tab writes don't fire the `storage` event, so keep an in-process listener
+// set alongside the cross-tab `storage` subscription.
+const storedThemeListeners = new Set<() => void>();
+
+function subscribeStoredTheme(onStoreChange: () => void) {
+  storedThemeListeners.add(onStoreChange);
+  window.addEventListener("storage", onStoreChange);
+  return () => {
+    storedThemeListeners.delete(onStoreChange);
+    window.removeEventListener("storage", onStoreChange);
+  };
+}
+
+function emitStoredThemeChange() {
+  storedThemeListeners.forEach((listener) => listener());
+}
+
 export function useTheme() {
+  // useSyncExternalStore returns the server snapshot ("light" / no override)
+  // during SSR and hydration, then the client value — matching server-rendered
+  // HTML on first paint and avoiding a hydration mismatch without a mount flag.
   const systemTheme = useSyncExternalStore(
     subscribeSystemTheme,
     readSystemTheme,
     () => "light" as const
   );
-  const [mounted, setMounted] = useState(false);
-  const [themeOverride, setThemeOverride] = useState<"light" | "dark" | null>(null);
+  const storedTheme = useSyncExternalStore(
+    subscribeStoredTheme,
+    readStoredTheme,
+    () => null
+  );
+
+  const theme = storedTheme ?? systemTheme;
 
   useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored === "light" || stored === "dark") {
-      setThemeOverride(stored);
-    }
-    setMounted(true);
-  }, []);
-
-  // Before mount, use "light" to match server-rendered HTML and avoid hydration mismatch
-  const theme = mounted ? (themeOverride ?? systemTheme) : "light";
-
-  useEffect(() => {
-    if (mounted) {
-      document.documentElement.classList.toggle("dark", theme === "dark");
-    }
-  }, [theme, mounted]);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   const setTheme = (next: "light" | "dark") => {
-    setThemeOverride(next);
     localStorage.setItem("theme", next);
+    emitStoredThemeChange();
   };
 
   return { theme, setTheme };
