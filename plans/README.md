@@ -123,9 +123,9 @@ and update your row when done.
 | 052  | Read-only MCP server exposing S3 operations through S3Dock | P2 | M | 051 | SUPERSEDED by 057 — in-process approach (requires DB on client machine) replaced by HTTP proxy; PR #60 should be closed without merging |
 | 053  | Feedback button and dialog in sidebar (DB-backed submissions) | P2 | M | — | DONE |
 | 054  | Add changelog button to sidebar and display changelog from markdown files | P2 | S | — | TODO |
-| 055  | Disable PostHog analytics in local/dev environments (gate init on production build) | P2 | S | — | TODO |
-| 056  | Add PAT Bearer token auth path to `withAuth` (enables HTTP API access for non-browser clients) | P1 | S | 051 | TODO |
-| 057  | HTTP-proxy MCP server calling S3Dock's API via Bearer token (supersedes 052) | P1 | M | 056 | TODO |
+| 055  | Disable PostHog analytics in local/dev environments (gate init on production build) | P2 | S | — | DONE (PR #62) |
+| 056  | Add PAT Bearer token auth path to `withAuth` (enables HTTP API access for non-browser clients) | P1 | S | 051 | DONE |
+| 057  | HTTP-proxy MCP server calling S3Dock's API via Bearer token (supersedes 052) | P1 | M | 056 | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned)
 
