@@ -2,7 +2,7 @@
 CREATE TYPE "FeedbackType" AS ENUM ('FEEDBACK', 'BUG_REPORT');
 
 -- CreateTable
-CREATE TABLE "Feedback" (
+CREATE TABLE "feedback" (
     "id" TEXT NOT NULL,
     "type" "FeedbackType" NOT NULL,
     "message" TEXT NOT NULL,
@@ -14,4 +14,4 @@ CREATE TABLE "Feedback" (
 );
 
 -- AddForeignKey
-ALTER TABLE "Feedback" ADD CONSTRAINT "Feedback_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "feedback" ADD CONSTRAINT "feedback_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;

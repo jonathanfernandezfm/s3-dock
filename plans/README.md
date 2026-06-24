@@ -120,10 +120,12 @@ and update your row when done.
 | 049  | Team invitation links (MVP) — onboard members who haven't signed up yet | P1 | M | — | DONE (PR #58) |
 | 050  | Teams UX polish — styled role select, rename/delete/leave, declutter, hide "coming soon" | P2 | M | #57 | DONE |
 | 051  | Personal Access Tokens for non-cookie clients (auth foundation for MCP) | P2 | M | — | DONE |
-| 052  | Read-only MCP server exposing S3 operations through S3Dock | P2 | M | 051 | DONE |
+| 052  | Read-only MCP server exposing S3 operations through S3Dock | P2 | M | 051 | SUPERSEDED by 057 — in-process approach (requires DB on client machine) replaced by HTTP proxy; PR #60 should be closed without merging |
 | 053  | Feedback button and dialog in sidebar (DB-backed submissions) | P2 | M | — | DONE |
 | 054  | Add changelog button to sidebar and display changelog from markdown files | P2 | S | — | TODO |
 | 055  | Disable PostHog analytics in local/dev environments (gate init on production build) | P2 | S | — | TODO |
+| 056  | Add PAT Bearer token auth path to `withAuth` (enables HTTP API access for non-browser clients) | P1 | S | 051 | TODO |
+| 057  | HTTP-proxy MCP server calling S3Dock's API via Bearer token (supersedes 052) | P1 | M | 056 | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned)
 

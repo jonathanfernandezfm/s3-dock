@@ -1,4 +1,4 @@
-# Plan 053: Add PAT Bearer token auth path to `withAuth`
+# Plan 056: Add PAT Bearer token auth path to `withAuth`
 
 > **Executor instructions**: Follow this plan step by step. Run every
 > verification command and confirm the expected result before moving to the
@@ -99,7 +99,7 @@ Plan 054 (the HTTP-proxy MCP server) depends on this landing first.
 
 ## Git workflow
 
-- Branch: `advisor/053-pat-bearer-auth`
+- Branch: `advisor/056-pat-bearer-auth`
 - Conventional commits: `feat: add PAT Bearer token path to withAuth`
 - Do NOT push or open a PR unless the operator instructed it.
 

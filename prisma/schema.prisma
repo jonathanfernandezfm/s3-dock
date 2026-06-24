@@ -538,4 +538,6 @@ model Feedback {
   userEmail String?
 
   createdAt DateTime @default(now())
+
+  @@map("feedback")
 }
