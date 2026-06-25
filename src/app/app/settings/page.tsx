@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth";
+import prisma from "@/lib/db/prisma";
 import {
   Card,
   CardContent,
@@ -6,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CalendarDays, Mail, ShieldCheck } from "lucide-react";
+import { TokensSection } from "./tokens-section";
 
 const tierStyles: Record<string, string> = {
   FREE: "bg-secondary text-secondary-foreground",
@@ -15,6 +17,19 @@ const tierStyles: Record<string, string> = {
 
 export default async function SettingsPage() {
   const user = await requireUser();
+
+  const tokens = await prisma.mcpToken.findMany({
+    where: { userId: user.id, revokedAt: null },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      prefix: true,
+      createdAt: true,
+      lastUsedAt: true,
+      expiresAt: true,
+    },
+  });
 
   const fullName =
     [user.firstName, user.lastName].filter(Boolean).join(" ") || "User";
@@ -89,6 +104,15 @@ export default async function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <TokensSection
+        initialTokens={tokens.map((t) => ({
+          ...t,
+          createdAt: t.createdAt.toISOString(),
+          lastUsedAt: t.lastUsedAt?.toISOString() ?? null,
+          expiresAt: t.expiresAt?.toISOString() ?? null,
+        }))}
+      />
     </div>
   );
 }
