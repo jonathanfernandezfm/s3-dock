@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks/clerk(.*)",
   "/api/internal/(.*)",
   "/s(.*)",
+  "/opengraph-image(.*)",
 ]);
 
 const clerkProxy = clerkMiddleware(async (auth, req) => {
