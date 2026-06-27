@@ -126,6 +126,7 @@ and update your row when done.
 | 055  | Disable PostHog analytics in local/dev environments (gate init on production build) | P2 | S | — | DONE (PR #62) |
 | 056  | Add PAT Bearer token auth path to `withAuth` (enables HTTP API access for non-browser clients) | P1 | S | 051 | DONE |
 | 057  | HTTP-proxy MCP server calling S3Dock's API via Bearer token (supersedes 052) | P1 | M | 056 | DONE |
+| 059  | Version history: fix diff-view fetch lifecycle + wire up the disabled "Copy to…" button | P1 | M | — | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned)
 
