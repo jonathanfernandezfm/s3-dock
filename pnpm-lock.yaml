@@ -128,9 +128,6 @@ importers:
       remark-gfm:
         specifier: ^4.0.1
         version: 4.0.1
-      remotion:
-        specifier: ^4.0.484
-        version: 4.0.484(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       stripe:
         specifier: ^22.2.0
         version: 22.2.0(@types/node@22.19.3)
@@ -4165,12 +4162,6 @@ packages:
 
   remeda@2.21.3:
     resolution: {integrity: sha512-XXrZdLA10oEOQhLLzEJEiFFSKi21REGAkHdImIb4rt/XXy8ORGXh5HCcpUOsElfPNDb+X6TA/+wkh+p2KffYmg==}
-
-  remotion@4.0.484:
-    resolution: {integrity: sha512-UJTgWindeUPqn5TTb55qOtRFhh96uTfVqJN20qb0ggi5Qq/T1OEY2nu1yi4CEbsM/+tpFDHV1aecrtrDykcdlA==}
-    peerDependencies:
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
 
   require-from-string@2.0.2:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
@@ -9304,11 +9295,6 @@ snapshots:
   remeda@2.21.3:
     dependencies:
       type-fest: 4.41.0
-
-  remotion@4.0.484(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
 
   require-from-string@2.0.2: {}
 
