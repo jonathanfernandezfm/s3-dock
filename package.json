@@ -11,7 +11,11 @@
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"mcp": "tsx src/mcp/server.ts"
+		"mcp": "tsx src/mcp/server.ts",
+		"video:studio": "remotion studio src/remotion/index.ts",
+		"video:render": "remotion render src/remotion/index.ts ShowcaseDemo public/demo/showcase.mp4 --codec=h264",
+		"video:render:webm": "remotion render src/remotion/index.ts ShowcaseDemo public/demo/showcase.webm --codec=vp8",
+		"video:poster": "remotion still src/remotion/index.ts ShowcaseDemo public/demo/poster.png --frame=45"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.1073.0",
@@ -31,6 +35,10 @@
 		"@radix-ui/react-progress": "^1.1.1",
 		"@radix-ui/react-slot": "^1.1.1",
 		"@radix-ui/react-tooltip": "^1.2.8",
+		"@remotion/cli": "^4.0.484",
+		"@remotion/google-fonts": "^4.0.484",
+		"@remotion/tailwind-v4": "^4.0.484",
+		"@remotion/transitions": "^4.0.484",
 		"@tanstack/react-query": "^5.62.0",
 		"@tanstack/react-virtual": "^3.14.3",
 		"@types/diff": "^8.0.0",
@@ -54,6 +62,7 @@
 		"react-markdown": "^10.1.0",
 		"react-syntax-highlighter": "^16.1.1",
 		"remark-gfm": "^4.0.1",
+		"remotion": "^4.0.484",
 		"stripe": "^22.2.0",
 		"svix": "^1.84.1",
 		"tailwind-merge": "^2.6.0",
